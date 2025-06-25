@@ -1,5 +1,6 @@
 import 'package:find_motel/modules/home/bloc/home_bloc.dart';
 import 'package:find_motel/modules/home/screens/home_screens.dart';
+import 'package:find_motel/modules/home_page/bloc/home_page_bloc.dart';
 import 'package:flutter/material.dart';
 // ignore: depend_on_referenced_packages
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -19,8 +20,11 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: BlocProvider(
-        create: (context) => TabBloc(),
+      home: MultiBlocProvider(
+        providers: [
+          BlocProvider(create: (context) => TabBloc()),
+          BlocProvider(create: (context) => HomePageBloc()),
+        ],
         child: const HomeScreen(),
       ),
     );

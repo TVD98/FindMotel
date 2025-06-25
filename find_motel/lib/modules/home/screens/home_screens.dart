@@ -1,6 +1,7 @@
 import 'package:find_motel/modules/home/bloc/home_bloc.dart';
 import 'package:find_motel/modules/home/bloc/home_event.dart';
 import 'package:find_motel/modules/home/bloc/home_state.dart';
+import 'package:find_motel/modules/home_page/screens/home_page.dart';
 import 'package:flutter/material.dart';
 // ignore: depend_on_referenced_packages
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,12 +9,18 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
+  static const List<Widget> _pages = [
+    HomePage(),
+    Center(child: Text('Map Screen')),
+    Center(child: Text('Profile Screen')),
+  ];
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<TabBloc, TabState>(
       builder: (context, state) {
         return Scaffold(
-          body: _buildBody(state.selectedIndex),
+          body: _pages[state.selectedIndex],
           bottomNavigationBar: BottomNavigationBar(
             currentIndex: state.selectedIndex,
             onTap: (index) {
@@ -30,6 +37,7 @@ class HomeScreen extends StatelessWidget {
                   break;
               }
             },
+            backgroundColor: Color(0xFFF5F5F5),
             items: const [
               BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
               BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Map'),
@@ -42,18 +50,5 @@ class HomeScreen extends StatelessWidget {
         );
       },
     );
-  }
-
-  Widget _buildBody(int index) {
-    switch (index) {
-      case 0:
-        return const Center(child: Text('Home Screen'));
-      case 1:
-        return const Center(child: Text('Map Screen'));
-      case 2:
-        return const Center(child: Text('Profile Screen'));
-      default:
-        return const SizedBox.shrink();
-    }
   }
 }
