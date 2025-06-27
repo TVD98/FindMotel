@@ -1,0 +1,1 @@
+enum ProfileEvent { updateName }

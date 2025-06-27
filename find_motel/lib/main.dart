@@ -1,8 +1,11 @@
+// ignore_for_file: depend_on_referenced_packages
+
 import 'package:find_motel/modules/home/bloc/home_bloc.dart';
 import 'package:find_motel/modules/home/screens/home_screens.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_bloc.dart';
+import 'package:find_motel/modules/map_page/bloc/map_page_bloc.dart';
+import 'package:find_motel/modules/profile_page/bloc/profile_page_bloc.dart';
 import 'package:flutter/material.dart';
-// ignore: depend_on_referenced_packages
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 void main() {
@@ -24,6 +27,8 @@ class MyApp extends StatelessWidget {
         providers: [
           BlocProvider(create: (context) => TabBloc()),
           BlocProvider(create: (context) => HomePageBloc()),
+          BlocProvider(create: (context) => MapBloc()),
+          BlocProvider(create: (context) => ProfileBloc()),
         ],
         child: const HomeScreen(),
       ),
