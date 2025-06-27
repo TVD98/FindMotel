@@ -38,6 +38,13 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  google_fonts: ^6.1.0
+  hexcolor: ^3.0.1
+  equatable: ^2.0.5
+  firebase_core: ^3.6.0
+  firebase_auth: ^5.3.1
+
+
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -88,3 +95,6 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+  assets:
+    - assets/logo.png
+    - assets/logowelcom.png
