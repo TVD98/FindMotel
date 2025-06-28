@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:find_motel/modules/home/screens/home_screens.dart';
-import 'package:find_motel/modules/authentication/screens/logo_widget.dart';
 import '../bloc/login_bloc.dart';
 
 class LoginScreen extends StatelessWidget {
@@ -49,98 +48,104 @@ class _LoginForm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: BlocBuilder<LoginBloc, LoginState>(
-          builder: (context, state) {
-            return Stack(
-              children: [
-                SingleChildScrollView(
-                  padding: EdgeInsets.only(
-                    bottom: MediaQuery.of(context).viewInsets.bottom,
+      body: BlocBuilder<LoginBloc, LoginState>(
+        builder: (context, state) {
+          return Stack(
+            children: [
+              SingleChildScrollView(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                ),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: MediaQuery.of(context).size.height,
                   ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const SizedBox(height: 40),
-                      LogoWidget(),
-                      const SizedBox(height: 40),
-                      _buildTextField(
-                        hint: 'Email',
-                        onChanged: (value) =>
-                            context.read<LoginBloc>().add(EmailChanged(value)),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildTextField(
-                        hint: 'Password',
-                        obscureText: true,
-                        onChanged: (value) => context.read<LoginBloc>().add(
-                          PasswordChanged(value),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 30),
-                        child: SizedBox(
-                          height: 44,
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: state.canLogin
-                                ? () => context.read<LoginBloc>().add(
-                                    LoginSubmitted(),
-                                  )
-                                : null,
-                            style: ButtonStyle(
-                              backgroundColor:
-                                  WidgetStateProperty.resolveWith<Color>((
-                                    states,
-                                  ) {
-                                    if (states.contains(WidgetState.disabled)) {
-                                      return const Color(0x80248078);
-                                    }
-                                    return const Color(0xFF248078);
-                                  }),
-                              foregroundColor: WidgetStateProperty.all<Color>(
-                                Colors.white,
-                              ),
-                              shape:
-                                  WidgetStateProperty.all<
-                                    RoundedRectangleBorder
-                                  >(
-                                    RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(44),
-                                    ),
-                                  ),
-                              elevation: WidgetStateProperty.all(0),
-                            ),
-                            child: state.isSubmitting
-                                ? const CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  )
-                                : Text(
-                                    'Login',
-                                    style: GoogleFonts.quicksand(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
+                  child: IntrinsicHeight(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const SizedBox(height: 80),
+                        Image.asset('assets/logo.png', fit: BoxFit.contain),
+                        const SizedBox(height: 40),
+                        _buildTextField(
+                          hint: 'Email',
+                          onChanged: (value) => context.read<LoginBloc>().add(
+                            EmailChanged(value),
                           ),
                         ),
-                      ),
+                        const SizedBox(height: 12),
+                        _buildTextField(
+                          hint: 'Password',
+                          obscureText: true,
+                          onChanged: (value) => context.read<LoginBloc>().add(
+                            PasswordChanged(value),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 30),
+                          child: SizedBox(
+                            height: 44,
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: state.canLogin
+                                  ? () => context.read<LoginBloc>().add(
+                                      LoginSubmitted(),
+                                    )
+                                  : null,
+                              style: ButtonStyle(
+                                backgroundColor:
+                                    WidgetStateProperty.resolveWith<Color>((
+                                      states,
+                                    ) {
+                                      if (states.contains(
+                                        WidgetState.disabled,
+                                      )) {
+                                        return const Color(0x80248078);
+                                      }
+                                      return const Color(0xFF248078);
+                                    }),
+                                foregroundColor: WidgetStateProperty.all<Color>(
+                                  Colors.white,
+                                ),
+                                shape:
+                                    WidgetStateProperty.all<
+                                      RoundedRectangleBorder
+                                    >(
+                                      RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(44),
+                                      ),
+                                    ),
+                                elevation: WidgetStateProperty.all(0),
+                              ),
+                              child: Text(
+                                'Login',
+                                style: GoogleFonts.quicksand(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 40),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              if (state.isSubmitting)
+                Positioned.fill(
+                  child: Stack(
+                    children: const [
+                      ModalBarrier(dismissible: false, color: Colors.black54),
+                      Center(child: CircularProgressIndicator()),
                     ],
                   ),
                 ),
-                if (state.isSubmitting)
-                  Positioned.fill(
-                    child: Container(
-                      color: Colors.black.withOpacity(0.3),
-                      child: const Center(child: CircularProgressIndicator()),
-                    ),
-                  ),
-              ],
-            );
-          },
-        ),
+            ],
+          );
+        },
       ),
     );
   }
