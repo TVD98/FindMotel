@@ -15,37 +15,14 @@ class MapPage extends StatefulWidget {
 }
 
 class _MapPageState extends State<MapPage> {
+  static const LatLng _defaultCenter = LatLng(
+    21.0285,
+    105.8542,
+  ); // Tọa độ mặc định (Hà Nội)
   late GoogleMapController mapController;
-  Set<Marker> _markers = {};
-
-  @override
-  void initState() {
-    super.initState();
-    _loadMarkerIcon();
-  }
 
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
-  }
-
-  Future<void> _loadMarkerIcon() async {
-    // // Tải ảnh asset và chuyển thành BitmapDescriptor
-    // final BitmapDescriptor markerIcon = await BitmapDescriptor.fromAssetImage(
-    //   ImageConfiguration(size: Size(32, 32), devicePixelRatio: 2.0),
-    //   'assets/images/image_sana.jpg',
-    // );
-
-    // Cập nhật markers với ảnh asset
-    setState(() {
-      _markers = {
-        Marker(
-          markerId: MarkerId('marker_1'),
-          position: LatLng(21.028511, 105.804817), // Tọa độ Hà Nội
-          //icon: markerIcon, // Sử dụng ảnh asset
-          infoWindow: InfoWindow(title: 'Hà Nội', snippet: 'Thủ đô Việt Nam'),
-        ),
-      };
-    });
   }
 
   @override
@@ -53,7 +30,9 @@ class _MapPageState extends State<MapPage> {
     return BlocConsumer<MapBloc, MapState>(
       listener: (context, state) {
         // Cập nhật vị trí camera khi trạng thái thay đổi
-        mapController.animateCamera(CameraUpdate.newLatLng(state.center));
+        mapController.animateCamera(
+          CameraUpdate.newLatLng(state.centerPosition ?? _defaultCenter),
+        );
       },
       builder: (context, state) {
         return Stack(
@@ -61,23 +40,16 @@ class _MapPageState extends State<MapPage> {
             GoogleMap(
               onMapCreated: _onMapCreated,
               initialCameraPosition: CameraPosition(
-                target: state.center,
-                zoom: 14.0,
+                target: state.centerPosition ?? _defaultCenter,
+                zoom: 12.0,
               ),
               markers: state.markers,
-              myLocationEnabled: true,
+              myLocationEnabled: false,
+              trafficEnabled: false,
+              buildingsEnabled: false,
               myLocationButtonEnabled: true,
             ),
-            Positioned(
-              top: 16,
-              right: 16,
-              child: FloatingActionButton(
-                onPressed: () {
-                  context.read<MapBloc>().add(MapEvent.moveToHCM);
-                },
-                child: const Icon(Icons.location_city),
-              ),
-            ),
+            if (state.isLoading) Center(child: CircularProgressIndicator()),
           ],
         );
       },
