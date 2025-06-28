@@ -1,0 +1,38 @@
+{
+    "flutter": {
+        "platforms": {
+            "macos": {
+                "default": {
+                    "projectId": "findmotel-299a5",
+                    "appId": "1:689449733513:ios:7e0bd6dc4be3530ead2558",
+                    "uploadDebugSymbols": false,
+                    "fileOutput": "macos/Runner/GoogleService-Info.plist"
+                }
+            },
+            "dart": {
+                "lib/firebase_options.dart": {
+                    "projectId": "findmotel-299a5",
+                    "configurations": {
+                        "android": "1:689449733513:android:e1a64b23632f626dad2558",
+                        "ios": "1:689449733513:ios:7e0bd6dc4be3530ead2558"
+                    }
+                }
+            },
+            "android": {
+                "default": {
+                    "projectId": "findmotel-299a5",
+                    "appId": "1:689449733513:android:e1a64b23632f626dad2558",
+                    "fileOutput": "android/app/google-services.json"
+                }
+            },
+            "ios": {
+                "default": {
+                    "projectId": "findmotel-299a5",
+                    "appId": "1:689449733513:ios:7e0bd6dc4be3530ead2558",
+                    "uploadDebugSymbols": false,
+                    "fileOutput": "ios/Runner/GoogleService-Info.plist"
+                }
+            }
+        }
+    }
+}

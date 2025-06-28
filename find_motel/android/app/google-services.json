@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "689449733513",
+    "project_id": "findmotel-299a5",
+    "storage_bucket": "findmotel-299a5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:689449733513:android:e1a64b23632f626dad2558",
+        "android_client_info": {
+          "package_name": "com.example.find_motel"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAniiJDintbsi75Xdqzmfjaj2ASjxcurPw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
