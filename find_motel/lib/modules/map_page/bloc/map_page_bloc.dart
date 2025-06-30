@@ -17,6 +17,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
   MapBloc() : super(MapState()) {
     on<LoadCurrentLocationEvent>(_onLoadCurrentLocation);
     on<LoadFirestoreMarkersEvent>(_onLoadFirestoreMarkers);
+    on<FilterMarkersEvent>(_onFilterMarkers);
   }
 
   Future<void> _onLoadCurrentLocation(
@@ -80,63 +81,185 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     LoadFirestoreMarkersEvent event,
     Emitter<MapState> emit,
   ) async {
-    emit(state.copyWith(isLoading: true));
+    emit(state.copyWith(isLoading: true, error: null));
     try {
       QuerySnapshot snapshot = await FirebaseFirestore.instance
           .collection('motels')
+          .limit(100)
           .get();
-      final markers = <Marker>{};
-      final List<LatLng> positions = [];
-
-      for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-        final GeoPoint geoPoint = data['geo_point'] as GeoPoint;
-        final position = LatLng(geoPoint.latitude, geoPoint.longitude);
-        positions.add(position);
-        final BitmapDescriptor customMarker = await _createCustomMarker(
-          'https://firebasestorage.googleapis.com/v0/b/dvpkcinema.appspot.com/o/cinema%2Fbitexco.png?alt=media&token=4b4dcd4e-1043-403d-9f8a-6ae5df20da4e',
-          data['price'] as int,
-          100,
-        );
-        markers.add(
-          Marker(
-            markerId: MarkerId(doc.id),
-            position: position,
-            icon: customMarker,
-            infoWindow: InfoWindow(
-              title: data['name'] ?? 'Địa điểm',
-              snippet: data['description'] ?? '',
-            ),
-          ),
-        );
-      }
-
-      // Tính vị trí trung tâm
-      LatLng? centerPosition;
-      if (positions.isNotEmpty) {
-        double latSum = 0;
-        double lngSum = 0;
-        for (var pos in positions) {
-          latSum += pos.latitude;
-          lngSum += pos.longitude;
-        }
-        centerPosition = LatLng(
-          latSum / positions.length,
-          lngSum / positions.length,
-        );
-      }
-
+      await _loadMarkers(snapshot, emit);
+    } catch (e) {
       emit(
         state.copyWith(
-          centerPosition: centerPosition,
-          markers: {...state.markers, ...markers},
           isLoading: false,
+          error: 'Lỗi khi tải dữ liệu Firestore: $e',
         ),
       );
-    } catch (e) {
-      print('Lỗi khi tải dữ liệu Firestore: $e');
-      emit(state.copyWith(isLoading: false));
     }
+  }
+
+  Future<void> _onFilterMarkers(
+    FilterMarkersEvent event,
+    Emitter<MapState> emit,
+  ) async {
+    emit(state.copyWith(isLoading: true, error: null));
+    try {
+      Query query = FirebaseFirestore.instance.collection('motels').limit(100);
+
+      // Lọc theo tỉnh và phường
+      // if (event.province != null && event.province!.isNotEmpty) {
+      //   query = query.where('address', contains: event.province);
+      // }
+      // if (event.ward != null && event.ward!.isNotEmpty) {
+      //   query = query.where('ward', isEqualTo: event.ward);
+      // }
+
+      // Lọc theo giá thuê
+      if (event.priceRange != null && event.priceRange!.isNotEmpty) {
+        final priceLimits = _parsePriceRange(event.priceRange!);
+        if (priceLimits != null) {
+          query = query.where(
+            'price',
+            isGreaterThanOrEqualTo: priceLimits[0] * 1000000,
+          );
+          if (priceLimits[1] != double.infinity) {
+            query = query.where(
+              'price',
+              isLessThanOrEqualTo: priceLimits[1] * 1000000,
+            );
+          }
+        }
+      }
+
+      // Lọc theo tiện ích
+      if (event.amenities != null && event.amenities!.isNotEmpty) {
+        query = query.where('extensions', arrayContainsAny: event.amenities);
+      }
+
+      QuerySnapshot snapshot = await query.get();
+
+      await _loadMarkers(snapshot, emit, clearIfEmpty: true);
+    } catch (e) {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          error: 'Lỗi khi lọc dữ liệu Firestore: $e',
+        ),
+      );
+    }
+  }
+
+  List<double>? _parsePriceRange(String range) {
+    switch (range) {
+      case '0-3':
+        return [0, 3];
+      case '3-5':
+        return [3, 5];
+      case '5-8':
+        return [5, 8];
+      case '>8':
+        return [8, double.infinity];
+      default:
+        return null;
+    }
+  }
+
+  Future<void> _loadMarkers(
+    QuerySnapshot snapshot,
+    Emitter<MapState> emit, {
+    bool clearIfEmpty = false,
+  }) async {
+    final markers = <Marker>{};
+    final List<LatLng> positions = [];
+    final List<Future<void>> imageLoadingTasks = [];
+
+    // Tạo marker mặc định trước
+    for (var doc in snapshot.docs) {
+      final data = doc.data() as Map<String, dynamic>;
+      final GeoPoint geoPoint = data['geo_point'] as GeoPoint;
+      final position = LatLng(geoPoint.latitude, geoPoint.longitude);
+      positions.add(position);
+
+      // Tạo marker với defaultMarker
+      final marker = Marker(
+        markerId: MarkerId(doc.id),
+        position: position,
+        icon: BitmapDescriptor.defaultMarker,
+      );
+      markers.add(marker);
+
+      // Tạo task tải ảnh và cập nhật marker
+      final String imageUrl =
+          data['imageUrl'] ??
+          'https://firebasestorage.googleapis.com/v0/b/dvpkcinema.appspot.com/o/cinema%2Fbitexco.png?alt=media&token=4b4dcd4e-1043-403d-9f8a-6ae5df20da4e';
+      final int? price = data['price'];
+      if (imageUrl.isNotEmpty) {
+        imageLoadingTasks.add(
+          _createCustomMarker(imageUrl, price, 100)
+              .then((markerIcon) {
+                final updatedMarker = Marker(
+                  markerId: MarkerId(doc.id),
+                  position: position,
+                  icon: markerIcon,
+                );
+                markers.removeWhere((m) => m.markerId == MarkerId(doc.id));
+                markers.add(updatedMarker);
+                emit(state.copyWith(markers: {...markers}, isLoading: false));
+              })
+              .catchError((e) {
+                print('Lỗi tải ảnh cho marker ${doc.id}: $e');
+              }),
+        );
+      }
+    }
+
+    // Tính vị trí trung tâm
+    LatLng? centerPosition;
+    LatLngBounds? bounds;
+    if (positions.isNotEmpty) {
+      double latSum = 0;
+      double lngSum = 0;
+      final minLat = positions
+          .map((p) => p.latitude)
+          .reduce((a, b) => a < b ? a : b);
+      final maxLat = positions
+          .map((p) => p.latitude)
+          .reduce((a, b) => a > b ? a : b);
+      final minLng = positions
+          .map((p) => p.longitude)
+          .reduce((a, b) => a < b ? a : b);
+      final maxLng = positions
+          .map((p) => p.longitude)
+          .reduce((a, b) => a > b ? a : b);
+      for (var pos in positions) {
+        latSum += pos.latitude;
+        lngSum += pos.longitude;
+      }
+      centerPosition = LatLng(
+        latSum / positions.length,
+        lngSum / positions.length,
+      );
+      bounds = LatLngBounds(
+        southwest: LatLng(minLat, minLng),
+        northeast: LatLng(maxLat, maxLng),
+      );
+    } else if (clearIfEmpty) {
+      // Nếu không có vị trí và clearIfEmpty = true, xóa tất cả marker
+      markers.clear();
+    }
+
+    // Emit state với marker mặc định
+    emit(
+      state.copyWith(
+        centerPosition: centerPosition,
+        bounds: bounds,
+        markers: {...state.markers, ...markers},
+        isLoading: false,
+      ),
+    );
+
+    // Chạy các task tải ảnh đồng thời
+    await Future.wait(imageLoadingTasks);
   }
 
   String _formatPrice(int? price) {
@@ -163,17 +286,47 @@ class MapBloc extends Bloc<MapEvent, MapState> {
       if (response.statusCode == 200) {
         img.Image? image = img.decodeImage(response.bodyBytes);
         if (image != null) {
-          image = img.copyResize(image, width: width);
+          image = img.copyResize(image, width: width, height: width);
           final Uint8List imageData = Uint8List.fromList(img.encodePng(image));
 
           // Tạo canvas với ảnh và text
           final ui.PictureRecorder pictureRecorder = ui.PictureRecorder();
           final Canvas canvas = Canvas(pictureRecorder);
+          const double padding = 10; // Padding 10px mỗi bên
           final double textHeight = 50;
           final double totalHeight = width + textHeight;
+          final double imageSize = width.toDouble(); // Ảnh 50x50
+          final double canvasWidth =
+              imageSize + 2 * padding; // Width canvas: 50 + 10 + 10
+          final double canvasHeight =
+              imageSize +
+              textHeight +
+              2 * padding; // Height canvas: 50 + 20 + 10 + 10
 
-          // Vẽ ảnh
+          // Vẽ màu nền cho canvas
+          final backgroundPaint = Paint()..color = const Color(0xFFFFC752);
+          canvas.drawRRect(
+            RRect.fromRectAndRadius(
+              Rect.fromLTWH(0, 0, canvasWidth, canvasHeight),
+              Radius.circular(8),
+            ),
+            backgroundPaint,
+          );
+
+          // Vẽ ảnh bo tròn (căn giữa ngang)
           final ui.Image markerImage = await _decodeImageFromList(imageData);
+          canvas.save();
+          canvas.clipRRect(
+            RRect.fromRectAndRadius(
+              Rect.fromLTWH(
+                padding,
+                padding,
+                imageSize.toDouble(),
+                imageSize.toDouble(),
+              ),
+              Radius.circular(8),
+            ),
+          );
           canvas.drawImageRect(
             markerImage,
             Rect.fromLTWH(
@@ -182,9 +335,15 @@ class MapBloc extends Bloc<MapEvent, MapState> {
               markerImage.width.toDouble(),
               markerImage.height.toDouble(),
             ),
-            Rect.fromLTWH(0, 0, width.toDouble(), width.toDouble()),
+            Rect.fromLTWH(
+              padding,
+              padding,
+              imageSize.toDouble(),
+              imageSize.toDouble(),
+            ), // Ảnh 40x40, đặt tại (10, 10)
             Paint(),
           );
+          canvas.restore();
 
           // Vẽ text bên dưới
           final textPainter = TextPainter(
@@ -194,7 +353,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
                 color: Colors.black,
                 fontSize: 30,
                 fontWeight: FontWeight.bold,
-                backgroundColor: Colors.white.withOpacity(0.8),
+                backgroundColor: const Color(0xFFFFC752),
               ),
             ),
             textAlign: TextAlign.center,
@@ -203,15 +362,15 @@ class MapBloc extends Bloc<MapEvent, MapState> {
           textPainter.layout(maxWidth: width.toDouble());
           final textWidth = textPainter.width;
           final textOffset = Offset(
-            (width - textWidth) / 2,
-            width.toDouble(),
+            (canvasWidth - textWidth) / 2,
+            2 * padding + width.toDouble(),
           ); // Căn giữa ngang
           textPainter.paint(canvas, textOffset);
 
           // Chuyển canvas thành BitmapDescriptor
           final canvasImage = await pictureRecorder.endRecording().toImage(
-            width,
-            totalHeight.toInt(),
+            canvasWidth.toInt(),
+            canvasHeight.toInt(),
           );
           final byteData = await canvasImage.toByteData(
             format: ui.ImageByteFormat.png,

@@ -3,6 +3,7 @@
 import 'package:find_motel/modules/map_page/bloc/map_page_bloc.dart';
 import 'package:find_motel/modules/map_page/bloc/map_page_event.dart';
 import 'package:find_motel/modules/map_page/bloc/map_page_state.dart';
+import 'package:find_motel/modules/map_page/screens/filter_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -30,9 +31,17 @@ class _MapPageState extends State<MapPage> {
     return BlocConsumer<MapBloc, MapState>(
       listener: (context, state) {
         // Cập nhật vị trí camera khi trạng thái thay đổi
-        mapController.animateCamera(
-          CameraUpdate.newLatLng(state.centerPosition ?? _defaultCenter),
-        );
+        if (state.bounds != null) {
+          mapController.animateCamera(
+            CameraUpdate.newLatLngBounds(state.bounds!, 50),
+          );
+        } else if (state.centerPosition != null) {
+          mapController.animateCamera(
+            CameraUpdate.newCameraPosition(
+              CameraPosition(target: state.centerPosition!, zoom: 12.0),
+            ),
+          );
+        }
       },
       builder: (context, state) {
         return Stack(
@@ -41,13 +50,45 @@ class _MapPageState extends State<MapPage> {
               onMapCreated: _onMapCreated,
               initialCameraPosition: CameraPosition(
                 target: state.centerPosition ?? _defaultCenter,
-                zoom: 12.0,
+                zoom: 13.0,
               ),
               markers: state.markers,
-              myLocationEnabled: false,
-              trafficEnabled: false,
+              myLocationEnabled: true,
               buildingsEnabled: false,
-              myLocationButtonEnabled: true,
+            ),
+            Positioned(
+              top: 32,
+              right: 16,
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => const FilterPage()),
+                  );
+                },
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle, // Bo tròn nút
+                    color: Colors.white, // Nền trắng
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 4,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: ClipOval(
+                    child: Image.asset(
+                      'assets/images/ic_filter.png',
+                      width: 32,
+                      height: 32,
+                      fit: BoxFit.scaleDown,
+                    ),
+                  ),
+                ),
+              ),
             ),
             if (state.isLoading) Center(child: CircularProgressIndicator()),
           ],
