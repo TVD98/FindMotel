@@ -294,7 +294,6 @@ class MapBloc extends Bloc<MapEvent, MapState> {
           final Canvas canvas = Canvas(pictureRecorder);
           const double padding = 10; // Padding 10px mỗi bên
           final double textHeight = 50;
-          final double totalHeight = width + textHeight;
           final double imageSize = width.toDouble(); // Ảnh 50x50
           final double canvasWidth =
               imageSize + 2 * padding; // Width canvas: 50 + 10 + 10

@@ -1,9 +1,10 @@
 // ignore_for_file: library_private_types_in_public_api
 
-import 'package:find_motel/modules/map_page/bloc/map_page_bloc.dart';
-import 'package:find_motel/modules/map_page/bloc/map_page_event.dart';
+import 'package:find_motel/common/circular_checkbox_list.dart';
+import 'package:find_motel/common/custom_choice_chip.dart';
+import 'package:find_motel/common/integer_range_slider.dart';
+import 'package:find_motel/modules/map_page/screens/fixed_dropdown_button.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 class FilterPage extends StatefulWidget {
   const FilterPage({super.key});
@@ -13,45 +14,15 @@ class FilterPage extends StatefulWidget {
 }
 
 class _FilterPageState extends State<FilterPage> {
-  final List<String> _roomCodes = [
-    'PH001',
-    'PH002',
-    'PH003',
-  ]; // Danh sách mã phòng mẫu
-  final List<String> _provinces = [
-    'Hà Nội',
-    'Hồ Chí Minh',
-    'Đà Nẵng',
-  ]; // Danh sách tỉnh mẫu
-  final Map<String, List<String>> _wards = {
-    'Hà Nội': ['Hoàn Kiếm', 'Ba Đình', 'Đống Đa'],
-    'Hồ Chí Minh': ['Quận 1', 'Quận 3', 'Quận 5'],
-    'Đà Nẵng': ['Hải Châu', 'Thanh Khê', 'Sơn Trà'],
-  }; // Danh sách phường mẫu
-  final List<String> _amenities = ['elevator', 'parking']; // Danh sách tiện ích
-  final List<String> _statuses = [
-    'trống',
-    'đặt cọc',
-    'đã thuê',
-  ]; // Danh sách tình trạng
-
-  String? _selectedRoomCode;
-  String? _selectedProvince;
-  String? _selectedWard;
-  final Map<String, bool> _selectedAmenities = {
-    'elevator': false,
-    'parking': false,
-  };
-  String? _selectedStatus;
-  double _priceValue = 0; // 0: 0-3tr, 1: 3-5tr, 2: 5-8tr, 3: >8tr
-  double _distanceValue = 0; // 0: <1km, 1: 1-5km, 2: 5-10km, 3: >10km
+  String? _selectedValue;
+  final List<String> _selectedChoices = [];
+  final List<String> _allOptions = ['Thang máy', 'Xe'];
+  RangeValues _selectedPriceRangeValues = const RangeValues(0, 2);
+  RangeValues _selectedDistanceRangeValues = const RangeValues(0, 1);
 
   @override
   void initState() {
     super.initState();
-    _selectedProvince = _provinces.first; // Mặc định chọn tỉnh đầu tiên
-    _selectedWard =
-        _wards[_selectedProvince]!.first; // Mặc định chọn phường đầu tiên
   }
 
   @override
@@ -71,219 +42,271 @@ class _FilterPageState extends State<FilterPage> {
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Mã phòng',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              DropdownButtonFormField<String>(
-                value: _selectedRoomCode,
-                hint: const Text('Chọn mã phòng'),
-                items: _roomCodes.map((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedRoomCode = value;
-                  });
-                },
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ),
-              const Divider(height: 32),
-              const Text(
-                'Khu vực',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-                      value: _selectedProvince,
-                      hint: const Text('Chọn tỉnh'),
-                      items: _provinces.map((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedProvince = value;
-                          _selectedWard =
-                              _wards[value]!.first; // Reset phường khi đổi tỉnh
-                        });
-                      },
-                      decoration: InputDecoration(
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                  const Padding(
+                    padding: EdgeInsets.only(
+                      right: 12.0,
+                    ), // Space between text and dropdown
+                    child: Text(
+                      'Mã phòng:',
+                      style: TextStyle(
+                        fontSize: 16.0,
+                        color: Color(0xFF248078),
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-                      value: _selectedWard,
-                      hint: const Text('Chọn phường'),
-                      items: _wards[_selectedProvince]?.map((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedWard = value;
-                        });
-                      },
-                      decoration: InputDecoration(
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                  FixedDropdownButton(
+                    value: _selectedValue,
+                    items: ['Option 1', 'Option 2', 'Option 3'],
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedValue = value;
+                      });
+                    },
+                  ),
+                ],
+              ),
+              const Divider(
+                height: 30.0, // Total height including spacing
+                thickness: 1.0, // Line thickness
+                color: Colors.grey, // Line color
+              ),
+              Text(
+                'Khu vực:',
+                style: TextStyle(
+                  fontSize: 16.0,
+                  color: Color(0xFF248078),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8.0),
+              Padding(
+                padding: const EdgeInsets.only(left: 12),
+                child: SizedBox(
+                  width: 250,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Padding(
+                            padding: EdgeInsets.only(
+                              right: 12.0,
+                            ), // Space between text and dropdown
+                            child: Text(
+                              'Tỉnh/Tp:',
+                              style: TextStyle(
+                                fontSize: 14.0,
+                                color: Color(0xFF1F1F1F),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: FixedDropdownButton(
+                              value: _selectedValue,
+                              items: ['Option 1', 'Option 2', 'Option 3'],
+                              width: 162.0,
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedValue = value;
+                                });
+                              },
+                            ),
+                          ),
+                        ],
                       ),
+                      const SizedBox(height: 10.0),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Padding(
+                            padding: EdgeInsets.only(
+                              right: 12.0,
+                            ), // Space between text and dropdown
+                            child: Text(
+                              'Phường/xã:',
+                              style: TextStyle(
+                                fontSize: 14.0,
+                                color: Color(0xFF1F1F1F),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: FixedDropdownButton(
+                              value: _selectedValue,
+                              items: ['Option 1', 'Option 2', 'Option 3'],
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedValue = value;
+                                });
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const Divider(
+                height: 30.0, // Total height including spacing
+                thickness: 1.0, // Line thickness
+                color: Colors.grey, // Line color
+              ),
+              Text(
+                'Tiện ích:',
+                style: TextStyle(
+                  fontSize: 16.0,
+                  color: Color(0xFF248078),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Wrap(
+                spacing: 8.0, // Khoảng cách giữa các chip
+                children: _allOptions.map((option) {
+                  return CustomChoiceChip(
+                    title: option,
+                    selected: _selectedChoices.contains(option),
+                    onSelected: (bool selected) {
+                      setState(() {
+                        if (selected) {
+                          _selectedChoices.add(option);
+                        } else {
+                          _selectedChoices.remove(option);
+                        }
+                      });
+                    },
+                  );
+                }).toList(),
+              ),
+              const Divider(
+                height: 30.0, // Total height including spacing
+                thickness: 1.0, // Line thickness
+                color: Colors.grey, // Line color
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(right: 12.0),
+                    child: Text(
+                      'Tình trạng:',
+                      style: TextStyle(
+                        fontSize: 16.0,
+                        color: Color(0xFF248078),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: CircularCheckboxList(
+                      items: ['Trống', 'Đặt cọc', 'Đã thuê'],
+                      initialSelected: null,
                     ),
                   ),
                 ],
               ),
-              const Divider(height: 32),
-              const Text(
-                'Tiện ích',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              const Divider(
+                height: 30.0, // Total height including spacing
+                thickness: 1.0, // Line thickness
+                color: Colors.grey, // Line color
               ),
-              const SizedBox(height: 8),
-              ..._amenities.map((amenity) {
-                return CheckboxListTile(
-                  title: Text(_getAmenityName(amenity)),
-                  value: _selectedAmenities[amenity],
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedAmenities[amenity] = value!;
-                    });
-                  },
-                  controlAffinity: ListTileControlAffinity.leading,
-                  contentPadding: EdgeInsets.zero,
-                );
-              }),
-              const Divider(height: 32),
-              const Text(
-                'Tình trạng',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              ..._statuses.map((status) {
-                return RadioListTile<String>(
-                  title: Text(status),
-                  value: status,
-                  groupValue: _selectedStatus,
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedStatus = value;
-                    });
-                  },
-                  contentPadding: EdgeInsets.zero,
-                );
-              }),
-              const Divider(height: 32),
-              const Text(
-                'Giá thuê (triệu VND)',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Slider(
-                value: _priceValue,
-                min: 0,
-                max: 3,
-                divisions: 3,
-                label: _getPriceLabel(_priceValue),
-                onChanged: (value) {
-                  setState(() {
-                    _priceValue = value;
-                  });
-                },
-              ),
-              const Divider(height: 32),
-              const Text(
-                'Phạm vi (km)',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Slider(
-                value: _distanceValue,
-                min: 0,
-                max: 3,
-                divisions: 3,
-                label: _getDistanceLabel(_distanceValue),
-                onChanged: (value) {
-                  setState(() {
-                    _distanceValue = value;
-                  });
-                },
-              ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text('Hủy'),
-                  ),
-                  const SizedBox(width: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      final selectedAmenities = _selectedAmenities.entries
-                          .where((entry) => entry.value)
-                          .map((entry) => entry.key)
-                          .toList();
-                      context.read<MapBloc>().add(
-                        FilterMarkersEvent(
-                          roomCode: _selectedRoomCode,
-                          province: _selectedProvince,
-                          ward: _selectedWard,
-                          amenities: selectedAmenities.isEmpty
-                              ? null
-                              : selectedAmenities,
-                          status: _selectedStatus,
-                          priceRange: _getPriceRange(_priceValue),
-                          distanceRange: _getDistanceRange(_distanceValue),
+                  Row(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8.0),
+                        child: Text(
+                          'Giá thuê:',
+                          style: TextStyle(
+                            fontSize: 16.0,
+                            color: Color(0xFF248078),
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
+                      ),
+                      buildRangeValueText(
+                        _selectedPriceRangeValues,
+                        10,
+                        'triệu',
+                      ),
+                    ],
+                  ),
+                  IntegerRangeSlider(
+                    minValue: 0,
+                    maxValue: 11,
+                    initialRange: const RangeValues(0, 2),
+                    labelsBuilder: (values) {
+                      final int maxValue = values.end.round();
+                      return RangeLabels(
+                        '${values.start.round()}',
+                        maxValue == 11 ? '10+' : '$maxValue',
                       );
-                      Navigator.of(context).pop();
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
+                    onChanged: (values) {
+                      setState(() {
+                        _selectedPriceRangeValues = values;
+                      });
+                    },
+                  ),
+                ],
+              ),
+              const Divider(
+                height: 30.0, // Total height including spacing
+                thickness: 1.0, // Line thickness
+                color: Colors.grey, // Line color
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8.0),
+                        child: Text(
+                          'Phạm vi:',
+                          style: TextStyle(
+                            fontSize: 16.0,
+                            color: Color(0xFF248078),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                      buildRangeValueText(
+                        _selectedDistanceRangeValues,
+                        10,
+                        'km',
                       ),
-                    ),
-                    child: const Text('Áp dụng'),
+                    ],
+                  ),
+                  IntegerRangeSlider(
+                    minValue: 1,
+                    maxValue: 11,
+                    initialRange: const RangeValues(1, 2),
+                    labelsBuilder: (values) {
+                      final int maxValue = values.end.round();
+                      return RangeLabels(
+                        '${values.start.round()}',
+                        maxValue == 11 ? '10+' : '$maxValue',
+                      );
+                    },
+                    onChanged: (values) {
+                      setState(() {
+                        _selectedDistanceRangeValues = values;
+                      });
+                    },
                   ),
                 ],
               ),
@@ -294,74 +317,25 @@ class _FilterPageState extends State<FilterPage> {
     );
   }
 
-  String _getAmenityName(String key) {
-    switch (key) {
-      case 'elevator':
-        return 'Thang Máy';
-      case 'parking':
-        return 'Chỗ để xe';
-      default:
-        return key;
+  Widget buildRangeValueText(RangeValues values, int maxValue, String unit) {
+    final int startValue = values.start.round();
+    final int endValue = values.end.round();
+    final String content;
+    if (endValue > maxValue) {
+      content = '> $startValue $unit';
+    } else if (startValue == 0) {
+      content = '< $endValue $unit';
+    } else {
+      content = '$startValue - $endValue $unit';
     }
-  }
 
-  String _getPriceLabel(double value) {
-    switch (value.toInt()) {
-      case 0:
-        return '0-3 triệu';
-      case 1:
-        return '3-5 triệu';
-      case 2:
-        return '5-8 triệu';
-      case 3:
-        return '>8 triệu';
-      default:
-        return '';
-    }
-  }
-
-  String _getDistanceLabel(double value) {
-    switch (value.toInt()) {
-      case 0:
-        return '<1 km';
-      case 1:
-        return '1-5 km';
-      case 2:
-        return '5-10 km';
-      case 3:
-        return '>10 km';
-      default:
-        return '';
-    }
-  }
-
-  String _getPriceRange(double value) {
-    switch (value.toInt()) {
-      case 0:
-        return '0-3';
-      case 1:
-        return '3-5';
-      case 2:
-        return '5-8';
-      case 3:
-        return '>8';
-      default:
-        return '';
-    }
-  }
-
-  String _getDistanceRange(double value) {
-    switch (value.toInt()) {
-      case 0:
-        return '<1';
-      case 1:
-        return '1-5';
-      case 2:
-        return '5-10';
-      case 3:
-        return '>10';
-      default:
-        return '';
-    }
+    return Text(
+      content,
+      style: const TextStyle(
+        color: Color(0xFF474747),
+        fontSize: 14.0,
+        fontWeight: FontWeight.w400,
+      ),
+    );
   }
 }
