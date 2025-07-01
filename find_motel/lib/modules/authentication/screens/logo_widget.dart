@@ -6,27 +6,9 @@ class LogoWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 120,
-      height: 120,
       child: Stack(
         alignment: Alignment.center,
-        children: [
-          Image.asset(
-            'assets/logo.png',
-            width: 120,
-            height: 120,
-            fit: BoxFit.contain,
-          ),
-          Positioned(
-            bottom: 0,
-            child: Image.asset(
-              'assets/logowelcom.png',
-              width: 191,
-              height: 48,
-              fit: BoxFit.fill,
-            ),
-          ),
-        ],
+        children: [Image.asset('assets/logo.png', fit: BoxFit.contain)],
       ),
     );
   }
