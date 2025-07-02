@@ -1,3 +1,5 @@
+// ignore_for_file: library_private_types_in_public_api
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -11,6 +13,8 @@ class AppConstants {
   static const borderRadius = 12.0; // Bo góc
   static const smallSpacing = 8.0; // Khoảng cách nhỏ
   static const chipBorderRadius = 44.0; // Bo góc cho chip
+  static const bottomNavBarHeight =
+      56.0; // Chiều cao giả định của BottomNavigationBar
 }
 
 // Hàm định dạng tiền tệ VNĐ
@@ -47,43 +51,66 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height:
-          MediaQuery.of(context).size.height *
-          0.9, // Chiếm 90% chiều cao màn hình
-      decoration: const BoxDecoration(
-        color: Color(0xFFF5F5F5),
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppConstants.borderRadius),
-        ),
-      ),
-      child: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppConstants.padding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(context),
-              const SizedBox(height: AppConstants.padding),
-              _buildMainImage(),
-              const SizedBox(height: AppConstants.smallSpacing),
-              _buildImageGallery(),
-              const SizedBox(height: AppConstants.smallSpacing),
-              _buildTags(),
-              const SizedBox(height: AppConstants.smallSpacing),
-              _buildRoomInfo(),
-              const SizedBox(height: AppConstants.padding),
-              _buildAddress(context),
-              const SizedBox(height: AppConstants.padding),
-              _buildExtensions(),
-              const SizedBox(height: AppConstants.padding),
-              _buildFees(),
-              const SizedBox(height: AppConstants.padding),
-              _buildNotes(),
-            ],
+    // Tính maxChildSize để không che BottomNavigationBar
+    final bottomNavHeight =
+        AppConstants.bottomNavBarHeight; // Chiều cao BottomNavigationBar
+    final bottomPadding = MediaQuery.of(
+      context,
+    ).padding.bottom; // Chiều cao bottom bar hệ thống
+    final maxHeightFraction =
+        (MediaQuery.of(context).size.height - bottomNavHeight - bottomPadding) /
+        MediaQuery.of(context).size.height;
+    return DraggableScrollableSheet(
+      initialChildSize: 0.5, // Bắt đầu với 1/2 màn hình
+      minChildSize: 0.5, // Chiều cao tối thiểu: 1/2 màn hình
+      maxChildSize:
+          maxHeightFraction, // Chiều cao tối đa: không che BottomNavigationBar
+      snap: true, // Bật snap giữa các mức
+      snapSizes: [
+        0.5,
+        0.75,
+        maxHeightFraction,
+      ], // Các mức: 1/2, 3/4, max (không che BottomNavigationBar)
+      builder: (context, scrollController) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Color(0xFFF5F5F5),
+            borderRadius: BorderRadius.vertical(
+              top: Radius.circular(AppConstants.borderRadius),
+            ),
           ),
-        ),
-      ),
+          child: SafeArea(
+            bottom: true, // Không che bottom navigation bar hệ thống
+            child: SingleChildScrollView(
+              controller:
+                  scrollController, // Gắn scrollController từ DraggableScrollableSheet
+              padding: const EdgeInsets.all(AppConstants.padding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeader(context),
+                  const SizedBox(height: AppConstants.padding),
+                  _buildMainImage(),
+                  const SizedBox(height: AppConstants.smallSpacing),
+                  _buildImageGallery(),
+                  const SizedBox(height: AppConstants.smallSpacing),
+                  _buildTags(),
+                  const SizedBox(height: AppConstants.smallSpacing),
+                  _buildRoomInfo(),
+                  const SizedBox(height: AppConstants.padding),
+                  _buildAddress(context),
+                  const SizedBox(height: AppConstants.padding),
+                  _buildExtensions(),
+                  const SizedBox(height: AppConstants.padding),
+                  _buildFees(),
+                  const SizedBox(height: AppConstants.padding),
+                  _buildNotes(),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -253,18 +280,11 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
             // Ưu tiên mở ứng dụng Google Maps bằng URL scheme
             String appUrl;
             String webUrl;
-            if (widget.detail.geoPoint.length == 2) {
-              final lat = widget.detail.geoPoint[0];
-              final lng = widget.detail.geoPoint[1];
-              appUrl = 'comgooglemaps://?q=$lat,$lng';
-              webUrl =
-                  'https://www.google.com/maps/search/?api=1&query=$lat,$lng';
-            } else {
-              final encodedAddress = Uri.encodeComponent(widget.detail.address);
-              appUrl = 'comgooglemaps://?q=$encodedAddress';
-              webUrl =
-                  'https://www.google.com/maps/search/?api=1&query=$encodedAddress';
-            }
+            final lat = widget.detail.geoPoint.latitude;
+            final lng = widget.detail.geoPoint.longitude;
+            appUrl = 'comgooglemaps://?q=$lat,$lng';
+            webUrl =
+                'https://www.google.com/maps/search/?api=1&query=$lat,$lng';
 
             // Thử mở ứng dụng Google Maps
             if (await canLaunchUrl(Uri.parse(appUrl))) {
@@ -311,7 +331,13 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
             : Wrap(
                 spacing: AppConstants.smallSpacing,
                 children: widget.detail.extensions
-                    .map((e) => _tagChip(e, Colors.grey.shade200))
+                    .map(
+                      (e) => _tagChip(
+                        e,
+                        Color(0xFFEBEBEB),
+                        textColor: Colors.black,
+                      ),
+                    )
                     .toList(),
               ),
       ],

@@ -1,5 +1,7 @@
 // ignore_for_file: depend_on_referenced_packages, deprecated_member_use
 
+import 'package:find_motel/modules/detail/detail_motel_model.dart';
+import 'package:find_motel/modules/detail/detail_screen.dart';
 import 'package:find_motel/modules/map_page/bloc/map_page_bloc.dart';
 import 'package:find_motel/modules/map_page/bloc/map_page_event.dart';
 import 'package:find_motel/modules/map_page/bloc/map_page_state.dart';
@@ -41,6 +43,10 @@ class _MapPageState extends State<MapPage> {
               CameraPosition(target: state.centerPosition!, zoom: 12.0),
             ),
           );
+        }
+
+        if (state.selectedMotel != null) {
+          showRoomDetailBottomSheet(context, state.selectedMotel!);
         }
       },
       builder: (context, state) {
@@ -94,6 +100,15 @@ class _MapPageState extends State<MapPage> {
           ],
         );
       },
+    );
+  }
+
+  void showRoomDetailBottomSheet(BuildContext context, RoomDetail motel) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true, // Cho phép bottom sheet chiếm gần hết màn hình
+      backgroundColor: Colors.transparent, // Nền trong suốt để bo góc
+      builder: (context) => RoomDetailScreen(detail: motel),
     );
   }
 }

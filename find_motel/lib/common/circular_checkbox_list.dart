@@ -3,15 +3,19 @@
 import 'package:find_motel/common/circular_checkbox.dart';
 import 'package:flutter/material.dart';
 
+typedef CircularCheckboxListCallback = void Function(String value);
+
 class CircularCheckboxList extends StatefulWidget {
   final List<String> items;
   // Giá trị khởi tạo cho selected. Nếu items rỗng, sẽ dùng ''
   final String? initialSelected; // Sử dụng String? để cho phép null
+  final CircularCheckboxListCallback? onChange;
 
   const CircularCheckboxList({
     super.key,
     required this.items,
     this.initialSelected, // Không gán giá trị mặc định trực tiếp ở đây
+    this.onChange,
   });
 
   @override
@@ -37,13 +41,13 @@ class _CircularCheckboxListState extends State<CircularCheckboxList> {
           isSelected: _selected == item,
           text: item,
           onTap: () {
+            String newValue = _selected == item ? '' : item;
             setState(() {
-              if (_selected == item) {
-                _selected = '';
-              } else {
-                _selected = item;
-              }
+              _selected = newValue;
             });
+            if (widget.onChange != null) {
+              widget.onChange!(newValue);
+            }
           },
         );
       }).toList(),

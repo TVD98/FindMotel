@@ -1,11 +1,14 @@
-import 'package:find_motel/modules/profile_page/bloc/profile_page_event.dart';
+// ignore_for_file: unused_field
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:find_motel/modules/profile_page/bloc/profile_page_bloc.dart';
 import 'package:find_motel/modules/profile_page/bloc/profile_page_state.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ProfilePage extends StatelessWidget {
-  const ProfilePage({super.key});
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  ProfilePage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -26,18 +29,9 @@ class ProfilePage extends StatelessWidget {
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () {
-                  context.read<ProfileBloc>().add(ProfileEvent.updateName);
+                  _auth.signOut();
                 },
-                child: const Text('Update Name'),
-              ),
-              const SizedBox(height: 16),
-              Center(
-                child: Image.asset(
-                  'assets/images/image_sana.jpg',
-                  width: 40, // Kích thước tùy chỉnh
-                  height: 40,
-                  fit: BoxFit.cover, // Điều chỉnh cách ảnh hiển thị
-                ),
+                child: const Text('Đăng xuất'),
               ),
             ],
           ),

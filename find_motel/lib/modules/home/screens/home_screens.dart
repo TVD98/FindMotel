@@ -11,7 +11,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  static const List<Widget> _pages = [HomePage(), MapPage(), ProfilePage()];
+  static final List<Widget> _pages = [
+    const HomePage(),
+    const MapPage(),
+    ProfilePage(),
+  ];
 
   @override
   Widget build(BuildContext context) {

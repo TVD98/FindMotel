@@ -2,6 +2,8 @@
 
 import 'dart:async';
 import 'dart:typed_data' show Uint8List;
+import 'package:find_motel/managers/app_data_manager.dart';
+import 'package:find_motel/modules/detail/detail_motel_model.dart';
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as img;
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -18,6 +20,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     on<LoadCurrentLocationEvent>(_onLoadCurrentLocation);
     on<LoadFirestoreMarkersEvent>(_onLoadFirestoreMarkers);
     on<FilterMarkersEvent>(_onFilterMarkers);
+    on<MarkerTapped>(_onMarkerTapped);
   }
 
   Future<void> _onLoadCurrentLocation(
@@ -106,16 +109,20 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     try {
       Query query = FirebaseFirestore.instance.collection('motels').limit(100);
 
+      // Lọc theo mã phòng
+      if (event.roomCode != null) {
+        query = query.where('room_code', isEqualTo: event.roomCode!);
+      }
+
       // Lọc theo tỉnh và phường
-      // if (event.province != null && event.province!.isNotEmpty) {
-      //   query = query.where('address', contains: event.province);
-      // }
-      // if (event.ward != null && event.ward!.isNotEmpty) {
-      //   query = query.where('ward', isEqualTo: event.ward);
-      // }
+      List<String> address = [];
+      if (event.province != null && event.ward != null) {
+        address = [event.province!, event.ward!];
+        query = query.where('keywords', arrayContainsAny: address);
+      }
 
       // Lọc theo giá thuê
-      if (event.priceRange != null && event.priceRange!.isNotEmpty) {
+      if (event.priceRange != null) {
         final priceLimits = _parsePriceRange(event.priceRange!);
         if (priceLimits != null) {
           query = query.where(
@@ -131,11 +138,6 @@ class MapBloc extends Bloc<MapEvent, MapState> {
         }
       }
 
-      // Lọc theo tiện ích
-      if (event.amenities != null && event.amenities!.isNotEmpty) {
-        query = query.where('extensions', arrayContainsAny: event.amenities);
-      }
-
       QuerySnapshot snapshot = await query.get();
 
       await _loadMarkers(snapshot, emit, clearIfEmpty: true);
@@ -149,18 +151,21 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     }
   }
 
-  List<double>? _parsePriceRange(String range) {
-    switch (range) {
-      case '0-3':
-        return [0, 3];
-      case '3-5':
-        return [3, 5];
-      case '5-8':
-        return [5, 8];
-      case '>8':
-        return [8, double.infinity];
-      default:
-        return null;
+  void _onMarkerTapped(MarkerTapped event, Emitter<MapState> emit) async {
+    emit(state.copyWith(selectedMotel: event.motel));
+
+    await Future.delayed(Duration(milliseconds: 100), () {
+      emit(state.copyWith(selectedMotel: null));
+    });
+  }
+
+  List<double>? _parsePriceRange(RangeValues range) {
+    final int startValue = range.start.round();
+    final int endValue = range.end.round();
+    if (endValue > 10) {
+      return [startValue.toDouble(), double.infinity];
+    } else {
+      return [startValue.toDouble(), endValue.toDouble()];
     }
   }
 
@@ -176,21 +181,45 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     // Tạo marker mặc định trước
     for (var doc in snapshot.docs) {
       final data = doc.data() as Map<String, dynamic>;
+
+      // last filter
+      if (!_isValidMotel(data)) {
+        break;
+      }
+
       final GeoPoint geoPoint = data['geo_point'] as GeoPoint;
       final position = LatLng(geoPoint.latitude, geoPoint.longitude);
       positions.add(position);
+
+      final RoomDetail motelDetail = RoomDetail(
+        address: data['address'] as String,
+        commission: data['commission'] as String,
+        extensions: (data['extensions'] as List<dynamic>).cast<String>(),
+        fees: (data['fees'] as List<dynamic>).cast<Map<String, dynamic>>(),
+        geoPoint: position,
+        name: data['name'] as String,
+        note: (data['note'] as List<dynamic>).cast<String>(),
+        price: data['price'] as int,
+        id: data['room_code'] as String,
+        typeRoom: data['type'] as String,
+        images: (data['images'] as List<dynamic>).cast<String>(),
+        mainImage: data['thumbnail'] as String,
+      );
 
       // Tạo marker với defaultMarker
       final marker = Marker(
         markerId: MarkerId(doc.id),
         position: position,
         icon: BitmapDescriptor.defaultMarker,
+        onTap: () {
+          add(MarkerTapped(motelDetail));
+        },
       );
       markers.add(marker);
 
       // Tạo task tải ảnh và cập nhật marker
       final String imageUrl =
-          data['imageUrl'] ??
+          data['marker'] ??
           'https://firebasestorage.googleapis.com/v0/b/dvpkcinema.appspot.com/o/cinema%2Fbitexco.png?alt=media&token=4b4dcd4e-1043-403d-9f8a-6ae5df20da4e';
       final int? price = data['price'];
       if (imageUrl.isNotEmpty) {
@@ -201,6 +230,9 @@ class MapBloc extends Bloc<MapEvent, MapState> {
                   markerId: MarkerId(doc.id),
                   position: position,
                   icon: markerIcon,
+                  onTap: () {
+                    add(MarkerTapped(motelDetail));
+                  },
                 );
                 markers.removeWhere((m) => m.markerId == MarkerId(doc.id));
                 markers.add(updatedMarker);
@@ -253,7 +285,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
       state.copyWith(
         centerPosition: centerPosition,
         bounds: bounds,
-        markers: {...state.markers, ...markers},
+        markers: {...markers},
         isLoading: false,
       ),
     );
@@ -266,6 +298,21 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     if (price == null) return 'N/A';
     final double priceInMillions = price / 1000000;
     return '${priceInMillions.toStringAsFixed(1)} tr';
+  }
+
+  bool _isValidMotel(Map<String, dynamic> data) {
+    if (AppDataManager().filterMotels.amenities?.isEmpty ?? true) {
+      return true;
+    } else {
+      List<String> extensions = (data['extensions'] as List<dynamic>)
+          .cast<String>();
+      for (String amenitie in AppDataManager().filterMotels.amenities!) {
+        if (extensions.contains(amenitie)) {
+          return true;
+        }
+      }
+      return false;
+    }
   }
 
   Future<BitmapDescriptor> _createCustomMarker(

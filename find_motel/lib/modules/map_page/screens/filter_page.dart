@@ -1,10 +1,16 @@
 // ignore_for_file: library_private_types_in_public_api
 
 import 'package:find_motel/common/circular_checkbox_list.dart';
+import 'package:find_motel/common/custom_button.dart';
 import 'package:find_motel/common/custom_choice_chip.dart';
 import 'package:find_motel/common/integer_range_slider.dart';
+import 'package:find_motel/managers/app_data_manager.dart';
+import 'package:find_motel/managers/models/filter_motels_model.dart';
+import 'package:find_motel/modules/map_page/bloc/map_page_bloc.dart';
+import 'package:find_motel/modules/map_page/bloc/map_page_event.dart';
 import 'package:find_motel/modules/map_page/screens/fixed_dropdown_button.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class FilterPage extends StatefulWidget {
   const FilterPage({super.key});
@@ -14,15 +20,42 @@ class FilterPage extends StatefulWidget {
 }
 
 class _FilterPageState extends State<FilterPage> {
-  String? _selectedValue;
-  final List<String> _selectedChoices = [];
-  final List<String> _allOptions = ['Thang máy', 'Xe'];
-  RangeValues _selectedPriceRangeValues = const RangeValues(0, 2);
-  RangeValues _selectedDistanceRangeValues = const RangeValues(0, 1);
+  final List<String> _allAmenitiesOptions = ['Thang máy', 'Xe'];
+  final List<String> _allRoomCodeOptions = [
+    'Tất cả',
+    'L3',
+    '301',
+    '201',
+    'P4',
+    '101',
+    'lửng B',
+    'G01',
+  ];
+  final List<String> _allProvinceOptions = ['Tp. Hồ Chí Minh'];
+  final List<String> _allWardOptions =
+      ['Tất cả'] + AppDataManager().allWardOfTPHCM;
+  final List<String> _allStatusOptions = ['Trống', 'Đã cọc', 'Đã thuê'];
+
+  late String _selectedRoomCode;
+  late String _selectedProvince;
+  late String _selectedWard;
+  late List<String> _selectedAmenities;
+  late String? _selectedStatus;
+  late RangeValues _selectedPriceRangeValues;
+  late RangeValues _selectedDistanceRangeValues;
 
   @override
   void initState() {
     super.initState();
+    final initialData = AppDataManager().filterMotels;
+    _selectedRoomCode = initialData.roomCode ?? '';
+    _selectedProvince = initialData.province ?? '';
+    _selectedWard = initialData.ward ?? '';
+    _selectedAmenities = initialData.amenities ?? [];
+    _selectedStatus = initialData.status ?? '';
+    _selectedPriceRangeValues = initialData.priceRange ?? RangeValues(0, 2);
+    _selectedDistanceRangeValues =
+        initialData.distanceRange ?? RangeValues(0, 1);
   }
 
   @override
@@ -62,11 +95,11 @@ class _FilterPageState extends State<FilterPage> {
                     ),
                   ),
                   FixedDropdownButton(
-                    value: _selectedValue,
-                    items: ['Option 1', 'Option 2', 'Option 3'],
+                    value: _selectedRoomCode,
+                    items: _allRoomCodeOptions,
                     onChanged: (value) {
                       setState(() {
-                        _selectedValue = value;
+                        _selectedRoomCode = value ?? 'Tất cả';
                       });
                     },
                   ),
@@ -89,7 +122,7 @@ class _FilterPageState extends State<FilterPage> {
               Padding(
                 padding: const EdgeInsets.only(left: 12),
                 child: SizedBox(
-                  width: 250,
+                  width: 300,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -112,12 +145,12 @@ class _FilterPageState extends State<FilterPage> {
                           ),
                           Expanded(
                             child: FixedDropdownButton(
-                              value: _selectedValue,
-                              items: ['Option 1', 'Option 2', 'Option 3'],
+                              value: _selectedProvince,
+                              items: _allProvinceOptions,
                               width: 162.0,
                               onChanged: (value) {
                                 setState(() {
-                                  _selectedValue = value;
+                                  _selectedProvince = value ?? 'Tất cả';
                                 });
                               },
                             ),
@@ -143,11 +176,11 @@ class _FilterPageState extends State<FilterPage> {
                           ),
                           Expanded(
                             child: FixedDropdownButton(
-                              value: _selectedValue,
-                              items: ['Option 1', 'Option 2', 'Option 3'],
+                              value: _selectedWard,
+                              items: _allWardOptions,
                               onChanged: (value) {
                                 setState(() {
-                                  _selectedValue = value;
+                                  _selectedWard = value ?? 'Tất cả';
                                 });
                               },
                             ),
@@ -173,16 +206,16 @@ class _FilterPageState extends State<FilterPage> {
               ),
               Wrap(
                 spacing: 8.0, // Khoảng cách giữa các chip
-                children: _allOptions.map((option) {
+                children: _allAmenitiesOptions.map((option) {
                   return CustomChoiceChip(
                     title: option,
-                    selected: _selectedChoices.contains(option),
+                    selected: _selectedAmenities.contains(option),
                     onSelected: (bool selected) {
                       setState(() {
                         if (selected) {
-                          _selectedChoices.add(option);
+                          _selectedAmenities.add(option);
                         } else {
-                          _selectedChoices.remove(option);
+                          _selectedAmenities.remove(option);
                         }
                       });
                     },
@@ -210,8 +243,13 @@ class _FilterPageState extends State<FilterPage> {
                   ),
                   Expanded(
                     child: CircularCheckboxList(
-                      items: ['Trống', 'Đặt cọc', 'Đã thuê'],
-                      initialSelected: null,
+                      items: _allStatusOptions,
+                      initialSelected: _selectedStatus == 'Tất cả'
+                          ? null
+                          : _selectedStatus,
+                      onChange: (value) {
+                        _selectedStatus = value.isEmpty ? 'Tất cả' : value;
+                      },
                     ),
                   ),
                 ],
@@ -247,7 +285,7 @@ class _FilterPageState extends State<FilterPage> {
                   IntegerRangeSlider(
                     minValue: 0,
                     maxValue: 11,
-                    initialRange: const RangeValues(0, 2),
+                    initialRange: _selectedPriceRangeValues,
                     labelsBuilder: (values) {
                       final int maxValue = values.end.round();
                       return RangeLabels(
@@ -294,7 +332,7 @@ class _FilterPageState extends State<FilterPage> {
                   IntegerRangeSlider(
                     minValue: 1,
                     maxValue: 11,
-                    initialRange: const RangeValues(1, 2),
+                    initialRange: _selectedDistanceRangeValues,
                     labelsBuilder: (values) {
                       final int maxValue = values.end.round();
                       return RangeLabels(
@@ -308,12 +346,81 @@ class _FilterPageState extends State<FilterPage> {
                       });
                     },
                   ),
+                  const SizedBox(height: 16.0),
+                  Row(
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          height: 38,
+                          child: CustomButton(
+                            title: 'Xoá',
+                            textColor: Color(0xFF248078),
+                            backgroundColor: Color(0xFFFAFFFD),
+                            strokeColor: Color(0xFFD1D1D1),
+                            radius: 4.0,
+                            onPressed: () {},
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 36),
+                      Expanded(
+                        child: SizedBox(
+                          height: 38,
+                          child: CustomButton(
+                            title: 'Apply',
+                            textColor: Color(0xFFFAFFFD),
+                            backgroundColor: Color(0xFF248078),
+                            strokeColor: Color(0xFFD1D1D1),
+                            radius: 4.0,
+                            onPressed: () {
+                              _saveFilterMotels();
+                              context.read<MapBloc>().add(
+                                FilterMarkersEvent(
+                                  roomCode: _formatStringSelection(
+                                    _selectedRoomCode,
+                                  ),
+                                  province: _formatStringSelection(
+                                    _selectedProvince,
+                                  ),
+                                  ward: _formatStringSelection(_selectedWard),
+                                  amenities: _selectedAmenities,
+                                  status: _formatStringSelection(
+                                    _selectedStatus,
+                                  ),
+                                  priceRange: _selectedPriceRangeValues,
+                                  distanceRange: _selectedDistanceRangeValues,
+                                ),
+                              );
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  String? _formatStringSelection(String? input) {
+    return input == 'Tất cả' ? null : input;
+  }
+
+  void _saveFilterMotels() {
+    AppDataManager().filterMotels = FilterMotelsModel(
+      roomCode: _selectedRoomCode,
+      province: _selectedProvince,
+      ward: _selectedWard,
+      amenities: _selectedAmenities,
+      status: _selectedStatus,
+      priceRange: _selectedPriceRangeValues,
+      distanceRange: _selectedDistanceRangeValues,
     );
   }
 

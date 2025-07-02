@@ -1,4 +1,6 @@
 import 'package:equatable/equatable.dart';
+import 'package:find_motel/modules/detail/detail_motel_model.dart';
+import 'package:flutter/material.dart';
 
 abstract class MapEvent extends Equatable {
   const MapEvent();
@@ -21,8 +23,8 @@ class FilterMarkersEvent extends MapEvent {
   final String? ward;
   final List<String>? amenities;
   final String? status;
-  final String? priceRange; // Ví dụ: "0-3", "3-5", "5-8", ">8"
-  final String? distanceRange; // Ví dụ: "<1", "1-5", "5-10", ">10"
+  final RangeValues? priceRange;
+  final RangeValues? distanceRange;
 
   const FilterMarkersEvent({
     this.roomCode,
@@ -44,4 +46,12 @@ class FilterMarkersEvent extends MapEvent {
     priceRange ?? '',
     distanceRange ?? '',
   ];
+}
+
+class MarkerTapped extends MapEvent {
+  final RoomDetail motel;
+  const MarkerTapped(this.motel);
+
+  @override
+  List<Object> get props => [motel];
 }
