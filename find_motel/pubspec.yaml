@@ -43,6 +43,8 @@ dev_dependencies:
   equatable: ^2.0.5
   firebase_core: ^3.6.0
   firebase_auth: ^5.3.1
+  url_launcher: ^6.3.0
+  intl: ^0.19.0
 
 
 
