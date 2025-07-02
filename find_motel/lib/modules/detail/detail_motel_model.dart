@@ -1,10 +1,12 @@
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
 // Class định nghĩa thông tin chi tiết phòng
 class RoomDetail {
   final String address; // Địa chỉ phòng
   final String commission; // Hoa hồng
   final List<String> extensions; // Tiện ích (ví dụ: ["Xe"])
   final List<Map<String, dynamic>> fees; // Chi phí khác (điện, nước, dịch vụ)
-  final List<double> geoPoint; // Tọa độ [latitude, longitude]
+  final LatLng geoPoint; // Tọa độ [latitude, longitude]
   final String name; // Tên phòng
   final List<String> note; // Ghi chú
   final int price; // Giá thuê

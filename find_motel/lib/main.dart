@@ -2,6 +2,9 @@ import 'package:find_motel/modules/home/bloc/home_bloc.dart';
 import 'package:find_motel/modules/home/screens/home_screens.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_bloc.dart';
 import 'package:find_motel/modules/authentication/screens/login_screen.dart';
+import 'package:find_motel/modules/map_page/bloc/map_page_bloc.dart';
+import 'package:find_motel/modules/map_page/bloc/map_page_event.dart';
+import 'package:find_motel/modules/profile_page/bloc/profile_page_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -25,6 +28,12 @@ class MyApp extends StatelessWidget {
       providers: [
         BlocProvider(create: (_) => TabBloc()),
         BlocProvider(create: (_) => HomePageBloc()),
+        BlocProvider(
+          create: (_) => MapBloc()
+            ..add(LoadCurrentLocationEvent())
+            ..add(LoadFirestoreMarkersEvent()),
+        ),
+        BlocProvider(create: (_) => ProfileBloc()),
       ],
       child: MaterialApp(
         title: 'FindMotel',

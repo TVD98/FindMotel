@@ -2,6 +2,8 @@ import 'package:find_motel/modules/home/bloc/home_bloc.dart';
 import 'package:find_motel/modules/home/bloc/home_event.dart';
 import 'package:find_motel/modules/home/bloc/home_state.dart';
 import 'package:find_motel/modules/home_page/screens/home_page.dart';
+import 'package:find_motel/modules/map_page/screens/map_page.dart';
+import 'package:find_motel/modules/profile_page/screens/profile_page.dart';
 import 'package:flutter/material.dart';
 // ignore: depend_on_referenced_packages
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -9,10 +11,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  static const List<Widget> _pages = [
-    HomePage(),
-    Center(child: Text('Map Screen')),
-    Center(child: Text('Profile Screen')),
+  static final List<Widget> _pages = [
+    const HomePage(),
+    const MapPage(),
+    ProfilePage(),
   ];
 
   @override
