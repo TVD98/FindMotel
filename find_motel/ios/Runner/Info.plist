@@ -45,6 +45,10 @@
 		<true />
 		<key>UIApplicationSupportsIndirectInputEvents</key>
 		<true />
+		<key>LSApplicationQueriesSchemes</key>
+		<array>
+			<string>comgooglemaps</string>
+		</array>
 		<key>NSLocationWhenInUseUsageDescription</key>
 		<string>Ứng dụng cần quyền vị trí để hiển thị bản đồ</string>
 	</dict>
