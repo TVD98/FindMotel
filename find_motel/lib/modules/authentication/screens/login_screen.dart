@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:find_motel/modules/home/screens/home_screens.dart';
+import 'package:find_motel/theme/app_colors.dart';
 import '../bloc/login_bloc.dart';
 
 class LoginScreen extends StatelessWidget {
@@ -65,7 +67,10 @@ class _LoginForm extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const SizedBox(height: 80),
-                        Image.asset('assets/logo.png', fit: BoxFit.contain),
+                        SvgPicture.asset(
+                          'assets/images/ic_logo.svg',
+                          fit: BoxFit.scaleDown,
+                        ),
                         const SizedBox(height: 40),
                         _buildTextField(
                           hint: 'Email',
@@ -101,9 +106,11 @@ class _LoginForm extends StatelessWidget {
                                       if (states.contains(
                                         WidgetState.disabled,
                                       )) {
-                                        return const Color(0x80248078);
+                                        return AppColors.primary.withOpacity(
+                                          0.5,
+                                        );
                                       }
-                                      return const Color(0xFF248078);
+                                      return AppColors.primary;
                                     }),
                                 foregroundColor: WidgetStateProperty.all<Color>(
                                   Colors.white,
@@ -138,7 +145,10 @@ class _LoginForm extends StatelessWidget {
                 Positioned.fill(
                   child: Stack(
                     children: const [
-                      ModalBarrier(dismissible: false, color: Colors.black54),
+                      ModalBarrier(
+                        dismissible: false,
+                        color: AppColors.strokeLight,
+                      ),
                       Center(child: CircularProgressIndicator()),
                     ],
                   ),
@@ -172,15 +182,15 @@ class _LoginForm extends StatelessWidget {
             hintStyle: GoogleFonts.quicksand(
               fontSize: 14,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFFB0B0B0),
+              color: AppColors.textHint,
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(44),
-              borderSide: const BorderSide(color: Color(0xFFD1D1D1)),
+              borderSide: const BorderSide(color: AppColors.strokeLight),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(44),
-              borderSide: const BorderSide(color: Color(0xFF248078)),
+              borderSide: const BorderSide(color: AppColors.primary),
             ),
           ),
         ),

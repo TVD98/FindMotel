@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:find_motel/theme/app_colors.dart';
 
 class CustomChoiceChip extends StatelessWidget {
   final String title;
@@ -18,7 +19,7 @@ class CustomChoiceChip extends StatelessWidget {
       label: Text(title),
       selected: selected,
       onSelected: onSelected,
-      selectedColor: Color(0xFF248078),
+      selectedColor: AppColors.primary,
       backgroundColor: Colors.white,
       labelStyle: TextStyle(
         fontSize: 12,
@@ -28,7 +29,7 @@ class CustomChoiceChip extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8.0),
         side: BorderSide(
-          color: selected ? Color(0xFF248078) : Color(0xFFD1D1D1),
+          color: selected ? AppColors.primary : AppColors.elementSecondary,
           width: 1.0,
         ),
       ),

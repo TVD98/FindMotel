@@ -1,5 +1,6 @@
-import 'package:find_motel/common/custom_dropdown_button.dart';
+import 'package:find_motel/common/widgets/custom_dropdown_button.dart';
 import 'package:flutter/material.dart';
+import 'package:find_motel/theme/app_colors.dart';
 
 class FixedDropdownButton extends StatefulWidget {
   final List<String> items;
@@ -26,7 +27,7 @@ class _FixedDropdownButtonState extends State<FixedDropdownButton> {
       value: widget.value,
       items: widget.items,
       onChanged: widget.onChanged,
-      borderColor: const Color(0xFFD1D1D1),
+      borderColor: AppColors.strokeLight,
       borderRadius: 4.0,
       backgroundColor: Colors.white,
       rightIconAsset: 'assets/images/ic_arrow_down_rectange.png',
@@ -35,7 +36,7 @@ class _FixedDropdownButtonState extends State<FixedDropdownButton> {
       horizontalPadding: 8.0,
       iconSize: 18.0,
       menuItemFontSize: 14.0,
-      menuItemTextColor: const Color(0xFF474747),
+      menuItemTextColor: AppColors.elementSecondary,
     );
   }
 }

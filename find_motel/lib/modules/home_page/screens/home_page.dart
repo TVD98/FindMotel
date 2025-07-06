@@ -1,10 +1,11 @@
+// ignore_for_file: unused_import
+
 import 'package:find_motel/modules/home_page/bloc/home_page_bloc.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_event.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_state.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:find_motel/modules/detail/detail_screen.dart';
-import 'package:find_motel/modules/detail/detail_motel_model.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

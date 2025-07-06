@@ -10,6 +10,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase_options.dart';
+import 'package:find_motel/theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,26 +25,13 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider(create: (_) => TabBloc()),
-        BlocProvider(create: (_) => HomePageBloc()),
-        BlocProvider(
-          create: (_) => MapBloc()
-            ..add(LoadCurrentLocationEvent())
-            ..add(LoadFirestoreMarkersEvent()),
-        ),
-        BlocProvider(create: (_) => ProfileBloc()),
-      ],
-      child: MaterialApp(
-        title: 'FindMotel',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
-          useMaterial3: true,
-        ),
-        home: const AuthGate(),
-      ),
+    return MaterialApp(
+      title: 'FindMotel',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
+      themeMode: ThemeMode.system,
+      home: const AuthGate(),
     );
   }
 }
@@ -65,7 +53,17 @@ class AuthGate extends StatelessWidget {
 
         // Đã đăng nhập
         if (snapshot.hasData) {
-          return const HomeScreen();
+          return MultiBlocProvider(
+            providers: [
+              BlocProvider(create: (_) => HomeBloc()),
+              BlocProvider(create: (_) => HomePageBloc()),
+              BlocProvider(
+                create: (_) => MapBloc()..add(FirstLoadMotelsEvent()),
+              ),
+              BlocProvider(create: (_) => ProfileBloc()),
+            ],
+            child: const HomeScreen(),
+          );
         }
 
         // Chưa đăng nhập

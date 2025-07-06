@@ -1,9 +1,8 @@
 // ignore_for_file: depend_on_referenced_packages, deprecated_member_use
 
-import 'package:find_motel/modules/detail/detail_motel_model.dart';
+import 'package:find_motel/common/models/motel.dart';
 import 'package:find_motel/modules/detail/detail_screen.dart';
 import 'package:find_motel/modules/map_page/bloc/map_page_bloc.dart';
-import 'package:find_motel/modules/map_page/bloc/map_page_event.dart';
 import 'package:find_motel/modules/map_page/bloc/map_page_state.dart';
 import 'package:find_motel/modules/map_page/screens/filter_page.dart';
 import 'package:flutter/material.dart';
@@ -63,12 +62,18 @@ class _MapPageState extends State<MapPage> {
               buildingsEnabled: false,
             ),
             Positioned(
-              top: 32,
+              top: 50,
               right: 16,
               child: GestureDetector(
                 onTap: () {
                   Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => const FilterPage()),
+                    MaterialPageRoute(
+                      builder: (_) => BlocProvider.value(
+                        value: context
+                            .read<MapBloc>(), // dùng lại MapBloc hiện có
+                        child: const FilterPage(),
+                      ),
+                    ),
                   );
                 },
                 child: Container(
@@ -103,7 +108,7 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
-  void showRoomDetailBottomSheet(BuildContext context, RoomDetail motel) {
+  void showRoomDetailBottomSheet(BuildContext context, Motel motel) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true, // Cho phép bottom sheet chiếm gần hết màn hình

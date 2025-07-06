@@ -1,25 +1,31 @@
-import 'package:find_motel/managers/models/filter_motels_model.dart';
+import 'package:find_motel/services/map/models/motels_filter.dart';
 import 'package:flutter/material.dart';
+import 'package:find_motel/common/models/motel.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class AppDataManager {
   static final AppDataManager _instance = AppDataManager._internal();
 
-  // Factory constructor để luôn trả về cùng một thể hiện
   factory AppDataManager() {
     return _instance;
   }
 
   AppDataManager._internal();
 
-  FilterMotelsModel filterMotels = FilterMotelsModel(
-    roomCode: 'Tất cả',
-    province: 'Tp. Hồ Chí Minh',
-    ward: 'Tất cả',
-    amenities: [],
-    status: 'Tất cả',
-    priceRange: RangeValues(0, 11),
-    distanceRange: RangeValues(0, 11),
+  LatLng? currentLocation;
+
+  MotelsFilter filterMotels = MotelsFilter(
+    roomCode: null,
+    address: Address(province: 'Tp. Hồ Chí Minh', ward: null),
+    amenities: null,
+    status: null,
+    priceRange: Range2D(values: RangeValues(0, 11), maxValue: 10),
+    distanceRange: Range(value: 11, maxValue: 10),
   );
+
+  final List<String> allAmenities = ['Thang máy', 'Xe'];
+
+  final List<RentalStatus> allStatus = RentalStatus.values;
 
   final List<String> allWardOfTPHCM = [
     'đặc khu Côn Đảo',

@@ -2,24 +2,36 @@
 
 import 'dart:async';
 import 'dart:typed_data' show Uint8List;
+import 'package:find_motel/common/models/motel.dart';
 import 'package:find_motel/managers/app_data_manager.dart';
-import 'package:find_motel/modules/detail/detail_motel_model.dart';
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as img;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:find_motel/services/geolocator/geolocator_service.dart';
+import 'package:find_motel/services/firestore/firestore_service.dart';
+import 'package:find_motel/services/map/map_service.dart';
 import 'map_page_event.dart';
 import 'map_page_state.dart';
 import 'package:http/http.dart' as http;
 import 'dart:ui' as ui;
+import 'package:find_motel/theme/app_colors.dart';
 
 class MapBloc extends Bloc<MapEvent, MapState> {
-  MapBloc() : super(MapState()) {
+  final IGeolocatorService _geolocatorService;
+  final int maxSize = 100;
+  final IMapService _firestoreService;
+  final _markerCache = <String, Marker>{};
+
+  MapBloc({
+    IGeolocatorService? geolocatorService,
+    IMapService? firestoreService,
+  }) : _geolocatorService = geolocatorService ?? GeolocatorService(),
+       _firestoreService = firestoreService ?? FirestoreService(),
+       super(MapState()) {
     on<LoadCurrentLocationEvent>(_onLoadCurrentLocation);
-    on<LoadFirestoreMarkersEvent>(_onLoadFirestoreMarkers);
-    on<FilterMarkersEvent>(_onFilterMarkers);
+    on<FirstLoadMotelsEvent>(_onFirstLoadMotels);
+    on<FilterMotelsEvent>(_onFilterMotels);
     on<MarkerTapped>(_onMarkerTapped);
   }
 
@@ -27,38 +39,18 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     LoadCurrentLocationEvent event,
     Emitter<MapState> emit,
   ) async {
-    emit(state.copyWith(isLoading: true));
+    emit(state.copyWith(isLoading: true, error: null));
     try {
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        print('Dịch vụ vị trí bị tắt');
-        emit(state.copyWith(isLoading: false));
+      final result = await _geolocatorService.getCurrentLocation();
+
+      if (result.error != null) {
+        emit(state.copyWith(isLoading: false, error: result.error));
         return;
       }
 
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          print('Quyền vị trí bị từ chối');
-          emit(state.copyWith(isLoading: false));
-          return;
-        }
-      }
-
-      if (permission == LocationPermission.deniedForever) {
-        print('Quyền vị trí bị từ chối vĩnh viễn');
-        emit(state.copyWith(isLoading: false));
-        return;
-      }
-
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
-      final LatLng currentPosition = LatLng(
-        position.latitude,
-        position.longitude,
-      );
+      final pos = result.position!;
+      final LatLng currentPosition = LatLng(pos.latitude, pos.longitude);
+      AppDataManager().currentLocation = currentPosition;
 
       final marker = Marker(
         markerId: MarkerId('current_location'),
@@ -75,22 +67,22 @@ class MapBloc extends Bloc<MapEvent, MapState> {
         ),
       );
     } catch (e) {
-      print('Lỗi khi lấy vị trí: $e');
-      emit(state.copyWith(isLoading: false));
+      emit(state.copyWith(isLoading: false, error: e.toString()));
     }
   }
 
-  Future<void> _onLoadFirestoreMarkers(
-    LoadFirestoreMarkersEvent event,
+  Future<void> _onFirstLoadMotels(
+    FirstLoadMotelsEvent event,
     Emitter<MapState> emit,
   ) async {
     emit(state.copyWith(isLoading: true, error: null));
     try {
-      QuerySnapshot snapshot = await FirebaseFirestore.instance
-          .collection('motels')
-          .limit(100)
-          .get();
-      await _loadMarkers(snapshot, emit);
+      final result = await _firestoreService.getMotels(limit: maxSize);
+      if (result.error != null) {
+        emit(state.copyWith(isLoading: false, error: result.error));
+        return;
+      }
+      await _loadMarkers(result.motels!, emit);
     } catch (e) {
       emit(
         state.copyWith(
@@ -101,46 +93,21 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     }
   }
 
-  Future<void> _onFilterMarkers(
-    FilterMarkersEvent event,
+  Future<void> _onFilterMotels(
+    FilterMotelsEvent event,
     Emitter<MapState> emit,
   ) async {
     emit(state.copyWith(isLoading: true, error: null));
     try {
-      Query query = FirebaseFirestore.instance.collection('motels').limit(100);
-
-      // Lọc theo mã phòng
-      if (event.roomCode != null) {
-        query = query.where('room_code', isEqualTo: event.roomCode!);
+      final result = await _firestoreService.getMotels(
+        filter: event.filter,
+        limit: maxSize,
+      );
+      if (result.error != null) {
+        emit(state.copyWith(isLoading: false, error: result.error));
+        return;
       }
-
-      // Lọc theo tỉnh và phường
-      List<String> address = [];
-      if (event.province != null && event.ward != null) {
-        address = [event.province!, event.ward!];
-        query = query.where('keywords', arrayContainsAny: address);
-      }
-
-      // Lọc theo giá thuê
-      if (event.priceRange != null) {
-        final priceLimits = _parsePriceRange(event.priceRange!);
-        if (priceLimits != null) {
-          query = query.where(
-            'price',
-            isGreaterThanOrEqualTo: priceLimits[0] * 1000000,
-          );
-          if (priceLimits[1] != double.infinity) {
-            query = query.where(
-              'price',
-              isLessThanOrEqualTo: priceLimits[1] * 1000000,
-            );
-          }
-        }
-      }
-
-      QuerySnapshot snapshot = await query.get();
-
-      await _loadMarkers(snapshot, emit, clearIfEmpty: true);
+      await _loadMarkers(result.motels!, emit);
     } catch (e) {
       emit(
         state.copyWith(
@@ -159,128 +126,67 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     });
   }
 
-  List<double>? _parsePriceRange(RangeValues range) {
-    final int startValue = range.start.round();
-    final int endValue = range.end.round();
-    if (endValue > 10) {
-      return [startValue.toDouble(), double.infinity];
-    } else {
-      return [startValue.toDouble(), endValue.toDouble()];
-    }
-  }
-
-  Future<void> _loadMarkers(
-    QuerySnapshot snapshot,
-    Emitter<MapState> emit, {
-    bool clearIfEmpty = false,
-  }) async {
+  Future<void> _loadMarkers(List<Motel> motels, Emitter<MapState> emit) async {
     final markers = <Marker>{};
     final List<LatLng> positions = [];
     final List<Future<void>> imageLoadingTasks = [];
 
     // Tạo marker mặc định trước
-    for (var doc in snapshot.docs) {
-      final data = doc.data() as Map<String, dynamic>;
-
-      // last filter
-      if (!_isValidMotel(data)) {
-        break;
-      }
-
-      final GeoPoint geoPoint = data['geo_point'] as GeoPoint;
-      final position = LatLng(geoPoint.latitude, geoPoint.longitude);
+    for (var motel in motels) {
+      final position = motel.geoPoint;
       positions.add(position);
 
-      final RoomDetail motelDetail = RoomDetail(
-        address: data['address'] as String,
-        commission: data['commission'] as String,
-        extensions: (data['extensions'] as List<dynamic>).cast<String>(),
-        fees: (data['fees'] as List<dynamic>).cast<Map<String, dynamic>>(),
-        geoPoint: position,
-        name: data['name'] as String,
-        note: (data['note'] as List<dynamic>).cast<String>(),
-        price: data['price'] as int,
-        id: data['room_code'] as String,
-        typeRoom: data['type'] as String,
-        images: (data['images'] as List<dynamic>).cast<String>(),
-        mainImage: data['thumbnail'] as String,
-      );
+      if (_markerCache.containsKey(motel.id)) {
+        markers.add(_markerCache[motel.id]!);
+        continue;
+      }
 
-      // Tạo marker với defaultMarker
       final marker = Marker(
-        markerId: MarkerId(doc.id),
+        markerId: MarkerId(motel.id),
         position: position,
         icon: BitmapDescriptor.defaultMarker,
         onTap: () {
-          add(MarkerTapped(motelDetail));
+          add(MarkerTapped(motel));
         },
       );
       markers.add(marker);
+      _markerCache[motel.id] = marker;
 
       // Tạo task tải ảnh và cập nhật marker
-      final String imageUrl =
-          data['marker'] ??
-          'https://firebasestorage.googleapis.com/v0/b/dvpkcinema.appspot.com/o/cinema%2Fbitexco.png?alt=media&token=4b4dcd4e-1043-403d-9f8a-6ae5df20da4e';
-      final int? price = data['price'];
+      final String imageUrl = motel.marker;
+      final int price = motel.price.toInt();
+
       if (imageUrl.isNotEmpty) {
         imageLoadingTasks.add(
           _createCustomMarker(imageUrl, price, 100)
               .then((markerIcon) {
                 final updatedMarker = Marker(
-                  markerId: MarkerId(doc.id),
+                  markerId: MarkerId(motel.id),
                   position: position,
                   icon: markerIcon,
                   onTap: () {
-                    add(MarkerTapped(motelDetail));
+                    add(MarkerTapped(motel));
                   },
                 );
-                markers.removeWhere((m) => m.markerId == MarkerId(doc.id));
+                markers.removeWhere((m) => m.markerId == MarkerId(motel.id));
                 markers.add(updatedMarker);
+                _markerCache[motel.id] = updatedMarker;
                 emit(state.copyWith(markers: {...markers}, isLoading: false));
               })
               .catchError((e) {
-                print('Lỗi tải ảnh cho marker ${doc.id}: $e');
+                print('Lỗi tải ảnh cho marker ${motel.id}: $e');
               }),
         );
       }
     }
 
-    // Tính vị trí trung tâm
+    // Tính vị trí trung tâm và bounds bằng service
     LatLng? centerPosition;
     LatLngBounds? bounds;
-    if (positions.isNotEmpty) {
-      double latSum = 0;
-      double lngSum = 0;
-      final minLat = positions
-          .map((p) => p.latitude)
-          .reduce((a, b) => a < b ? a : b);
-      final maxLat = positions
-          .map((p) => p.latitude)
-          .reduce((a, b) => a > b ? a : b);
-      final minLng = positions
-          .map((p) => p.longitude)
-          .reduce((a, b) => a < b ? a : b);
-      final maxLng = positions
-          .map((p) => p.longitude)
-          .reduce((a, b) => a > b ? a : b);
-      for (var pos in positions) {
-        latSum += pos.latitude;
-        lngSum += pos.longitude;
-      }
-      centerPosition = LatLng(
-        latSum / positions.length,
-        lngSum / positions.length,
-      );
-      bounds = LatLngBounds(
-        southwest: LatLng(minLat, minLng),
-        northeast: LatLng(maxLat, maxLng),
-      );
-    } else if (clearIfEmpty) {
-      // Nếu không có vị trí và clearIfEmpty = true, xóa tất cả marker
-      markers.clear();
-    }
+    final centerBounds = _geolocatorService.calculateCenterAndBounds(positions);
+    centerPosition = centerBounds.center;
+    bounds = centerBounds.bounds;
 
-    // Emit state với marker mặc định
     emit(
       state.copyWith(
         centerPosition: centerPosition,
@@ -297,22 +203,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
   String _formatPrice(int? price) {
     if (price == null) return 'N/A';
     final double priceInMillions = price / 1000000;
-    return '${priceInMillions.toStringAsFixed(1)} tr';
-  }
-
-  bool _isValidMotel(Map<String, dynamic> data) {
-    if (AppDataManager().filterMotels.amenities?.isEmpty ?? true) {
-      return true;
-    } else {
-      List<String> extensions = (data['extensions'] as List<dynamic>)
-          .cast<String>();
-      for (String amenitie in AppDataManager().filterMotels.amenities!) {
-        if (extensions.contains(amenitie)) {
-          return true;
-        }
-      }
-      return false;
-    }
+    return '${priceInMillions.toStringAsFixed(1)}tr';
   }
 
   Future<BitmapDescriptor> _createCustomMarker(
@@ -320,116 +211,117 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     int? price,
     int width,
   ) async {
-    if (imageUrl.isEmpty) {
-      // Sử dụng marker mặc định của Google Maps nếu không có URL
+    if (imageUrl.isEmpty) return BitmapDescriptor.defaultMarker;
+
+    try {
+      final Uint8List? imageBytes = await _downloadAndResizeImage(
+        imageUrl,
+        width,
+      );
+      if (imageBytes == null) return BitmapDescriptor.defaultMarker;
+
+      return await _buildMarkerDescriptor(imageBytes, price, width);
+    } catch (e) {
+      // Ignore errors and fall back to the default marker
+      print('Create custom marker error: $e');
       return BitmapDescriptor.defaultMarker;
     }
+  }
 
-    // Tải và resize ảnh từ URL
-    try {
-      final response = await http
-          .get(Uri.parse(imageUrl))
-          .timeout(Duration(seconds: 5));
-      if (response.statusCode == 200) {
-        img.Image? image = img.decodeImage(response.bodyBytes);
-        if (image != null) {
-          image = img.copyResize(image, width: width, height: width);
-          final Uint8List imageData = Uint8List.fromList(img.encodePng(image));
+  /// Downloads an image from [url] and resizes it to [width]×[width].
+  Future<Uint8List?> _downloadAndResizeImage(String url, int width) async {
+    final response = await http
+        .get(Uri.parse(url))
+        .timeout(const Duration(seconds: 5));
+    if (response.statusCode != 200) return null;
 
-          // Tạo canvas với ảnh và text
-          final ui.PictureRecorder pictureRecorder = ui.PictureRecorder();
-          final Canvas canvas = Canvas(pictureRecorder);
-          const double padding = 10; // Padding 10px mỗi bên
-          final double textHeight = 50;
-          final double imageSize = width.toDouble(); // Ảnh 50x50
-          final double canvasWidth =
-              imageSize + 2 * padding; // Width canvas: 50 + 10 + 10
-          final double canvasHeight =
-              imageSize +
-              textHeight +
-              2 * padding; // Height canvas: 50 + 20 + 10 + 10
+    final img.Image? original = img.decodeImage(response.bodyBytes);
+    if (original == null) return null;
 
-          // Vẽ màu nền cho canvas
-          final backgroundPaint = Paint()..color = const Color(0xFFFFC752);
-          canvas.drawRRect(
-            RRect.fromRectAndRadius(
-              Rect.fromLTWH(0, 0, canvasWidth, canvasHeight),
-              Radius.circular(8),
-            ),
-            backgroundPaint,
-          );
+    final img.Image resized = img.copyResize(
+      original,
+      width: width,
+      height: width,
+    );
+    return Uint8List.fromList(img.encodePng(resized));
+  }
 
-          // Vẽ ảnh bo tròn (căn giữa ngang)
-          final ui.Image markerImage = await _decodeImageFromList(imageData);
-          canvas.save();
-          canvas.clipRRect(
-            RRect.fromRectAndRadius(
-              Rect.fromLTWH(
-                padding,
-                padding,
-                imageSize.toDouble(),
-                imageSize.toDouble(),
-              ),
-              Radius.circular(8),
-            ),
-          );
-          canvas.drawImageRect(
-            markerImage,
-            Rect.fromLTWH(
-              0,
-              0,
-              markerImage.width.toDouble(),
-              markerImage.height.toDouble(),
-            ),
-            Rect.fromLTWH(
-              padding,
-              padding,
-              imageSize.toDouble(),
-              imageSize.toDouble(),
-            ), // Ảnh 40x40, đặt tại (10, 10)
-            Paint(),
-          );
-          canvas.restore();
+  /// Builds a [BitmapDescriptor] with the motel thumbnail and price.
+  Future<BitmapDescriptor> _buildMarkerDescriptor(
+    Uint8List imageData,
+    int? price,
+    int width,
+  ) async {
+    const double padding = 10;
+    const double textHeight = 50;
+    final double imageSize = width.toDouble();
+    final double canvasWidth = imageSize + 2 * padding;
+    final double canvasHeight = imageSize + textHeight + 2 * padding;
 
-          // Vẽ text bên dưới
-          final textPainter = TextPainter(
-            text: TextSpan(
-              text: _formatPrice(price),
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 30,
-                fontWeight: FontWeight.bold,
-                backgroundColor: const Color(0xFFFFC752),
-              ),
-            ),
-            textAlign: TextAlign.center,
-            textDirection: TextDirection.ltr,
-          );
-          textPainter.layout(maxWidth: width.toDouble());
-          final textWidth = textPainter.width;
-          final textOffset = Offset(
-            (canvasWidth - textWidth) / 2,
-            2 * padding + width.toDouble(),
-          ); // Căn giữa ngang
-          textPainter.paint(canvas, textOffset);
+    final ui.PictureRecorder recorder = ui.PictureRecorder();
+    final Canvas canvas = Canvas(recorder);
 
-          // Chuyển canvas thành BitmapDescriptor
-          final canvasImage = await pictureRecorder.endRecording().toImage(
-            canvasWidth.toInt(),
-            canvasHeight.toInt(),
-          );
-          final byteData = await canvasImage.toByteData(
-            format: ui.ImageByteFormat.png,
-          );
-          return BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
-        }
-      }
-    } catch (e) {
-      print('Lỗi tải ảnh từ URL: $e');
-    }
+    // Draw background
+    final ui.Paint bgPaint = ui.Paint()..color = AppColors.secondaryContainer;
+    canvas.drawRRect(
+      ui.RRect.fromRectAndRadius(
+        ui.Rect.fromLTWH(0, 0, canvasWidth, canvasHeight),
+        const ui.Radius.circular(8),
+      ),
+      bgPaint,
+    );
 
-    // Trả về marker mặc định nếu tải thất bại
-    return BitmapDescriptor.defaultMarker;
+    // Draw motel image
+    final ui.Image motelImage = await _decodeImageFromList(imageData);
+    canvas.save();
+    canvas.clipRRect(
+      ui.RRect.fromRectAndRadius(
+        ui.Rect.fromLTWH(padding, padding, imageSize, imageSize),
+        const ui.Radius.circular(8),
+      ),
+    );
+    canvas.drawImageRect(
+      motelImage,
+      ui.Rect.fromLTWH(
+        0,
+        0,
+        motelImage.width.toDouble(),
+        motelImage.height.toDouble(),
+      ),
+      ui.Rect.fromLTWH(padding, padding, imageSize, imageSize),
+      ui.Paint(),
+    );
+    canvas.restore();
+
+    // Draw price text
+    final TextPainter textPainter = TextPainter(
+      text: TextSpan(
+        text: _formatPrice(price),
+        style: const TextStyle(
+          color: AppColors.elementPrimary,
+          fontSize: 30,
+          fontWeight: FontWeight.w600,
+          backgroundColor: AppColors.secondaryContainer,
+        ),
+      ),
+      textAlign: TextAlign.center,
+      textDirection: TextDirection.ltr,
+    )..layout(maxWidth: width.toDouble());
+
+    final double textX = (canvasWidth - textPainter.width) / 2;
+    final double textY = padding * 2 + imageSize;
+    textPainter.paint(canvas, Offset(textX, textY));
+
+    // Convert canvas to image
+    final ui.Image canvasImage = await recorder.endRecording().toImage(
+      canvasWidth.toInt(),
+      canvasHeight.toInt(),
+    );
+    final byteData = await canvasImage.toByteData(
+      format: ui.ImageByteFormat.png,
+    );
+
+    return BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
   }
 
   Future<ui.Image> _decodeImageFromList(Uint8List list) {

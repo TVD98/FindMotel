@@ -1,14 +1,15 @@
 // ignore_for_file: library_private_types_in_public_api
 
+import 'package:find_motel/common/models/motel.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:find_motel/modules/detail/detail_motel_model.dart';
 import 'package:intl/intl.dart';
+import 'package:find_motel/theme/app_colors.dart';
 
 // Class chứa các hằng số dùng chung
 class AppConstants {
-  static const primaryColor = Color(0xFF248078); // Màu xanh chủ đạo
+  static const primaryColor = AppColors.primary; // Màu xanh chủ đạo
   static const padding = 16.0; // Khoảng cách lề
   static const borderRadius = 12.0; // Bo góc
   static const smallSpacing = 8.0; // Khoảng cách nhỏ
@@ -24,7 +25,7 @@ String formatVND(dynamic price) {
 }
 
 class RoomDetailScreen extends StatefulWidget {
-  final RoomDetail detail;
+  final Motel detail;
 
   const RoomDetailScreen({super.key, required this.detail});
 
@@ -38,8 +39,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _currentMainImage =
-        widget.detail.mainImage; // Khởi tạo với mainImage ban đầu
+    _currentMainImage = widget.detail.thumbnail;
   }
 
   // Cập nhật mainImage khi nhấn vào ảnh con
@@ -74,7 +74,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
       builder: (context, scrollController) {
         return Container(
           decoration: const BoxDecoration(
-            color: Color(0xFFF5F5F5),
+            color: AppColors.backgroundLight,
             borderRadius: BorderRadius.vertical(
               top: Radius.circular(AppConstants.borderRadius),
             ),
@@ -247,7 +247,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          'Mã phòng: ${widget.detail.id}',
+          'Mã phòng: ${widget.detail.roomCode}',
           style: GoogleFonts.quicksand(
             fontSize: 14,
             color: AppConstants.primaryColor,
@@ -255,7 +255,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
           ),
         ),
         Text(
-          'Kiểu phòng: ${widget.detail.typeRoom}',
+          'Kiểu phòng: ${widget.detail.type}',
           style: GoogleFonts.quicksand(
             fontSize: 14,
             color: AppConstants.primaryColor,
@@ -334,7 +334,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
                     .map(
                       (e) => _tagChip(
                         e,
-                        Color(0xFFEBEBEB),
+                        AppColors.elementSecondary,
                         textColor: Colors.black,
                       ),
                     )

@@ -1,14 +1,17 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:find_motel/services/authentication/authentication_service.dart';
+import 'package:find_motel/services/authentication/firebase_auth_service.dart';
 
 part 'login_event.dart';
 part 'login_state.dart';
 
 class LoginBloc extends Bloc<LoginEvent, LoginState> {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final IAuthentication _auth;
 
-  LoginBloc() : super(const LoginState()) {
+  LoginBloc({IAuthentication? authService})
+    : _auth = authService ?? FirebaseAuthService(),
+      super(const LoginState()) {
     on<EmailChanged>((event, emit) {
       emit(state.copyWith(email: event.email));
     });
@@ -25,13 +28,8 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
           password: state.password.trim(),
         );
         emit(state.copyWith(isSubmitting: false));
-      } on FirebaseAuthException catch (e) {
-        emit(
-          state.copyWith(
-            isSubmitting: false,
-            errorMessage: e.message ?? "Login failed",
-          ),
-        );
+      } catch (e) {
+        emit(state.copyWith(isSubmitting: false, errorMessage: e.toString()));
       }
     });
   }

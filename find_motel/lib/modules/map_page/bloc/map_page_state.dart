@@ -1,7 +1,7 @@
 // ignore: depend_on_referenced_packages
 
 import 'package:equatable/equatable.dart';
-import 'package:find_motel/modules/detail/detail_motel_model.dart';
+import 'package:find_motel/common/models/motel.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class MapState extends Equatable {
@@ -9,7 +9,7 @@ class MapState extends Equatable {
   final LatLng? centerPosition;
   final LatLngBounds? bounds;
   final Set<Marker> markers;
-  final RoomDetail? selectedMotel;
+  final Motel? selectedMotel;
   final bool isLoading;
   final String? error;
 
@@ -28,7 +28,7 @@ class MapState extends Equatable {
     LatLng? centerPosition,
     LatLngBounds? bounds,
     Set<Marker>? markers,
-    RoomDetail? selectedMotel,
+    Motel? selectedMotel,
     bool? isLoading,
     String? error,
   }) {

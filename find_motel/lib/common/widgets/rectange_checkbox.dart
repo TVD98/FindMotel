@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 // Đây là widget CircularCheckbox của bạn
-class CircularCheckbox extends StatelessWidget {
+class RectangeCheckbox extends StatelessWidget {
   final bool isSelected;
   final String text;
   final VoidCallback onTap; // Callback khi người dùng chạm vào
 
-  const CircularCheckbox({
+  const RectangeCheckbox({
     super.key,
     required this.isSelected,
     required this.text,
@@ -21,12 +22,12 @@ class CircularCheckbox extends StatelessWidget {
         mainAxisSize:
             MainAxisSize.min, // Đảm bảo Row chỉ chiếm không gian cần thiết
         children: [
-          Image.asset(
+          SvgPicture.asset(
             isSelected
-                ? 'assets/images/ic_checked_circle.png'
-                : 'assets/images/ic_unchecked_circle.png',
-            width: 12,
-            height: 12,
+                ? 'assets/images/ic_checked_box.svg'
+                : 'assets/images/ic_unchecked_box.svg',
+            width: 18,
+            height: 18,
           ),
           const SizedBox(width: 5.0), // Khoảng cách nhỏ giữa checkbox và text
           Flexible(
