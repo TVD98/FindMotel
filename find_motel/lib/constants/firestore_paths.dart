@@ -3,6 +3,7 @@ class FirestorePaths {
   // Collections
   static const String usersCollection = 'users';
   static const String motelsCollection = 'motels';
+  static const String areasCollection = 'areas';
 
   // Document
   static String userDocument(String userId) {

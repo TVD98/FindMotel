@@ -1,4 +1,4 @@
-import 'package:find_motel/services/map/models/motels_filter.dart';
+import 'package:find_motel/services/motel/models/motels_filter.dart';
 import 'package:flutter/material.dart';
 import 'package:find_motel/common/models/motel.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';

@@ -10,7 +10,7 @@ import 'package:find_motel/managers/app_data_manager.dart';
 import 'package:find_motel/modules/map_page/bloc/map_page_bloc.dart';
 import 'package:find_motel/modules/map_page/bloc/map_page_event.dart';
 import 'package:find_motel/modules/map_page/screens/fixed_dropdown_button.dart';
-import 'package:find_motel/services/map/models/motels_filter.dart';
+import 'package:find_motel/services/motel/models/motels_filter.dart';
 import 'package:flutter/material.dart';
 import 'package:find_motel/theme/app_colors.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

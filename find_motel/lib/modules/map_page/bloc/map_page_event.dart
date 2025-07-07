@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:find_motel/common/models/motel.dart';
-import 'package:find_motel/services/map/models/motels_filter.dart';
+import 'package:find_motel/services/motel/models/motels_filter.dart';
 
 abstract class MapEvent extends Equatable {
   const MapEvent();
