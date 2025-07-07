@@ -1,5 +1,6 @@
 // ignore_for_file: library_private_types_in_public_api
 
+import 'package:find_motel/common/models/area.dart';
 import 'package:find_motel/common/widgets/rectange_checkbox_list.dart';
 import 'package:find_motel/common/widgets/custom_button.dart';
 import 'package:find_motel/common/widgets/custom_choice_chip.dart';
@@ -34,9 +35,7 @@ class _FilterPageState extends State<FilterPage> {
     'lửng B',
     'G01',
   ];
-  final List<String> _allProvinceOptions = ['Tp. Hồ Chí Minh'];
-  final List<String> _allWardOptions =
-      ['Tất cả'] + AppDataManager().allWardOfTPHCM;
+  final List<Province> _allProvinceOptions = AppDataManager().allProvinces;
   final List<CheckboxItem> _allStatusOptions = AppDataManager().allStatus
       .map((e) => (e.name, e.title))
       .toList();
@@ -160,7 +159,7 @@ class _FilterPageState extends State<FilterPage> {
                     Expanded(
                       child: FixedDropdownButton(
                         value: _selectedProvince,
-                        items: _allProvinceOptions,
+                        items: _allProvinceOptions.map((e) => e.name).toList(),
                         width: 162.0,
                         onChanged: (value) {
                           setState(() {
@@ -188,7 +187,12 @@ class _FilterPageState extends State<FilterPage> {
                     Expanded(
                       child: FixedDropdownButton(
                         value: _selectedWard,
-                        items: _allWardOptions,
+                        items:
+                            ['Tất cả'] +
+                            _allProvinceOptions[_allProvinceOptions.indexWhere(
+                                  (e) => e.name == _selectedProvince,
+                                )]
+                                .wards,
                         onChanged: (value) {
                           setState(() {
                             _selectedWard = value ?? 'Tất cả';

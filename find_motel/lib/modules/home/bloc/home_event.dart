@@ -18,3 +18,7 @@ class TabSelected extends HomeEvent {
 class LoadCurrentLocationEvent extends HomeEvent {
   const LoadCurrentLocationEvent();
 }
+
+class LoadCatalogEvent extends HomeEvent {
+  const LoadCatalogEvent();
+}
