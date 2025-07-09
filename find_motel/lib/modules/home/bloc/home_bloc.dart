@@ -1,16 +1,27 @@
+import 'package:find_motel/common/models/user_profile.dart';
 import 'package:find_motel/modules/home/bloc/home_event.dart';
 import 'package:find_motel/modules/home/bloc/home_state.dart';
+import 'package:find_motel/services/firestore/firestore_service.dart';
 import 'package:find_motel/services/geolocator/geolocator_service.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:find_motel/managers/app_data_manager.dart';
-// ignore: depend_on_referenced_packages
+import 'package:find_motel/services/authentication/authentication_service.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:find_motel/services/authentication/firebase_auth_service.dart';
+import 'package:find_motel/services/user_data/user_data_service.dart';
 
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final IGeolocatorService _geolocatorService;
-  HomeBloc({IGeolocatorService? geolocatorService})
-    : _geolocatorService = geolocatorService ?? GeolocatorService(),
-      super(const HomeState()) {
+  final IAuthentication _authService;
+  final IUserDataService _userDataService;
+  HomeBloc({
+    IGeolocatorService? geolocatorService,
+    IAuthentication? authService,
+    IUserDataService? userDataService,
+  }) : _geolocatorService = geolocatorService ?? GeolocatorService(),
+       _authService = authService ?? FirebaseAuthService(),
+       _userDataService = userDataService ?? FirestoreService(),
+       super(const HomeState()) {
     on<TabSelected>((event, emit) {
       emit(state.copyWith(selectedIndex: event.index));
     });
@@ -25,6 +36,21 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         AppDataManager().currentLocation = LatLng(pos.latitude, pos.longitude);
       } catch (e) {
         print('[HomeBloc] Error getting location: $e');
+      }
+    });
+
+    on<LoadUserDataEvent>((event, emit) async {
+      try {
+        final user = _authService.getCurrentUser();
+        if (user == null) {
+          return;
+        }
+        final userProfile = await _userDataService.getUserProfileByEmail(
+          user.email,
+        );
+        AppDataManager().currentUserProfile = userProfile.userProfile;
+      } catch (e) {
+        print('[HomeBloc] Error getting user data: $e');
       }
     });
   }
