@@ -1,5 +1,7 @@
 import 'package:find_motel/modules/profile_page/bloc/profile_page_event.dart';
 import 'package:find_motel/theme/app_colors.dart';
+import 'package:find_motel/common/widgets/custom_button.dart';
+import 'package:find_motel/utilities/excel_reader_page.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:find_motel/modules/profile_page/bloc/profile_page_bloc.dart';
 import 'package:find_motel/modules/profile_page/bloc/profile_page_state.dart';
@@ -28,7 +30,7 @@ class _ProfilePageState extends State<ProfilePage> {
         return Scaffold(
           appBar: CommonAppBar(
             title: 'Hello ${state.name}',
-            //leadingAsset: null,
+            leadingAsset: null,
             actions: [
               IconButton(
                 onPressed: () {
@@ -44,41 +46,78 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           body: BlocBuilder<ProfileBloc, ProfileState>(
             builder: (context, state) {
-              return SingleChildScrollView(
-                child: SizedBox(
-                  width: double.infinity,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const SizedBox(height: 48),
-                      _buildAvatar(state.avatar),
-                      const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Email: ',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.primary,
+              return Stack(
+                fit: StackFit.expand,
+                children: [
+                  SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 16, right: 16),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const SizedBox(height: 48),
+                            _buildAvatar(state.avatar),
+                            const SizedBox(height: 20),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'Email: ',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                                Text(
+                                  state.email ?? '',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w400,
+                                    color: AppColors.elementPrimary,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                          Text(
-                            state.email ?? '',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w400,
-                              color: AppColors.elementPrimary,
+                            _divider(),
+                            Column(
+                              children: [
+                                for (Future future in state.futures)
+                                  _buildCard(future),
+                              ],
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ],
+                    ),
                   ),
-                ),
+                  Positioned(
+                    bottom: 50,
+                    left: 0,
+                    right: 0,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: SizedBox(
+                        height: 44,
+                        child: CustomButton(
+                          title: 'Đăng xuất',
+                          icon: Icons.logout,
+                          textColor: AppColors.onPrimary,
+                          backgroundColor: AppColors.primary,
+                          onPressed: () {
+                            context.read<ProfileBloc>().add(
+                              const LogoutEvent(),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               );
             },
           ),
@@ -90,12 +129,83 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _buildAvatar(String? avatar) {
     if (avatar == null) {
       return SvgPicture.asset(
-        'assets/images/img_empty_avatar.svg',
+        'assets/images/ic_logo.svg',
         width: 100,
         height: 100,
         fit: BoxFit.contain,
       );
     }
     return CircleAvatar(radius: 50, backgroundImage: NetworkImage(avatar));
+  }
+
+  _divider() =>
+      const Divider(height: 30.0, thickness: 1.0, color: AppColors.strokeLight);
+
+  Widget _buildCard(Future future) {
+    Widget leading = Image.asset(future.info.icon, width: 22, height: 22);
+    return GestureDetector(
+      onTap: () {
+        _navigateFuture(future);
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: AppColors.strokeLight,
+            width: 1,
+          ), // Optional border
+          borderRadius: BorderRadius.circular(10), // Rounded corners
+        ),
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            leading,
+            const SizedBox(width: 12),
+            Column(
+              mainAxisSize: MainAxisSize.max,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  future.info.title,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.elementPrimary,
+                  ),
+                ),
+                Text(
+                  future.info.description,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
+                    color: AppColors.elementSecondary,
+                  ),
+                ),
+              ],
+            ),
+            const Spacer(),
+            SvgPicture.asset(
+              'assets/images/ic_arrow_right.svg',
+              height: 24,
+              width: 24,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  _navigateFuture(Future future) {
+    switch (future) {
+      case Future.customer:
+        // TODO: handle customer tap
+        break;
+      case Future.import:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const ExcelReaderPage()),
+        );
+        break;
+    }
   }
 }

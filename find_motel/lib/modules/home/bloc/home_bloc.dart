@@ -1,4 +1,3 @@
-import 'package:find_motel/common/models/user_profile.dart';
 import 'package:find_motel/modules/home/bloc/home_event.dart';
 import 'package:find_motel/modules/home/bloc/home_state.dart';
 import 'package:find_motel/services/firestore/firestore_service.dart';
@@ -41,12 +40,12 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
     on<LoadUserDataEvent>((event, emit) async {
       try {
-        final user = _authService.getCurrentUser();
-        if (user == null) {
+        final result = await _authService.getCurrentUser();
+        if (result.user == null) {
           return;
         }
         final userProfile = await _userDataService.getUserProfileByEmail(
-          user.email,
+          result.user!.email,
         );
         AppDataManager().currentUserProfile = userProfile.userProfile;
       } catch (e) {

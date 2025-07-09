@@ -20,5 +20,9 @@ abstract class IAuthentication {
     required String password,
   });
 
-  fm.User? getCurrentUser();
+
+
+  Future<({fm.User? user, String? error})> getCurrentUser();
+
+  Future<String?> signOut();
 }

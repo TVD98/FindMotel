@@ -6,7 +6,8 @@ import 'package:find_motel/common/models/user.dart' as fm;
 class FirebaseAuthService implements IAuthentication {
   final FirebaseAuth _auth;
 
-  FirebaseAuthService({FirebaseAuth? auth}) : _auth = auth ?? FirebaseAuth.instance;
+  FirebaseAuthService({FirebaseAuth? auth})
+    : _auth = auth ?? FirebaseAuth.instance;
 
   @override
   Stream<User?> authStateChange() {
@@ -22,11 +23,21 @@ class FirebaseAuthService implements IAuthentication {
   }
 
   @override
-  fm.User? getCurrentUser() {
+  Future<({fm.User? user, String? error})> getCurrentUser() async {
     final user = _auth.currentUser;
     if (user != null) {
-      return fm.User(id: user.uid, email: user.email!);
+      return (user: fm.User(id: user.uid, email: user.email!), error: null);
     }
-    return null;
+    return (user: null, error: 'User not found');
+  }
+
+  @override
+  Future<String?> signOut() async {
+    try {
+      await _auth.signOut();
+      return null;
+    } catch (e) {
+      return e.toString();
+    }
   }
 }

@@ -48,6 +48,8 @@ dependencies:
   image: ^4.2.0
   cloud_firestore: ^5.4.3
   flutter_svg: ^2.0.0
+  excel: ^2.1.0
+  file_picker: ^6.2.1
 
 dev_dependencies:
   flutter_test:
