@@ -1,5 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'package:find_motel/modules/account_manager/screens/account_manager_screen.dart';
 import 'package:find_motel/modules/import_motels/bloc/import_motels_bloc.dart';
 import 'package:find_motel/modules/import_motels/screens/import_motels_screen.dart';
 import 'package:find_motel/modules/profile_page/bloc/profile_page_event.dart';
@@ -218,6 +219,12 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           );
         }
+        break;
+      case Future.account:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => AccountManagerScreen()),
+        );
         break;
     }
   }

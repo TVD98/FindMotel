@@ -6,6 +6,7 @@ class FixedDropdownButton extends StatefulWidget {
   final List<String> items;
   final String? value;
   final double width;
+  final double height;
   final ValueChanged<String?>? onChanged;
 
   const FixedDropdownButton({
@@ -13,6 +14,7 @@ class FixedDropdownButton extends StatefulWidget {
     required this.items,
     this.value,
     this.width = 120.0,
+    this.height = 26,
     this.onChanged,
   });
 
@@ -32,7 +34,7 @@ class _FixedDropdownButtonState extends State<FixedDropdownButton> {
       backgroundColor: Colors.white,
       rightIconAsset: 'assets/images/ic_arrow_down_rectange.png',
       width: widget.width,
-      height: 26.0,
+      height: widget.height,
       horizontalPadding: 8.0,
       iconSize: 18.0,
       menuItemFontSize: 14.0,

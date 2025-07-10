@@ -12,7 +12,8 @@ import 'package:find_motel/constants/firestore_paths.dart';
 import 'package:find_motel/common/models/user_profile.dart';
 
 /// Service that fetches motel data from Firebase Cloud Firestore.
-class FirestoreService implements IMotelsService, ICatalogService, IUserDataService {
+class FirestoreService
+    implements IMotelsService, ICatalogService, IUserDataService {
   final FirebaseFirestore _firestore;
 
   FirestoreService({FirebaseFirestore? firestore})
@@ -237,6 +238,53 @@ class FirestoreService implements IMotelsService, ICatalogService, IUserDataServ
       return (motelIndex: MotelIndex.fromJson(doc.data()), error: null);
     } catch (e) {
       return (motelIndex: null, error: e.toString());
+    }
+  }
+
+  @override
+  Future<({List<UserProfile>? users, String? error})> getAllUsers() async {
+    try {
+      final querySnapshot = await _firestore
+          .collection(FirestorePaths.usersCollection)
+          .limit(100)
+          .get();
+      return (
+        users: querySnapshot.docs
+            .map((doc) => _userProfileFromDoc(doc))
+            .toList(),
+        error: null,
+      );
+    } catch (e) {
+      return (users: null, error: e.toString());
+    }
+  }
+
+  @override
+  Future<bool> updateUserRole({
+    required String userId,
+    required UserRole newRole,
+  }) async {
+    try {
+      await _firestore
+          .collection(FirestorePaths.usersCollection)
+          .doc(userId)
+          .update({'role': newRole.name});
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> deleteUser(String userId) async {
+    try {
+      await _firestore
+          .collection(FirestorePaths.usersCollection)
+          .doc(userId)
+          .delete();
+      return true;
+    } catch (e) {
+      return false;
     }
   }
 }
