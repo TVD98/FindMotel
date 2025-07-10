@@ -18,6 +18,9 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
   /// Provide an asset path to display a custom leading icon. When set, this overrides the default back arrow.
   final String? leadingAsset;
 
+  /// Optional callback to handle leading icon press.
+  final VoidCallback? onLeadingPressed;
+
   /// Optional list of widgets to display in the AppBar actions.
   final List<Widget>? actions;
 
@@ -25,6 +28,7 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
     super.key,
     required this.title,
     this.leadingAsset = 'assets/images/ic_back.svg',
+    this.onLeadingPressed,
     this.actions,
   });
 
@@ -38,8 +42,12 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
       leading: leadingAsset != null
           ? IconButton(
               onPressed: () {
-                if (Navigator.of(context).canPop()) {
-                  Navigator.of(context).pop();
+                if (onLeadingPressed == null) {
+                  if (Navigator.of(context).canPop()) {
+                    Navigator.of(context).pop();
+                  }
+                } else {
+                  onLeadingPressed!();
                 }
               },
               icon: SvgPicture.asset(leadingAsset!, height: 24, width: 24),
