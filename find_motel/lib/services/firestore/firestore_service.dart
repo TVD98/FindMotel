@@ -19,6 +19,7 @@ class FirestoreService implements IMotelsService, ICatalogService, IUserDataServ
     : _firestore = firestore ?? FirebaseFirestore.instance;
 
   /// Upload a new motel to Firestore.
+  @override
   Future<({String? id, String? error})> addMotel(Motel motel) async {
     try {
       final docRef = await _firestore

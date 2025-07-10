@@ -4,16 +4,31 @@ import 'package:find_motel/managers/app_data_manager.dart';
 import 'package:find_motel/modules/import_motels/bloc/import_motels_event.dart';
 import 'package:find_motel/modules/import_motels/bloc/import_motels_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:find_motel/services/firestore/firestore_service.dart';
+import 'package:find_motel/services/motel/motels_service.dart';
 
 class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
-  ImportMotelsBloc() : super(const ImportMotelsState()) {
+  final IMotelsService _motelsService;
+  ImportMotelsBloc({IMotelsService? motelsService}) : _motelsService = motelsService ?? FirestoreService(), super(const ImportMotelsState()) {
     on<HandleFileEvent>((event, emit) {
       final motels = _parseMotels(event.data);
       emit(state.copyWith(motels: motels));
     });
 
-    on<SaveMotelsEvent>((event, emit) {
-      emit(state.copyWith(isSaved: true));
+    on<SaveMotelsEvent>((event, emit) async {
+      emit(state.copyWith(isLoading: true));
+      try { 
+        for (final motel in event.motels) {
+          final result = await _motelsService.addMotel(motel);
+          if (result.error != null) {
+            emit(state.copyWith(isLoading: false, error: result.error));
+            return;
+          }
+        }
+        emit(state.copyWith(isLoading: false, isSaved: true));
+      } catch (e) {
+        emit(state.copyWith(isLoading: false, error: e.toString()));
+      }
     });
   }
 

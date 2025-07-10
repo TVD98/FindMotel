@@ -1,5 +1,5 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:find_motel/constants/firestore_paths.dart';
+import 'package:find_motel/common/models/motel_index.dart';
+import 'package:find_motel/common/models/user.dart' as fm;
 import 'package:find_motel/modules/home/bloc/home_event.dart';
 import 'package:find_motel/modules/home/bloc/home_state.dart';
 import 'package:find_motel/services/catalog/catalog_service.dart';

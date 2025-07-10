@@ -12,8 +12,9 @@ extension StringExtensions on String {
   int? toIndex() {
     if (length != 1) return null; // Chỉ chấp nhận 1 ký tự
     final upperChar = toUpperCase();
-    if (!RegExp(r'^[A-Z]$').hasMatch(upperChar))
+    if (!RegExp(r'^[A-Z]$').hasMatch(upperChar)) {
       return null; // Chỉ chấp nhận A-Z
+    }
     return codeUnitAt(0) - 'A'.codeUnitAt(0);
   }
 

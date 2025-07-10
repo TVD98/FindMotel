@@ -27,51 +27,61 @@ class _ImportMotelsScreenState extends State<ImportMotelsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<ImportMotelsBloc, ImportMotelsState>(
+    return BlocConsumer<ImportMotelsBloc, ImportMotelsState>(
       listener: (context, state) {
         if (state.isSaved ?? false) {
           _showSaveMotelsSuccessDialog(context, state.motels?.length ?? 0);
         }
       },
-      child: BlocBuilder<ImportMotelsBloc, ImportMotelsState>(
-        builder: (context, state) {
-          return Scaffold(
-            appBar: CommonAppBar(
-              title: 'Import Motels',
-              onLeadingPressed: () {
-                if (state.motels?.isNotEmpty ?? false) {
-                  _showConfirmDialog(context);
-                } else {
-                  Navigator.pop(context);
-                }
-              },
-              actions: [
-                if (state.motels?.isNotEmpty ?? false)
-                  Text(
-                    '${state.motels?.length ?? 0} trọ',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                      color: AppColors.headerLineOnPrimary,
-                    ),
+      builder: (context, state) {
+        return Scaffold(
+          appBar: CommonAppBar(
+            title: 'Import Motels',
+            onLeadingPressed: () {
+              if (state.motels?.isNotEmpty ?? false) {
+                _showConfirmDialog(context);
+              } else {
+                Navigator.pop(context);
+              }
+            },
+            actions: [
+              if (state.motels?.isNotEmpty ?? false)
+                Text(
+                  '${state.motels?.length ?? 0} trọ',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: AppColors.headerLineOnPrimary,
                   ),
-                IconButton(
-                  onPressed: () {
-                    context.read<ImportMotelsBloc>().add(SaveMotelsEvent());
-                  },
-                  icon: SvgPicture.asset('assets/images/ic_save.svg'),
                 ),
-              ],
-            ),
-            body: ListView.builder(
-              itemCount: state.motels?.length ?? 0,
-              itemBuilder: (context, index) {
-                return _buildMotel(state.motels![index]);
-              },
-            ),
-          );
-        },
-      ),
+              IconButton(
+                onPressed: () {
+                  if (state.motels?.isNotEmpty ?? false) {
+                    context.read<ImportMotelsBloc>().add(
+                      SaveMotelsEvent(motels: state.motels!),
+                    );
+                  }
+                },
+                icon: SvgPicture.asset('assets/images/ic_save.svg'),
+              ),
+            ],
+          ),
+          body: Stack(
+            children: [
+              ListView.builder(
+                itemCount: state.motels?.length ?? 0,
+                itemBuilder: (context, index) {
+                  return _buildMotel(state.motels![index]);
+                },
+              ),
+              if (state.isLoading)
+                const Center(
+                  child: CircularProgressIndicator(),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 

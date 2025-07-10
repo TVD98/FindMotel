@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:find_motel/common/models/motel.dart';
 
 class ImportMotelsEvent extends Equatable {
   const ImportMotelsEvent();
@@ -17,10 +18,11 @@ class HandleFileEvent extends ImportMotelsEvent {
 }
 
 class SaveMotelsEvent extends ImportMotelsEvent {
-  const SaveMotelsEvent();
+  final List<Motel> motels;
+  const SaveMotelsEvent({required this.motels});
 
   @override
-  List<Object?> get props => [];
+  List<Object?> get props => [motels];
 }
 
   

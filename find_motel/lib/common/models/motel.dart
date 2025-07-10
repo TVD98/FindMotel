@@ -72,6 +72,7 @@ class Motel {
       'images': images,
       'marker': marker,
       'thumbnail': thumbnail,
+      'texture': texture,
     };
   }
 }
