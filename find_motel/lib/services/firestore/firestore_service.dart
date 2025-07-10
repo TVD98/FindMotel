@@ -2,14 +2,17 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:find_motel/common/models/area.dart';
 import 'package:find_motel/extensions/string_extensions.dart';
 import 'package:find_motel/services/catalog/catalog_service.dart';
+import 'package:find_motel/common/models/motel_index.dart';
+import 'package:find_motel/services/user_data/user_data_service.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:find_motel/common/models/motel.dart';
 import 'package:find_motel/services/motel/motels_service.dart';
 import 'package:find_motel/services/motel/models/motels_filter.dart';
 import 'package:find_motel/constants/firestore_paths.dart';
+import 'package:find_motel/common/models/user_profile.dart';
 
 /// Service that fetches motel data from Firebase Cloud Firestore.
-class FirestoreService implements IMotelsService, ICatalogService {
+class FirestoreService implements IMotelsService, ICatalogService, IUserDataService {
   final FirebaseFirestore _firestore;
 
   FirestoreService({FirebaseFirestore? firestore})
@@ -120,6 +123,7 @@ class FirestoreService implements IMotelsService, ICatalogService {
       images: List<String>.from(data['images'] ?? const []),
       marker: data['marker'] as String? ?? '',
       thumbnail: data['thumbnail'] as String? ?? '',
+      texture: data['texture'] as String? ?? '',
     );
   }
 
@@ -182,5 +186,56 @@ class FirestoreService implements IMotelsService, ICatalogService {
       name: data['name'] as String? ?? '',
       wards: List<String>.from(data['wards'] ?? const []),
     );
+  }
+
+  @override
+  Future<({UserProfile? userProfile, String? error})> getUserProfileByEmail(
+    String email,
+  ) async {
+    try {
+      final snapshot = await _firestore
+          .collection(FirestorePaths.usersCollection)
+          .where('email', isEqualTo: email)
+          .limit(1)
+          .get();
+      if (snapshot.docs.isEmpty) {
+        return (userProfile: null, error: 'User not found');
+      }
+      final doc = snapshot.docs.first;
+      return (userProfile: _userProfileFromDoc(doc), error: null);
+    } catch (e) {
+      return (userProfile: null, error: e.toString());
+    }
+  }
+
+  UserProfile _userProfileFromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = doc.data()!;
+    return UserProfile(
+      id: doc.id,
+      name: data['name'] as String? ?? '',
+      email: data['email'] as String? ?? '',
+      avatar: data['avatar'] as String? ?? '',
+      role: UserRole.values.firstWhere(
+        (e) => e.name == data['role'],
+        orElse: () => UserRole.sale,
+      ),
+    );
+  }
+
+  @override
+  Future<({MotelIndex? motelIndex, String? error})> getMotelIndex() async {
+    try {
+      final snapshot = await _firestore
+          .collection(FirestorePaths.motelIndexCollection)
+          .limit(1)
+          .get();
+      if (snapshot.docs.isEmpty) {
+        return (motelIndex: null, error: 'Motel index not found');
+      }
+      final doc = snapshot.docs.first;
+      return (motelIndex: MotelIndex.fromJson(doc.data()), error: null);
+    } catch (e) {
+      return (motelIndex: null, error: e.toString());
+    }
   }
 }

@@ -51,5 +51,9 @@
 		</array>
 		<key>NSLocationWhenInUseUsageDescription</key>
 		<string>Ứng dụng cần quyền vị trí để hiển thị bản đồ</string>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>Ứng dụng cần truy cập thư viện ảnh để chọn file Excel.</string>
+		<key>NSPhotoLibraryAddUsageDescription</key>
+		<string>Ứng dụng cần lưu file Excel vào thư viện ảnh.</string>
 	</dict>
 </plist>

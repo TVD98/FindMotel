@@ -31,8 +31,7 @@ class AppColors {
   static const Color highlight = Color(0xFFFFD47A); // #FFD47A
 
   // Product specific background
-  static const Color backgroundLight = Color(0xFFF5F5F5);
-  static const Color surface = Color(0xFFFFFFFF);
+  static const Color surface = Color(0xFFF5F5F5);
   static const Color onSurface = Color(0xFF111111);
 
   // Functional
