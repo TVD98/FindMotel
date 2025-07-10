@@ -33,6 +33,7 @@ class Motel {
   final List<String> images;
   final String marker;
   final String thumbnail;
+  final String texture;
 
   Motel({
     required this.id,
@@ -50,5 +51,6 @@ class Motel {
     required this.images,
     required this.marker,
     required this.thumbnail,
+    required this.texture,
   });
 }

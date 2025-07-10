@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:find_motel/common/models/user.dart' as fm;
 
 /// Contract for authentication related operations.
 ///
@@ -18,4 +19,10 @@ abstract class IAuthentication {
     required String email,
     required String password,
   });
+
+
+
+  Future<({fm.User? user, String? error})> getCurrentUser();
+
+  Future<String?> signOut();
 }

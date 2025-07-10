@@ -74,7 +74,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
       builder: (context, scrollController) {
         return Container(
           decoration: const BoxDecoration(
-            color: AppColors.backgroundLight,
+            color: AppColors.surface,
             borderRadius: BorderRadius.vertical(
               top: Radius.circular(AppConstants.borderRadius),
             ),

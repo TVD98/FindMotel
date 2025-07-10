@@ -16,19 +16,19 @@ class AppTheme {
 
   static final ColorScheme _darkScheme = _lightScheme.copyWith(
     brightness: Brightness.dark,
-    surface: const Color(0xFF222222),
+    surface: AppColors.surface,
     onSurface: Colors.white,
   );
 
   static ThemeData light() => ThemeData(
-        colorScheme: _lightScheme,
-        useMaterial3: true,
-        scaffoldBackgroundColor: _lightScheme.background,
-      );
+    colorScheme: _lightScheme,
+    useMaterial3: true,
+    scaffoldBackgroundColor: _lightScheme.surface,
+  );
 
   static ThemeData dark() => ThemeData(
-        colorScheme: _darkScheme,
-        useMaterial3: true,
-        scaffoldBackgroundColor: _darkScheme.background,
-      );
+    colorScheme: _darkScheme,
+    useMaterial3: true,
+    scaffoldBackgroundColor: _darkScheme.surface,
+  );
 }
