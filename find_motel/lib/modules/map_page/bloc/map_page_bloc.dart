@@ -10,7 +10,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:find_motel/services/geolocator/geolocator_service.dart';
 import 'package:find_motel/services/firestore/firestore_service.dart';
-import 'package:find_motel/services/map/map_service.dart';
+import 'package:find_motel/services/motel/motels_service.dart';
 import 'map_page_event.dart';
 import 'map_page_state.dart';
 import 'package:http/http.dart' as http;
@@ -20,12 +20,12 @@ import 'package:find_motel/theme/app_colors.dart';
 class MapBloc extends Bloc<MapEvent, MapState> {
   final IGeolocatorService _geolocatorService;
   final int maxSize = 100;
-  final IMapService _firestoreService;
+  final IMotelsService _firestoreService;
   final _markerCache = <String, Marker>{};
 
   MapBloc({
     IGeolocatorService? geolocatorService,
-    IMapService? firestoreService,
+    IMotelsService? firestoreService,
   }) : _geolocatorService = geolocatorService ?? GeolocatorService(),
        _firestoreService = firestoreService ?? FirestoreService(),
        super(MapState()) {
@@ -82,6 +82,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
         emit(state.copyWith(isLoading: false, error: result.error));
         return;
       }
+
       await _loadMarkers(result.motels!, emit);
     } catch (e) {
       emit(

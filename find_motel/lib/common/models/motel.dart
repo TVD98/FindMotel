@@ -1,4 +1,5 @@
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum RentalStatus {
   empty,
@@ -53,4 +54,24 @@ class Motel {
     required this.thumbnail,
     required this.texture,
   });
+
+  /// Convert this [Motel] instance to a Map suitable for Firestore.
+  Map<String, dynamic> toMap() {
+    return {
+      'address': address,
+      'commission': commission,
+      'extensions': extensions,
+      'fees': fees,
+      'geo_point': GeoPoint(geoPoint.latitude, geoPoint.longitude),
+      'name': name,
+      'note': note,
+      'price': price,
+      'room_code': roomCode,
+      'type': type,
+      'status': status.name,
+      'images': images,
+      'marker': marker,
+      'thumbnail': thumbnail,
+    };
+  }
 }

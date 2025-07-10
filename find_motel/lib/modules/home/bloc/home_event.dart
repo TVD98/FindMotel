@@ -19,6 +19,10 @@ class LoadCurrentLocationEvent extends HomeEvent {
   const LoadCurrentLocationEvent();
 }
 
+class LoadCatalogEvent extends HomeEvent {
+  const LoadCatalogEvent();
+}
+
 class LoadUserDataEvent extends HomeEvent {
   const LoadUserDataEvent();
 }
