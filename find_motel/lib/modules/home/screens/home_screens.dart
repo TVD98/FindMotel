@@ -29,7 +29,6 @@ class _HomeScreenState extends State<HomeScreen> {
     // Load current location once when HomeScreen is first shown
     context.read<HomeBloc>().add(const LoadCurrentLocationEvent());
     context.read<HomeBloc>().add(const LoadCatalogEvent());
-    context.read<HomeBloc>().add(const LoadUserDataEvent());
   }
 
   @override

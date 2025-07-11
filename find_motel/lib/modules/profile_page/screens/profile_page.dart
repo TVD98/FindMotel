@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:find_motel/modules/account_manager/screens/account_manager_screen.dart';
+import 'package:find_motel/modules/customer_manager/screens/customer_manager_screen.dart';
 import 'package:find_motel/modules/import_motels/bloc/import_motels_bloc.dart';
 import 'package:find_motel/modules/import_motels/screens/import_motels_screen.dart';
 import 'package:find_motel/modules/profile_page/bloc/profile_page_event.dart';
@@ -203,7 +204,10 @@ class _ProfilePageState extends State<ProfilePage> {
   _navigateFuture(Future future) async {
     switch (future) {
       case Future.customer:
-        // TODO: handle customer tap
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => CustomerManagerScreen()),
+        );
         break;
       case Future.import:
         final reader = ExcelReader();

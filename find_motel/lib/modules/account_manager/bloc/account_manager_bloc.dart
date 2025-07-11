@@ -55,8 +55,13 @@ class AccountManagerBloc
         newRole: event.newRole,
       );
       if (result) {
-        _updateAccountLocal(event.userId, event.newRole);
-        emit(state.copyWith(accounts: state.accounts));
+        final updatedAccounts = List<UserProfile>.from(state.accounts);
+        var updatedAccountIndex = updatedAccounts.indexWhere(
+          (element) => element.id == event.userId,
+        );
+        updatedAccounts[updatedAccountIndex] =
+            updatedAccounts[updatedAccountIndex].copyWith(role: event.newRole);
+        emit(state.copyWith(accounts: updatedAccounts));
       }
     } catch (e) {
       emit(
