@@ -10,14 +10,16 @@ import 'package:find_motel/services/motel/motels_service.dart';
 import 'package:find_motel/services/motel/models/motels_filter.dart';
 import 'package:find_motel/constants/firestore_paths.dart';
 import 'package:find_motel/common/models/user_profile.dart';
+import 'package:find_motel/common/models/customer.dart';
+import 'package:find_motel/services/customer/customer_service.dart';
 
 /// Service that fetches motel data from Firebase Cloud Firestore.
 class FirestoreService
-    implements IMotelsService, ICatalogService, IUserDataService {
+    implements IMotelsService, ICatalogService, IUserDataService, ICustomerService {
   final FirebaseFirestore _firestore;
 
   FirestoreService({FirebaseFirestore? firestore})
-    : _firestore = firestore ?? FirebaseFirestore.instance;
+      : _firestore = firestore ?? FirebaseFirestore.instance;
 
   /// Upload a new motel to Firestore.
   @override
@@ -285,6 +287,80 @@ class FirestoreService
       return true;
     } catch (e) {
       return false;
+    }
+  }
+
+  // ICustomerService implementation
+  @override
+  Future<(List<Customer>?, String?)> fetchCustomers({String? saleId}) async {
+    try {
+      Query<Map<String, dynamic>> query = _firestore.collection('customers');
+      if (saleId != null && saleId.isNotEmpty) {
+        query = query.where('saleId', isEqualTo: saleId);
+      }
+      final snapshot = await query.get();
+      final customers = snapshot.docs.map((doc) {
+        final data = doc.data();
+        return Customer(
+          id: doc.id,
+          name: data['name'] ?? '',
+          phone: data['phone'] ?? '',
+          deal: (data['deal'] ?? 0).toDouble(),
+          schedule: (data['schedule'] as Timestamp).toDate(),
+          saleId: data['saleId'] ?? '',
+          motelId: data['motelId'] ?? '',
+          motelName: data['motelName'] ?? '',
+        );
+      }).toList();
+      return (customers, null);
+    } catch (e) {
+      return (null, e.toString());
+    }
+  }
+
+  @override
+  Future<(bool, String?)> addCustomer(Customer customer) async {
+    try {
+      await _firestore.collection('customers').add({
+        'name': customer.name,
+        'phone': customer.phone,
+        'deal': customer.deal,
+        'schedule': customer.schedule,
+        'saleId': customer.saleId,
+        'motelId': customer.motelId,
+        'motelName': customer.motelName,
+      });
+      return (true, null);
+    } catch (e) {
+      return (false, e.toString());
+    }
+  }
+
+  @override
+  Future<(bool, String?)> deleteCustomer(String id) async {
+    try {
+      await _firestore.collection('customers').doc(id).delete();
+      return (true, null);
+    } catch (e) {
+      return (false, e.toString());
+    }
+  }
+
+  @override
+  Future<(bool, String?)> updateCustomer(Customer customer) async {
+    try {
+      await _firestore.collection('customers').doc(customer.id).update({
+        'name': customer.name,
+        'phone': customer.phone,
+        'deal': customer.deal,
+        'schedule': customer.schedule,
+        'saleId': customer.saleId,
+        'motelId': customer.motelId,
+        'motelName': customer.motelName,
+      });
+      return (true, null);
+    } catch (e) {
+      return (false, e.toString());
     }
   }
 }

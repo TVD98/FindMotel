@@ -1,11 +1,11 @@
 import 'package:equatable/equatable.dart';
-import 'package:find_motel/common/models/user_profile.dart';
+import 'package:find_motel/common/models/customer.dart';
 
 enum CustomerManagerStatus { initial, loading, success, failure }
 
 class CustomerManagerState extends Equatable {
   final CustomerManagerStatus status;
-  final List<UserProfile> customers;
+  final List<Customer> customers;
   final String? errorMessage;
 
   const CustomerManagerState({
@@ -16,7 +16,7 @@ class CustomerManagerState extends Equatable {
 
   CustomerManagerState copyWith({
     CustomerManagerStatus? status,
-    List<UserProfile>? customers,
+    List<Customer>? customers,
     String? errorMessage,
   }) {
     return CustomerManagerState(

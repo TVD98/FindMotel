@@ -1,12 +1,13 @@
+import 'package:find_motel/extensions/double_extensions.dart';
 import 'package:find_motel/modules/customer_manager/bloc/customer_manager_event.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:find_motel/common/widgets/common_app_bar.dart';
 import 'package:find_motel/theme/app_colors.dart';
-import 'package:find_motel/common/models/user_profile.dart';
 import 'package:find_motel/modules/customer_manager/bloc/customer_manager_bloc.dart';
 import 'package:find_motel/modules/customer_manager/bloc/customer_manager_state.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:find_motel/common/models/customer.dart';
+import 'package:intl/intl.dart';
 
 class CustomerManagerScreen extends StatefulWidget {
   const CustomerManagerScreen({super.key});
@@ -60,7 +61,7 @@ class _CustomerManagerScreenState extends State<CustomerManagerScreen> {
 }
 
 class _CustomerItem extends StatelessWidget {
-  final UserProfile customer;
+  final Customer customer;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
@@ -70,76 +71,113 @@ class _CustomerItem extends StatelessWidget {
     required this.onDelete,
   });
 
-  Widget _buildAvatar(String? avatar) {
-    if (avatar == null || avatar.isEmpty) {
-      return SvgPicture.asset(
-        'assets/images/ic_logo.svg', // Make sure this asset exists
-        width: 64,
-        height: 64,
-        fit: BoxFit.contain,
-      );
-    }
-    return CircleAvatar(radius: 32, backgroundImage: NetworkImage(avatar));
-  }
-
-  String _getRoleText(String role) {
-    switch (role) {
-      case 'admin':
-        return 'Quản trị viên';
-      case 'staff':
-        return 'Nhân viên';
-      case 'customer':
-      default:
-        return 'Khách hàng';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       shape: RoundedRectangleBorder(
         side: BorderSide(width: 1, color: AppColors.strokeLight),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildAvatar(customer.avatar),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'TVD',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+            // Dòng trên: name và deal
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Image.asset(
+                      'assets/images/ic_customer.png',
+                      width: 14,
+                      height: 14,
                     ),
+                    const SizedBox(width: 8),
+                    Text(
+                      customer.name,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+                // Đảm bảo width cố định cho cột deal
+                SizedBox(
+                  width: 120,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Image.asset(
+                        'assets/images/ic_money.png',
+                        width: 14,
+                        height: 14,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        customer.deal.toVND(),
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'tvd@gmail.com',
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Vai trò: Khách hàng',
-                    style: const TextStyle(fontSize: 14),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-            IconButton(
-              icon: const Icon(Icons.edit, color: Colors.blue),
-              onPressed: onEdit,
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete, color: Colors.red),
-              onPressed: onDelete,
+            const SizedBox(height: 8),
+            // Dòng dưới: motelName và schedule
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Image.asset(
+                      'assets/images/ic_motel.png',
+                      width: 14,
+                      height: 14,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      customer.motelName,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
+                        color: AppColors.elementSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+                // Đảm bảo width cố định cho cột schedule
+                SizedBox(
+                  width: 120,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Image.asset(
+                        'assets/images/ic_schedule.png',
+                        width: 14,
+                        height: 14,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        DateFormat('dd/MM/yyyy').format(customer.schedule),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w400,
+                          color: AppColors.elementSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ],
         ),
