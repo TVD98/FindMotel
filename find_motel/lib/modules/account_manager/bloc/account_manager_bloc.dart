@@ -94,13 +94,4 @@ class AccountManagerBloc
       );
     }
   }
-
-  void _updateAccountLocal(String userId, UserRole role) {
-    final accounts = state.accounts;
-    final index = accounts.indexWhere((a) => a.id == userId);
-    if (index != -1) {
-      final account = accounts[index];
-      accounts[index] = account.copyWith(role: role);
-    }
-  }
 }

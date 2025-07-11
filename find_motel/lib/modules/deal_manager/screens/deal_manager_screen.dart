@@ -1,56 +1,54 @@
 import 'package:find_motel/extensions/double_extensions.dart';
-import 'package:find_motel/modules/customer_manager/bloc/customer_manager_event.dart';
+import 'package:find_motel/modules/deal_manager/screens/deal_detail_screen.dart';
+import 'package:find_motel/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:find_motel/common/widgets/common_app_bar.dart';
-import 'package:find_motel/theme/app_colors.dart';
-import 'package:find_motel/modules/customer_manager/bloc/customer_manager_bloc.dart';
-import 'package:find_motel/modules/customer_manager/bloc/customer_manager_state.dart';
-import 'package:find_motel/common/models/customer.dart';
+import 'package:find_motel/modules/deal_manager/bloc/deal_manager_bloc.dart';
+import 'package:find_motel/modules/deal_manager/bloc/deal_manager_event.dart';
+import 'package:find_motel/modules/deal_manager/bloc/deal_manager_state.dart';
+import 'package:find_motel/common/models/deal.dart';
 import 'package:intl/intl.dart';
 
-class CustomerManagerScreen extends StatefulWidget {
-  const CustomerManagerScreen({super.key});
+class DealManagerScreen extends StatefulWidget {
+  const DealManagerScreen({super.key});
 
   @override
-  State<CustomerManagerScreen> createState() => _CustomerManagerScreenState();
+  State<DealManagerScreen> createState() => _DealManagerScreenState();
 }
 
-class _CustomerManagerScreenState extends State<CustomerManagerScreen> {
+class _DealManagerScreenState extends State<DealManagerScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => CustomerManagerBloc()..add(LoadCustomersEvent()),
+      create: (context) => DealManagerBloc()..add(LoadDealsEvent()),
       child: Scaffold(
-        appBar: const CommonAppBar(title: 'Quản Lý Khách Hàng'),
-        body: BlocBuilder<CustomerManagerBloc, CustomerManagerState>(
+        appBar: AppBar(
+          title: const Text('Quản lý deal'),
+        ),
+        body: BlocBuilder<DealManagerBloc, DealManagerState>(
           builder: (context, state) {
-            if (state.status == CustomerManagerStatus.loading) {
+            if (state.status == DealManagerStatus.loading) {
               return const Center(child: CircularProgressIndicator());
             }
-
-            if (state.status == CustomerManagerStatus.failure) {
-              return Center(
-                child: Text(
-                  'Đã xảy ra lỗi: ${state.errorMessage}',
-                  style: const TextStyle(color: Colors.red),
-                ),
-              );
+            if (state.status == DealManagerStatus.failure) {
+              return Center(child: Text(state.errorMessage ?? 'Đã có lỗi xảy ra'));
             }
-
-            if (state.customers.isEmpty) {
-              return const Center(child: Text('Không có khách hàng nào'));
+            if (state.deals.isEmpty) {
+              return const Center(child: Text('Chưa có deal nào'));
             }
-
             return ListView.builder(
-              itemCount: state.customers.length,
+              itemCount: state.deals.length,
               itemBuilder: (context, index) {
-                final customer = state.customers[index];
-                return _CustomerItem(
-                  customer: customer,
-                  onEdit: () {},
-                  onDelete: () {},
-                );
+                final deal = state.deals[index];
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => DealDetailScreen(deal: deal),
+                      ),
+                    );
+                  },
+                  child: _DealItem(deal: deal),);
               },
             );
           },
@@ -60,27 +58,21 @@ class _CustomerManagerScreenState extends State<CustomerManagerScreen> {
   }
 }
 
-class _CustomerItem extends StatelessWidget {
-  final Customer customer;
-  final VoidCallback onEdit;
-  final VoidCallback onDelete;
+class _DealItem extends StatelessWidget {
+  final Deal deal;
 
-  const _CustomerItem({
-    required this.customer,
-    required this.onEdit,
-    required this.onDelete,
-  });
+  const _DealItem({required this.deal});
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       shape: RoundedRectangleBorder(
         side: BorderSide(width: 1, color: AppColors.strokeLight),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -97,16 +89,15 @@ class _CustomerItem extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      customer.name,
+                      deal.name,
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
+                        color: Theme.of(context).primaryColor,
                       ),
                     ),
                   ],
                 ),
-                // Đảm bảo width cố định cho cột deal
                 SizedBox(
                   width: 120,
                   child: Row(
@@ -119,11 +110,11 @@ class _CustomerItem extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        customer.deal.toVND(),
+                        deal.price.toVND(),
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
+                          color: Theme.of(context).primaryColor,
                         ),
                       ),
                     ],
@@ -145,16 +136,15 @@ class _CustomerItem extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      customer.motelName,
+                      deal.motelName,
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w400,
-                        color: AppColors.elementSecondary,
+                        color: Colors.grey,
                       ),
                     ),
                   ],
                 ),
-                // Đảm bảo width cố định cho cột schedule
                 SizedBox(
                   width: 120,
                   child: Row(
@@ -167,11 +157,11 @@ class _CustomerItem extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        DateFormat('dd/MM/yyyy').format(customer.schedule),
+                        DateFormat('dd/MM/yyyy').format(deal.schedule),
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w400,
-                          color: AppColors.elementSecondary,
+                          color: Colors.grey,
                         ),
                       ),
                     ],

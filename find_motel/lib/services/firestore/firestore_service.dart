@@ -10,7 +10,7 @@ import 'package:find_motel/services/motel/motels_service.dart';
 import 'package:find_motel/services/motel/models/motels_filter.dart';
 import 'package:find_motel/constants/firestore_paths.dart';
 import 'package:find_motel/common/models/user_profile.dart';
-import 'package:find_motel/common/models/customer.dart';
+import 'package:find_motel/common/models/deal.dart';
 import 'package:find_motel/services/customer/customer_service.dart';
 
 /// Service that fetches motel data from Firebase Cloud Firestore.
@@ -292,20 +292,20 @@ class FirestoreService
 
   // ICustomerService implementation
   @override
-  Future<(List<Customer>?, String?)> fetchCustomers({String? saleId}) async {
+  Future<(List<Deal>?, String?)> fetchDeals({String? saleId}) async {
     try {
-      Query<Map<String, dynamic>> query = _firestore.collection('customers');
+      Query<Map<String, dynamic>> query = _firestore.collection(FirestorePaths.dealsCollection);
       if (saleId != null && saleId.isNotEmpty) {
         query = query.where('saleId', isEqualTo: saleId);
       }
       final snapshot = await query.get();
       final customers = snapshot.docs.map((doc) {
         final data = doc.data();
-        return Customer(
+        return Deal(
           id: doc.id,
           name: data['name'] ?? '',
           phone: data['phone'] ?? '',
-          deal: (data['deal'] ?? 0).toDouble(),
+          price: data['price'] as double,
           schedule: (data['schedule'] as Timestamp).toDate(),
           saleId: data['saleId'] ?? '',
           motelId: data['motelId'] ?? '',
@@ -319,12 +319,12 @@ class FirestoreService
   }
 
   @override
-  Future<(bool, String?)> addCustomer(Customer customer) async {
+  Future<(bool, String?)> addDeal(Deal customer) async {
     try {
-      await _firestore.collection('customers').add({
+      await _firestore.collection(FirestorePaths.dealsCollection).add({
         'name': customer.name,
         'phone': customer.phone,
-        'deal': customer.deal,
+        'deal': customer.price,
         'schedule': customer.schedule,
         'saleId': customer.saleId,
         'motelId': customer.motelId,
@@ -337,9 +337,9 @@ class FirestoreService
   }
 
   @override
-  Future<(bool, String?)> deleteCustomer(String id) async {
+  Future<(bool, String?)> deleteDeal(String id) async {
     try {
-      await _firestore.collection('customers').doc(id).delete();
+      await _firestore.collection(FirestorePaths.dealsCollection).doc(id).delete();
       return (true, null);
     } catch (e) {
       return (false, e.toString());
@@ -347,12 +347,12 @@ class FirestoreService
   }
 
   @override
-  Future<(bool, String?)> updateCustomer(Customer customer) async {
+  Future<(bool, String?)> updateDeal(Deal customer) async {
     try {
-      await _firestore.collection('customers').doc(customer.id).update({
+      await _firestore.collection(FirestorePaths.dealsCollection).doc(customer.id).update({
         'name': customer.name,
         'phone': customer.phone,
-        'deal': customer.deal,
+        'deal': customer.price,
         'schedule': customer.schedule,
         'saleId': customer.saleId,
         'motelId': customer.motelId,

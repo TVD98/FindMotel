@@ -1,8 +1,8 @@
-import 'package:find_motel/common/models/customer.dart';
+import 'package:find_motel/common/models/deal.dart';
 
 abstract class ICustomerService {
-  Future<(List<Customer>?, String?)> fetchCustomers({String? saleId});
-  Future<(bool, String?)> addCustomer(Customer customer);
-  Future<(bool, String?)> deleteCustomer(String id);
-  Future<(bool, String?)> updateCustomer(Customer customer);
+  Future<(List<Deal>?, String?)> fetchDeals({String? saleId});
+  Future<(bool, String?)> addDeal(Deal customer);
+  Future<(bool, String?)> deleteDeal(String id);
+  Future<(bool, String?)> updateDeal(Deal customer);
 }
