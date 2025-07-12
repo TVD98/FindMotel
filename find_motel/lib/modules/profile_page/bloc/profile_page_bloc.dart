@@ -15,7 +15,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       final userProfile = AppDataManager().currentUserProfile;
       List<Future> futures = [Future.customer];
       if (userProfile?.role == UserRole.admin) {
-        futures += [Future.import];
+        futures += [Future.import, Future.account];
       }
       emit(
         state.copyWith(

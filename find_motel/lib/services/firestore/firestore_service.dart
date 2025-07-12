@@ -10,14 +10,16 @@ import 'package:find_motel/services/motel/motels_service.dart';
 import 'package:find_motel/services/motel/models/motels_filter.dart';
 import 'package:find_motel/constants/firestore_paths.dart';
 import 'package:find_motel/common/models/user_profile.dart';
+import 'package:find_motel/common/models/deal.dart';
+import 'package:find_motel/services/customer/customer_service.dart';
 
 /// Service that fetches motel data from Firebase Cloud Firestore.
 class FirestoreService
-    implements IMotelsService, ICatalogService, IUserDataService {
+    implements IMotelsService, ICatalogService, IUserDataService, ICustomerService {
   final FirebaseFirestore _firestore;
 
   FirestoreService({FirebaseFirestore? firestore})
-    : _firestore = firestore ?? FirebaseFirestore.instance;
+      : _firestore = firestore ?? FirebaseFirestore.instance;
 
   /// Upload a new motel to Firestore.
   @override
@@ -238,6 +240,127 @@ class FirestoreService
       return (motelIndex: MotelIndex.fromJson(doc.data()), error: null);
     } catch (e) {
       return (motelIndex: null, error: e.toString());
+    }
+  }
+
+  @override
+  Future<({List<UserProfile>? users, String? error})> getAllUsers() async {
+    try {
+      final querySnapshot = await _firestore
+          .collection(FirestorePaths.usersCollection)
+          .limit(100)
+          .get();
+      return (
+        users: querySnapshot.docs
+            .map((doc) => _userProfileFromDoc(doc))
+            .toList(),
+        error: null,
+      );
+    } catch (e) {
+      return (users: null, error: e.toString());
+    }
+  }
+
+  @override
+  Future<bool> updateUserRole({
+    required String userId,
+    required UserRole newRole,
+  }) async {
+    try {
+      await _firestore
+          .collection(FirestorePaths.usersCollection)
+          .doc(userId)
+          .update({'role': newRole.name});
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> deleteUser(String userId) async {
+    try {
+      await _firestore
+          .collection(FirestorePaths.usersCollection)
+          .doc(userId)
+          .delete();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // ICustomerService implementation
+  @override
+  Future<(List<Deal>?, String?)> fetchDeals({String? saleId}) async {
+    try {
+      Query<Map<String, dynamic>> query = _firestore.collection(FirestorePaths.dealsCollection);
+      if (saleId != null && saleId.isNotEmpty) {
+        query = query.where('saleId', isEqualTo: saleId);
+      }
+      final snapshot = await query.get();
+      final customers = snapshot.docs.map((doc) {
+        final data = doc.data();
+        return Deal(
+          id: doc.id,
+          name: data['name'] ?? '',
+          phone: data['phone'] ?? '',
+          price: data['price'] as double,
+          schedule: (data['schedule'] as Timestamp).toDate(),
+          saleId: data['saleId'] ?? '',
+          motelId: data['motelId'] ?? '',
+          motelName: data['motelName'] ?? '',
+        );
+      }).toList();
+      return (customers, null);
+    } catch (e) {
+      return (null, e.toString());
+    }
+  }
+
+  @override
+  Future<(bool, String?)> addDeal(Deal customer) async {
+    try {
+      await _firestore.collection(FirestorePaths.dealsCollection).add({
+        'name': customer.name,
+        'phone': customer.phone,
+        'deal': customer.price,
+        'schedule': customer.schedule,
+        'saleId': customer.saleId,
+        'motelId': customer.motelId,
+        'motelName': customer.motelName,
+      });
+      return (true, null);
+    } catch (e) {
+      return (false, e.toString());
+    }
+  }
+
+  @override
+  Future<(bool, String?)> deleteDeal(String id) async {
+    try {
+      await _firestore.collection(FirestorePaths.dealsCollection).doc(id).delete();
+      return (true, null);
+    } catch (e) {
+      return (false, e.toString());
+    }
+  }
+
+  @override
+  Future<(bool, String?)> updateDeal(Deal customer) async {
+    try {
+      await _firestore.collection(FirestorePaths.dealsCollection).doc(customer.id).update({
+        'name': customer.name,
+        'phone': customer.phone,
+        'deal': customer.price,
+        'schedule': customer.schedule,
+        'saleId': customer.saleId,
+        'motelId': customer.motelId,
+        'motelName': customer.motelName,
+      });
+      return (true, null);
+    } catch (e) {
+      return (false, e.toString());
     }
   }
 }

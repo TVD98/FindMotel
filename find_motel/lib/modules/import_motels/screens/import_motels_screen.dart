@@ -1,3 +1,4 @@
+import 'package:find_motel/common/widgets/common_alert_dialog.dart';
 import 'package:find_motel/modules/import_motels/bloc/import_motels_bloc.dart';
 import 'package:find_motel/modules/import_motels/bloc/import_motels_event.dart';
 import 'package:find_motel/theme/app_colors.dart';
@@ -8,7 +9,6 @@ import 'package:find_motel/modules/import_motels/bloc/import_motels_state.dart';
 import 'package:find_motel/common/models/motel.dart';
 import 'package:find_motel/extensions/double_extensions.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:find_motel/common/widgets/custom_button.dart';
 
 class ImportMotelsScreen extends StatefulWidget {
   final List<List<String>> data;
@@ -75,9 +75,7 @@ class _ImportMotelsScreenState extends State<ImportMotelsScreen> {
                 },
               ),
               if (state.isLoading)
-                const Center(
-                  child: CircularProgressIndicator(),
-                ),
+                const Center(child: CircularProgressIndicator()),
             ],
           ),
         );
@@ -216,61 +214,18 @@ class _ImportMotelsScreenState extends State<ImportMotelsScreen> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(
-            'Xác nhận',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: AppColors.primary,
-            ),
-          ),
-          content: Text(
-            'Bạn chưa lưu thông tin',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w400,
-              color: AppColors.elementSecondary,
-            ),
-          ),
-          actions: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  width: 90,
-                  height: 38,
-                  child: CustomButton(
-                    title: 'Thoát',
-                    textColor: AppColors.primary,
-                    backgroundColor: AppColors.onPrimary,
-                    strokeColor: AppColors.strokeLight,
-                    radius: 4.0,
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      Navigator.pop(context);
-                    },
-                  ),
-                ),
-                const SizedBox(width: 16),
-                SizedBox(
-                  width: 90,
-                  height: 38,
-                  child: CustomButton(
-                    title: 'Tiếp tục',
-                    textColor: AppColors.onPrimary,
-                    backgroundColor: AppColors.primary,
-                    strokeColor: AppColors.strokeLight,
-                    radius: 4.0,
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ],
+        return CommonAlertDialog(
+          title: 'Xác nhận',
+          content: 'Bạn chưa lưu thông tin',
+          leadingActionTitle: 'Thoát',
+          trailingActionTitle: 'Tiếp tục',
+          onLeadingPressed: () {
+            Navigator.of(context).pop();
+            Navigator.pop(context);
+          },
+          onTrailingPressed: () {
+            Navigator.of(context).pop();
+          },
         );
       },
     );
@@ -280,41 +235,14 @@ class _ImportMotelsScreenState extends State<ImportMotelsScreen> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(
-            'Thành công',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: AppColors.primary,
-            ),
-          ),
-          content: Text(
-            'Lưu $motelsCount trọ thành công',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w400,
-              color: AppColors.elementSecondary,
-            ),
-          ),
-          actions: [
-            const SizedBox(width: 16),
-            SizedBox(
-              width: 90,
-              height: 38,
-              child: CustomButton(
-                title: 'Đóng',
-                textColor: AppColors.onPrimary,
-                backgroundColor: AppColors.primary,
-                strokeColor: AppColors.strokeLight,
-                radius: 4.0,
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  Navigator.pop(context);
-                },
-              ),
-            ),
-          ],
+        return CommonAlertDialog(
+          title: 'Thành công',
+          content: 'Lưu $motelsCount trọ thành công',
+          leadingActionTitle: 'Đóng',
+          onLeadingPressed: () {
+            Navigator.of(context).pop();
+            Navigator.pop(context);
+          },
         );
       },
     );
