@@ -2,6 +2,7 @@ import 'package:find_motel/modules/home/bloc/home_bloc.dart';
 import 'package:find_motel/modules/home/bloc/home_event.dart';
 import 'package:find_motel/modules/home/screens/home_screens.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_bloc.dart';
+import 'package:find_motel/modules/home_page/bloc/home_page_event.dart'; // Add this import
 import 'package:find_motel/modules/authentication/screens/login_screen.dart';
 import 'package:find_motel/modules/map_page/bloc/map_page_bloc.dart';
 import 'package:find_motel/modules/map_page/bloc/map_page_event.dart';
@@ -57,7 +58,7 @@ class AuthGate extends StatelessWidget {
           return MultiBlocProvider(
             providers: [
               BlocProvider(create: (_) => HomeBloc()..add(LoadUserDataEvent())),
-              BlocProvider(create: (_) => HomePageBloc()),
+              BlocProvider(create: (_) => HomePageBloc()..add(LoadMotels())),
               BlocProvider(
                 create: (_) => MapBloc()..add(FirstLoadMotelsEvent()),
               ),
