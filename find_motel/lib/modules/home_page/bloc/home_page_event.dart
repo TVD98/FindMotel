@@ -1,1 +1,3 @@
-enum HomePageEvent { updateMessage }
+abstract class HomePageEvent {}
+
+class LoadMotels extends HomePageEvent {}

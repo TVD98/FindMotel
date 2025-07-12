@@ -15,5 +15,4 @@ abstract class IMotelsService {
 
   /// Convenience method for updating a single field.
   Future<String?> updateMotelField(String motelId, String field, dynamic value);
-
 }
