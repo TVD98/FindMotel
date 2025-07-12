@@ -12,7 +12,8 @@ import 'package:find_motel/constants/firestore_paths.dart';
 import 'package:find_motel/common/models/user_profile.dart';
 
 /// Service that fetches motel data from Firebase Cloud Firestore.
-class FirestoreService implements IMotelsService, ICatalogService, IUserDataService {
+class FirestoreService
+    implements IMotelsService, ICatalogService, IUserDataService {
   final FirebaseFirestore _firestore;
 
   FirestoreService({FirebaseFirestore? firestore})

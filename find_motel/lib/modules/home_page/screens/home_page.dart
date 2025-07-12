@@ -10,30 +10,13 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:find_motel/services/motel/motels_service.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Thay đổi số lượng items và thêm nhiều ảnh hơn
-    final motels = List.generate(
-      10,
-      (i) => {
-        'title': 'Căn hộ số 1',
-        'address':
-            'Ung Văn Khiêm, Bình Thạnh, Tp. Hồ Chí Minh Ung Văn Khiêm, Bình Thạnh, Tp. Hồ Chí Minh Ung Văn Khiêm, Bình Thạnh, Tp. Hồ Chí Minh',
-        'price': '2,500,000đ',
-        'image': [
-          'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267',
-          'https://images.unsplash.com/photo-1502005229762-cf1b2da7c5d6',
-          'https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd',
-          'https://images.unsplash.com/photo-1507089947368-19c1da9775ae',
-          'https://images.unsplash.com/photo-1465101046530-73398c7f28ca',
-        ][i % 5],
-      },
-    );
-
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       body: SafeArea(
@@ -113,25 +96,48 @@ class HomePage extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: motels.length,
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              mainAxisSpacing: 16,
-                              crossAxisSpacing: 16,
-                              mainAxisExtent: 180, // Increased to fit content
-                            ),
-                        itemBuilder: (context, idx) {
-                          final motel = motels[idx];
-                          return _MotelCard(
-                            imageUrl: motel['image']!,
-                            title: motel['title']!,
-                            address: motel['address']!,
-                            price: motel['price']!,
-                          );
+                      BlocBuilder<HomePageBloc, HomePageState>(
+                        builder: (context, state) {
+                          if (state is HomePageLoading) {
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          }
+
+                          if (state is HomePageError) {
+                            return Center(
+                              child: Text(
+                                'Error: ${state.message}',
+                                style: GoogleFonts.quicksand(color: Colors.red),
+                              ),
+                            );
+                          }
+
+                          if (state is HomePageLoaded) {
+                            return GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: state.motels.length,
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 2,
+                                    mainAxisSpacing: 16,
+                                    crossAxisSpacing: 16,
+                                    mainAxisExtent: 185,
+                                  ),
+                              itemBuilder: (context, idx) {
+                                final motel = state.motels[idx];
+                                return _MotelCard(
+                                  imageUrl: motel.thumbnail,
+                                  title: motel.name,
+                                  address: motel.address,
+                                  price: '${motel.price.toStringAsFixed(0)}đ',
+                                );
+                              },
+                            );
+                          }
+
+                          return const SizedBox.shrink();
                         },
                       ),
                     ],
@@ -292,17 +298,39 @@ class _MotelCard extends StatelessWidget {
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(16),
               ),
-              child: Image.network(
-                imageUrl,
-                height: 93,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (c, e, s) => Container(
-                  height: 93,
-                  color: const Color(0xFFE0E0E0),
-                  child: const Icon(Icons.image, size: 40, color: Colors.white),
-                ),
-              ),
+              child: imageUrl.isEmpty
+                  ? Container(
+                      height: 93,
+                      width: double.infinity,
+                      decoration: const BoxDecoration(color: Color(0xFFE0E0E0)),
+                      child: const Center(
+                        child: Icon(
+                          Icons.image_not_supported_outlined,
+                          size: 40,
+                          color: Colors.white,
+                        ),
+                      ),
+                    )
+                  : Image.network(
+                      imageUrl,
+                      height: 93,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (c, e, s) => Container(
+                        height: 93,
+                        width: double.infinity,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFE0E0E0),
+                        ),
+                        child: const Center(
+                          child: Icon(
+                            Icons.broken_image_outlined,
+                            size: 40,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
             ),
             Container(
               padding: const EdgeInsets.all(8),
