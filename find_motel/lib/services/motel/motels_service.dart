@@ -15,4 +15,7 @@ abstract class IMotelsService {
 
   /// Convenience method for updating a single field.
   Future<String?> updateMotelField(String motelId, String field, dynamic value);
+
+  /// Delete a motel document. Returns `null` on success, or an error string if the deletion fails.
+  Future<String?> deleteMotel(String motelId);
 }

@@ -3,10 +3,12 @@ import 'package:find_motel/modules/home/bloc/home_event.dart';
 import 'package:find_motel/modules/home/screens/home_screens.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_bloc.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_event.dart'; // Add this import
+import 'package:find_motel/modules/user/bloc/user_bloc.dart';
 import 'package:find_motel/modules/authentication/screens/login_screen.dart';
 import 'package:find_motel/modules/map_page/bloc/map_page_bloc.dart';
 import 'package:find_motel/modules/map_page/bloc/map_page_event.dart';
 import 'package:find_motel/modules/profile_page/bloc/profile_page_bloc.dart';
+import 'package:find_motel/services/firestore/firestore_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -63,6 +65,9 @@ class AuthGate extends StatelessWidget {
                 create: (_) => MapBloc()..add(FirstLoadMotelsEvent()),
               ),
               BlocProvider(create: (_) => ProfileBloc()),
+              BlocProvider(
+                create: (_) => UserBloc(userDataService: FirestoreService()),
+              ),
             ],
             child: const HomeScreen(),
           );
