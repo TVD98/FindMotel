@@ -4,7 +4,10 @@ import 'package:find_motel/common/models/motel.dart';
 import 'package:find_motel/modules/detail/detail_screen.dart';
 import 'package:find_motel/modules/map_page/bloc/map_page_bloc.dart';
 import 'package:find_motel/modules/map_page/bloc/map_page_state.dart';
+import 'package:find_motel/modules/map_page/bloc/map_page_event.dart';
 import 'package:find_motel/modules/map_page/screens/filter_page.dart';
+import 'package:find_motel/modules/home_page/bloc/home_page_bloc.dart';
+import 'package:find_motel/modules/home_page/bloc/home_page_event.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -108,12 +111,23 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
-  void showRoomDetailBottomSheet(BuildContext context, Motel motel) {
-    showModalBottomSheet(
+  void showRoomDetailBottomSheet(BuildContext context, Motel motel) async {
+    final result = await showModalBottomSheet(
       context: context,
       isScrollControlled: true, // Cho phép bottom sheet chiếm gần hết màn hình
       backgroundColor: Colors.transparent, // Nền trong suốt để bo góc
       builder: (context) => RoomDetailScreen(detail: motel),
     );
+
+    // Nếu có kết quả trả về (true = đã save thành công), reload data cho map
+    if (result == true && context.mounted) {
+      context.read<MapBloc>().add(FirstLoadMotelsEvent());
+      // Cũng reload HomePageBloc nếu có thể
+      try {
+        context.read<HomePageBloc>().add(LoadMotels());
+      } catch (e) {
+        print('HomePageBloc not found in MapPage: $e');
+      }
+    }
   }
 }

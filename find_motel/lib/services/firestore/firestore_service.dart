@@ -15,11 +15,15 @@ import 'package:find_motel/services/customer/customer_service.dart';
 
 /// Service that fetches motel data from Firebase Cloud Firestore.
 class FirestoreService
-    implements IMotelsService, ICatalogService, IUserDataService, ICustomerService {
+    implements
+        IMotelsService,
+        ICatalogService,
+        IUserDataService,
+        ICustomerService {
   final FirebaseFirestore _firestore;
 
   FirestoreService({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   /// Upload a new motel to Firestore.
   @override
@@ -67,8 +71,8 @@ class FirestoreService
       // composite indexes. Skip them for now or adjust according to your
       // Firestore index setup.
 
-      // 3. Execute the query.
-      final snapshot = await query.get();
+      // 3. Execute the query with GetOptions to force server fetch.
+      final snapshot = await query.get(const GetOptions(source: Source.server));
 
       // 4. Map Firestore docs -> Motel models.
       final List<Motel> fetchedMotels = snapshot.docs
@@ -294,7 +298,9 @@ class FirestoreService
   @override
   Future<(List<Deal>?, String?)> fetchDeals({String? saleId}) async {
     try {
-      Query<Map<String, dynamic>> query = _firestore.collection(FirestorePaths.dealsCollection);
+      Query<Map<String, dynamic>> query = _firestore.collection(
+        FirestorePaths.dealsCollection,
+      );
       if (saleId != null && saleId.isNotEmpty) {
         query = query.where('saleId', isEqualTo: saleId);
       }
@@ -339,7 +345,10 @@ class FirestoreService
   @override
   Future<(bool, String?)> deleteDeal(String id) async {
     try {
-      await _firestore.collection(FirestorePaths.dealsCollection).doc(id).delete();
+      await _firestore
+          .collection(FirestorePaths.dealsCollection)
+          .doc(id)
+          .delete();
       return (true, null);
     } catch (e) {
       return (false, e.toString());
@@ -349,18 +358,34 @@ class FirestoreService
   @override
   Future<(bool, String?)> updateDeal(Deal customer) async {
     try {
-      await _firestore.collection(FirestorePaths.dealsCollection).doc(customer.id).update({
-        'name': customer.name,
-        'phone': customer.phone,
-        'deal': customer.price,
-        'schedule': customer.schedule,
-        'saleId': customer.saleId,
-        'motelId': customer.motelId,
-        'motelName': customer.motelName,
-      });
+      await _firestore
+          .collection(FirestorePaths.dealsCollection)
+          .doc(customer.id)
+          .update({
+            'name': customer.name,
+            'phone': customer.phone,
+            'deal': customer.price,
+            'schedule': customer.schedule,
+            'saleId': customer.saleId,
+            'motelId': customer.motelId,
+            'motelName': customer.motelName,
+          });
       return (true, null);
     } catch (e) {
       return (false, e.toString());
+    }
+  }
+
+  @override
+  Future<String?> deleteMotel(String motelId) async {
+    try {
+      await _firestore
+          .collection(FirestorePaths.motelsCollection)
+          .doc(motelId)
+          .delete();
+      return null;
+    } catch (e) {
+      return e.toString();
     }
   }
 }

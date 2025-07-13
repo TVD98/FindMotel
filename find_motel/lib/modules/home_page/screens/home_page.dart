@@ -1,23 +1,85 @@
-// ignore_for_file: unused_import
-
+import 'dart:async';
 import 'package:find_motel/modules/home_page/bloc/home_page_bloc.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_event.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_state.dart';
-import 'package:firebase_core/firebase_core.dart';
+import 'package:find_motel/modules/user/bloc/user_bloc.dart';
+import 'package:find_motel/modules/user/bloc/user_event.dart';
+import 'package:find_motel/modules/user/bloc/user_state.dart';
+import 'package:find_motel/services/reload_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:find_motel/modules/detail/detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:find_motel/services/motel/motels_service.dart';
 import 'package:find_motel/common/models/motel.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
+  late StreamSubscription<bool> _reloadSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
+    // Listen to reload stream
+    _reloadSubscription = ReloadService.reloadStream.listen((shouldReload) {
+      if (shouldReload && mounted) {
+        context.read<HomePageBloc>().add(LoadMotels());
+      }
+    });
+
+    // Load user profile khi khởi tạo
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser != null) {
+      context.read<UserBloc>().add(LoadUserProfile(currentUser.email!));
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _reloadSubscription.cancel();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Luôn reload motels khi app được resume
+      context.read<HomePageBloc>().add(LoadMotels());
+    }
+    // Kiểm tra nếu cần reload khi app được active
+    if (state == AppLifecycleState.resumed ||
+        state == AppLifecycleState.paused) {
+      if (ReloadService.getAndClearHomeNeedsReload()) {
+        context.read<HomePageBloc>().add(LoadMotels());
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    // Kiểm tra nếu cần reload sau khi quay về home
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (ReloadService.getAndClearHomeNeedsReload()) {
+        context.read<HomePageBloc>().add(LoadMotels());
+      }
+    });
+
+    // Thêm timer để check định kỳ (fallback)
+    Future.delayed(Duration.zero, () {
+      if (ReloadService.getAndClearHomeNeedsReload()) {
+        context.read<HomePageBloc>().add(LoadMotels());
+      }
+    });
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       body: SafeArea(
@@ -45,13 +107,23 @@ class HomePage extends StatelessWidget {
                       sliver: SliverList(
                         delegate: SliverChildListDelegate([
                           // Header section
-                          Text(
-                            "Hello Name's account",
-                            style: GoogleFonts.quicksand(
-                              color: const Color(0xFF3B7268),
-                              fontWeight: FontWeight.w600,
-                              fontSize: isDesktop ? 24 : 20,
-                            ),
+                          BlocBuilder<UserBloc, UserState>(
+                            builder: (context, userState) {
+                              String greeting = "Xin chào";
+                              if (userState is UserLoaded &&
+                                  userState.userProfile.name != null) {
+                                greeting =
+                                    "Xin chào ${userState.userProfile.name}";
+                              }
+                              return Text(
+                                greeting,
+                                style: GoogleFonts.quicksand(
+                                  color: const Color(0xFF3B7268),
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: isDesktop ? 24 : 20,
+                                ),
+                              );
+                            },
                           ),
                           const SizedBox(height: 16),
                           // Search bar section
@@ -210,32 +282,6 @@ class _SearchBar extends StatelessWidget {
   }
 }
 
-class _FilterRow extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        _FilterChip(label: 'Giá phòng', selected: true, onTap: () {}),
-        const SizedBox(width: 10),
-        _FilterChip(label: 'Khu vực', selected: false, onTap: () {}),
-        const SizedBox(width: 10),
-        _FilterChip(label: 'Loại phòng', selected: false, onTap: () {}),
-        const SizedBox(width: 10),
-        Container(
-          width: 38,
-          height: 38,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(color: const Color(0xFFE0E0E0)),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(Icons.tune, color: const Color(0xFF3B7268), size: 22),
-        ),
-      ],
-    );
-  }
-}
-
 class _FilterChip extends StatelessWidget {
   final String label;
   final bool selected;
@@ -308,14 +354,19 @@ class _MotelCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         // Wrap with InkWell for tap effect
-        onTap: () {
-          Navigator.push(
+        onTap: () async {
+          final result = await Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) =>
                   RoomDetailScreen(detail: motel, isBottomSheet: false),
             ),
           );
+
+          // Nếu có kết quả trả về từ EditMotelScreen (true = đã save thành công), reload data
+          if (result == true && context.mounted) {
+            context.read<HomePageBloc>().add(LoadMotels());
+          }
         },
         borderRadius: BorderRadius.circular(
           16,

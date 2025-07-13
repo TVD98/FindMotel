@@ -1,14 +1,16 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:find_motel/common/models/motel.dart';
 import 'package:find_motel/theme/app_colors.dart';
-import 'package:find_motel/common/widgets/custom_button.dart';
-import 'package:find_motel/common/widgets/rectange_checkbox_list.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:intl/intl.dart';
-import 'package:flutter/services.dart';
+import 'package:find_motel/services/firestore/firestore_service.dart';
+import 'package:find_motel/services/storage/firebase_storage_service.dart';
+import 'package:find_motel/services/reload_service.dart';
+import 'package:find_motel/common/widgets/common_app_bar.dart';
+import 'package:find_motel/common/constants/app_extensions.dart';
 
 class EditMotelScreen extends StatefulWidget {
   final Motel motel;
@@ -38,6 +40,9 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
   late String mainImage;
   late List<String> images; // url hoặc path local
 
+  bool _isLoading = false;
+  bool _isDeleting = false;
+
   @override
   void initState() {
     super.initState();
@@ -53,7 +58,7 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
     electricityController = TextEditingController(text: _getFeeValue('Điện'));
     waterController = TextEditingController(text: _getFeeValue('Nước'));
     otherFeeController = TextEditingController(
-      text: _formatVND(_getFeeValue('Chi phí khác')),
+      text: _formatVND(_getFeeValue('Phí dịch vụ')),
     );
     noteController = TextEditingController(text: widget.motel.note.join('\n'));
     selectedExtensions = List<String>.from(widget.motel.extensions);
@@ -109,14 +114,7 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
   }
 
   Future<void> _showSelectExtensionsDialog() async {
-    final allExtensions = [
-      'Thang máy',
-      'Máy giặt',
-      'Miễn phí gửi xe',
-      'Sân thượng',
-      'Dịch vụ vệ sinh',
-      'Gần trạm xe buýt',
-    ];
+    final allExtensions = AppExtensions.allExtensions;
     // Tạo bản sao để chọn tạm thời
     List<String> tempSelected = List<String>.from(selectedExtensions);
 
@@ -200,15 +198,335 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
     );
   }
 
+  Future<void> _saveMotel() async {
+    if (_isLoading) return; // Prevent double tap
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Lấy tất cả dữ liệu từ các controller
+      final name = nameController.text.trim();
+      final roomCode = roomCodeController.text.trim();
+      final type = typeController.text.trim();
+      final texture = textureController.text.trim();
+      final commission = commissionController.text.trim();
+      final price = priceController.text.trim();
+      final address = addressController.text.trim();
+      final electricity = electricityController.text.trim();
+      final water = waterController.text.trim();
+      final otherFee = otherFeeController.text.trim();
+      final note = noteController.text.trim();
+
+      // Validation cơ bản
+      if (name.isEmpty || address.isEmpty) {
+        _showErrorDialog('Vui lòng nhập đầy đủ tên căn hộ và địa chỉ!');
+        return;
+      }
+
+      // Upload ảnh lên Firebase Storage trước
+      final storageService = FirebaseStorageService();
+      final uploadedImages = await storageService.uploadImages(
+        images,
+        'motels',
+      );
+
+      // Cập nhật mainImage nếu cần
+      String updatedMainImage = mainImage;
+      if (!mainImage.startsWith('http') && uploadedImages.isNotEmpty) {
+        // Tìm ảnh main trong danh sách đã upload
+        final mainIndex = images.indexOf(mainImage);
+        if (mainIndex != -1 && mainIndex < uploadedImages.length) {
+          updatedMainImage = uploadedImages[mainIndex];
+        } else {
+          updatedMainImage = uploadedImages.first;
+        }
+      }
+
+      // Chuẩn bị fees list với giá trị đã clean
+      final cleanOtherFee = otherFee.replaceAll('.', '').replaceAll(' VND', '');
+
+      final updatedFees = [
+        {'name': 'Điện', 'price': int.tryParse(electricity) ?? 0, 'unit': 'số'},
+        {'name': 'Nước', 'price': int.tryParse(water) ?? 0, 'unit': 'người'},
+        {
+          'name': 'Phí dịch vụ',
+          'price': int.tryParse(cleanOtherFee) ?? 0,
+          'unit': 'người',
+        },
+        ...fees.where(
+          (fee) => !['Điện', 'Nước', 'Phí dịch vụ'].contains(fee['name']),
+        ),
+      ];
+
+      // Tạo object Motel mới với dữ liệu đã update
+      final updatedMotel = Motel(
+        id: widget.motel.id,
+        name: name,
+        roomCode: roomCode,
+        type: type,
+        texture: texture,
+        commission: commission,
+        price: double.tryParse(price) ?? 0,
+        address: address,
+        note: note.split('\n'),
+        extensions: selectedExtensions,
+        fees: updatedFees,
+        images: uploadedImages, // Sử dụng URLs đã upload
+        thumbnail: updatedMainImage, // Sử dụng main image đã upload
+        geoPoint: widget.motel.geoPoint,
+        status: widget.motel.status,
+        marker: widget.motel.marker,
+      );
+
+      // Tạo instance của FirestoreService và update
+      final firestoreService = FirestoreService();
+      final error = await firestoreService.updateMotel(
+        widget.motel.id,
+        updatedMotel.toMap(),
+      );
+
+      if (error == null) {
+        // Thành công - trở về màn home và reload data
+        _showSuccessDialog();
+      } else {
+        // Có lỗi
+        _showErrorDialog('Lỗi khi cập nhật: $error');
+      }
+    } catch (e) {
+      // Xử lý exception
+      _showErrorDialog('Có lỗi xảy ra: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _deleteMotel() async {
+    if (_isDeleting) return; // Prevent double tap
+
+    // Hiển thị dialog xác nhận xóa
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(Icons.warning_amber_outlined, color: Colors.orange, size: 24),
+            SizedBox(width: 8),
+            Text(
+              'Xác nhận xóa',
+              style: GoogleFonts.quicksand(
+                fontWeight: FontWeight.bold,
+                color: Colors.orange,
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'Bạn có chắc chắn muốn xóa căn hộ "${nameController.text.trim()}"?\nHành động này không thể hoàn tác.',
+          style: GoogleFonts.quicksand(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              'Hủy',
+              style: GoogleFonts.quicksand(
+                color: Colors.grey,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(
+              'Xóa',
+              style: GoogleFonts.quicksand(fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldDelete != true) return;
+
+    setState(() {
+      _isDeleting = true;
+    });
+
+    try {
+      // Tạo instance của FirestoreService và xóa
+      final firestoreService = FirestoreService();
+      final error = await firestoreService.deleteMotel(widget.motel.id);
+
+      if (error == null) {
+        // Thành công - hiển thị dialog thành công
+        _showDeleteSuccessDialog();
+      } else {
+        // Có lỗi
+        _showErrorDialog('Lỗi khi xóa: $error');
+      }
+    } catch (e) {
+      // Xử lý exception
+      _showErrorDialog('Có lỗi xảy ra: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isDeleting = false;
+        });
+      }
+    }
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(Icons.error_outline, color: Colors.red, size: 24),
+            SizedBox(width: 8),
+            Text(
+              'Lỗi',
+              style: GoogleFonts.quicksand(
+                fontWeight: FontWeight.bold,
+                color: Colors.red,
+              ),
+            ),
+          ],
+        ),
+        content: Text(message, style: GoogleFonts.quicksand()),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Đóng',
+              style: GoogleFonts.quicksand(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(Icons.check_circle_outline, color: Colors.green, size: 24),
+            SizedBox(width: 8),
+            Text(
+              'Thành công',
+              style: GoogleFonts.quicksand(
+                fontWeight: FontWeight.bold,
+                color: Colors.green,
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'Cập nhật thông tin căn hộ thành công!',
+          style: GoogleFonts.quicksand(),
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            onPressed: () {
+              Navigator.pop(context); // Đóng dialog
+              // Set flag để reload home
+              ReloadService.setHomeNeedsReload();
+              // Pop về home trực tiếp
+              Navigator.popUntil(context, (route) => route.isFirst);
+            },
+            child: Text(
+              'OK',
+              style: GoogleFonts.quicksand(fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteSuccessDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(Icons.check_circle_outline, color: Colors.green, size: 24),
+            SizedBox(width: 8),
+            Text(
+              'Đã xóa',
+              style: GoogleFonts.quicksand(
+                fontWeight: FontWeight.bold,
+                color: Colors.green,
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'Đã xóa căn hộ thành công!',
+          style: GoogleFonts.quicksand(),
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            onPressed: () {
+              Navigator.pop(context); // Đóng dialog
+              // Set flag để reload home
+              ReloadService.setHomeNeedsReload();
+              // Pop về home trực tiếp
+              Navigator.popUntil(context, (route) => route.isFirst);
+            },
+            child: Text(
+              'OK',
+              style: GoogleFonts.quicksand(fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Chỉnh sửa căn hộ'),
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.primary,
-        elevation: 0,
-      ),
+      appBar: const CommonAppBar(title: 'Chỉnh sửa căn hộ'),
       backgroundColor: const Color(0xFFF5F5F5),
       body: GestureDetector(
         behavior: HitTestBehavior.translucent,
@@ -250,7 +568,7 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
               _divider(),
               const SizedBox(height: 8),
               Text(
-                'Chi phí khác:',
+                'Phí dịch vụ:',
                 style: GoogleFonts.quicksand(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
@@ -273,23 +591,93 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
               const SizedBox(height: 8),
               _buildNotesSection(),
               const SizedBox(height: 24),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(48), // hoặc 50
-                  backgroundColor: AppColors.primary,
-                  textStyle: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+              // Row chứa nút xóa và nút lưu
+              Row(
+                children: [
+                  // Nút xóa
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(48),
+                        backgroundColor: (_isLoading || _isDeleting)
+                            ? Colors.grey
+                            : Colors.red,
+                        textStyle: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      onPressed: (_isLoading || _isDeleting)
+                          ? null
+                          : _deleteMotel,
+                      child: _isDeleting
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: 12),
+                                Text('Đang xóa...'),
+                              ],
+                            )
+                          : const Text('Xóa'),
+                    ),
                   ),
-                  foregroundColor: Colors.white, // Đảm bảo màu chữ trắng
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                  const SizedBox(width: 16),
+                  // Nút lưu
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(48),
+                        backgroundColor: (_isLoading || _isDeleting)
+                            ? Colors.grey
+                            : AppColors.primary,
+                        textStyle: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      onPressed: (_isLoading || _isDeleting)
+                          ? null
+                          : _saveMotel,
+                      child: _isLoading
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: 12),
+                                Text('Đang lưu...'),
+                              ],
+                            )
+                          : const Text('Lưu thay đổi'),
+                    ),
                   ),
-                ),
-                onPressed: () {
-                  // TODO: Save logic
-                },
-                child: const Text('Lưu thay đổi'),
+                ],
               ),
             ],
           ),
@@ -303,58 +691,27 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Ảnh lớn
-        Stack(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: mainImage.isNotEmpty
-                  ? (mainImage.startsWith('http')
-                        ? Image.network(
-                            mainImage,
-                            height: 140,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                          )
-                        : Image.file(
-                            File(mainImage),
-                            height: 140,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                          ))
-                  : Container(
-                      height: 140,
-                      color: Colors.grey[200],
-                      child: const Icon(
-                        Icons.image,
-                        size: 40,
-                        color: Colors.grey,
-                      ),
-                    ),
-            ),
-            Positioned(
-              top: 8,
-              right: 8,
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(20),
-                  onTap: _pickImage,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.4),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.edit,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: mainImage.isNotEmpty
+              ? (mainImage.startsWith('http')
+                    ? Image.network(
+                        mainImage,
+                        height: 140,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      )
+                    : Image.file(
+                        File(mainImage),
+                        height: 140,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ))
+              : Container(
+                  height: 140,
+                  color: Colors.grey[200],
+                  child: const Icon(Icons.image, size: 40, color: Colors.grey),
                 ),
-              ),
-            ),
-          ],
         ),
         const SizedBox(height: 12),
         // Gallery ảnh nhỏ
@@ -597,11 +954,11 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
           ],
         ),
         const SizedBox(height: 12),
-        // Chỉ một ô nhập chi phí khác, đơn vị tháng
+        // Chỉ một ô nhập phí dịch vụ, đơn vị người
         _buildFeeInput(
-          label: 'Chi phí khác',
+          label: 'Phí dịch vụ',
           controller: otherFeeController,
-          unit: 'tháng',
+          unit: 'người',
         ),
       ],
     );

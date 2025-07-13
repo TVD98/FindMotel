@@ -1,5 +1,6 @@
 // ignore_for_file: library_private_types_in_public_api
 
+import 'dart:io';
 import 'package:find_motel/common/models/motel.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -8,6 +9,10 @@ import 'package:intl/intl.dart';
 import 'package:find_motel/theme/app_colors.dart';
 import 'package:find_motel/common/widgets/common_app_bar.dart';
 import 'package:find_motel/modules/modtel_manager/screen/edit_motel_screen.dart'; // Thêm import này
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:find_motel/modules/home_page/bloc/home_page_bloc.dart';
+import 'package:find_motel/modules/home_page/bloc/home_page_event.dart';
+import 'package:find_motel/common/constants/app_extensions.dart';
 
 // Class chứa các hằng số dùng chung
 class AppConstants {
@@ -42,6 +47,7 @@ class RoomDetailScreen extends StatefulWidget {
 
 class _RoomDetailScreenState extends State<RoomDetailScreen> {
   late String _currentMainImage; // Lưu trữ mainImage hiện tại
+  bool _needsReload = false; // Track whether we need to reload data
 
   @override
   void initState() {
@@ -83,8 +89,10 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
 
     // Return different layouts based on isBottomSheet
     if (widget.isBottomSheet) {
-      return Scaffold(
-        body: DraggableScrollableSheet(
+      return Container(
+        // Thêm overlay mờ cho bottom sheet
+        decoration: BoxDecoration(color: Colors.black.withOpacity(0.5)),
+        child: DraggableScrollableSheet(
           initialChildSize: 0.5,
           minChildSize: 0.5,
           maxChildSize: 0.9,
@@ -116,24 +124,43 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
     return Scaffold(
       appBar: CommonAppBar(
         title: widget.detail.name,
-        leadingAsset: 'assets/images/ic_arrow_left.svg',
-        onLeadingPressed: () => Navigator.pop(context),
-        actions: [
-          IconButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => EditMotelScreen(motel: widget.detail),
+        leadingAsset: 'assets/images/ic_back.svg',
+        leadingIconColor: Colors.white,
+        onLeadingPressed: () => Navigator.pop(context, _needsReload),
+        // Chỉ hiển thị actions khi không phải bottom sheet
+        actions: widget.isBottomSheet
+            ? null
+            : [
+                IconButton(
+                  onPressed: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => EditMotelScreen(motel: widget.detail),
+                      ),
+                    );
+
+                    // Nếu có kết quả trả về (true = đã save thành công), reload data
+                    if (result == true) {
+                      _needsReload = true;
+                      // Trigger reload HomePageBloc
+                      if (context.mounted) {
+                        // Import để access HomePageBloc
+                        try {
+                          context.read<HomePageBloc>().add(LoadMotels());
+                        } catch (e) {
+                          // Handle case where HomePageBloc is not available
+                          print('HomePageBloc not found: $e');
+                        }
+                      }
+                    }
+                  },
+                  icon: const Icon(
+                    Icons.edit, // Đổi icon thành icon edit
+                    color: Colors.white, // Đổi thành màu trắng
+                  ),
                 ),
-              );
-            },
-            icon: const Icon(
-              Icons.edit, // Đổi icon thành icon edit
-              color: AppColors.primary,
-            ),
-          ),
-        ],
+              ],
       ),
       body: SafeArea(
         bottom: true,
@@ -149,25 +176,38 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
   Widget _buildMainImage() {
     return ClipRRect(
       borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-      child: Image.network(
-        _currentMainImage,
-        height: 180,
-        width: double.infinity,
-        fit: BoxFit.cover,
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return const SizedBox(
-            height: 180,
-            child: Center(child: CircularProgressIndicator()),
-          );
-        },
-        errorBuilder: (context, error, stackTrace) {
-          return const SizedBox(
-            height: 180,
-            child: Center(child: Icon(Icons.error, color: Colors.red)),
-          );
-        },
-      ),
+      child: _currentMainImage.startsWith('http')
+          ? Image.network(
+              _currentMainImage,
+              height: 180,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return const SizedBox(
+                  height: 180,
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              },
+              errorBuilder: (context, error, stackTrace) {
+                return const SizedBox(
+                  height: 180,
+                  child: Center(child: Icon(Icons.error, color: Colors.red)),
+                );
+              },
+            )
+          : Image.file(
+              File(_currentMainImage),
+              height: 180,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return const SizedBox(
+                  height: 180,
+                  child: Center(child: Icon(Icons.error, color: Colors.red)),
+                );
+              },
+            ),
     );
   }
 
@@ -200,29 +240,48 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
                           width: 2,
                         ),
                       ),
-                      child: Image.network(
-                        imageUrl,
-                        width: 60,
-                        height: 60,
-                        fit: BoxFit.cover,
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return const SizedBox(
-                            width: 60,
-                            height: 60,
-                            child: Center(child: CircularProgressIndicator()),
-                          );
-                        },
-                        errorBuilder: (context, error, stackTrace) {
-                          return const SizedBox(
-                            width: 60,
-                            height: 60,
-                            child: Center(
-                              child: Icon(Icons.error, color: Colors.red),
+                      child: imageUrl.startsWith('http')
+                          ? Image.network(
+                              imageUrl,
+                              width: 60,
+                              height: 60,
+                              fit: BoxFit.cover,
+                              loadingBuilder:
+                                  (context, child, loadingProgress) {
+                                    if (loadingProgress == null) return child;
+                                    return const SizedBox(
+                                      width: 60,
+                                      height: 60,
+                                      child: Center(
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                    );
+                                  },
+                              errorBuilder: (context, error, stackTrace) {
+                                return const SizedBox(
+                                  width: 60,
+                                  height: 60,
+                                  child: Center(
+                                    child: Icon(Icons.error, color: Colors.red),
+                                  ),
+                                );
+                              },
+                            )
+                          : Image.file(
+                              File(imageUrl),
+                              width: 60,
+                              height: 60,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return const SizedBox(
+                                  width: 60,
+                                  height: 60,
+                                  child: Center(
+                                    child: Icon(Icons.error, color: Colors.red),
+                                  ),
+                                );
+                              },
                             ),
-                          );
-                        },
-                      ),
                     ),
                   ),
                 );
@@ -335,12 +394,30 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
             ? const Text('Không có tiện ích', style: TextStyle(fontSize: 14))
             : Wrap(
                 spacing: AppConstants.smallSpacing,
-                children: widget.detail.extensions
+                runSpacing: AppConstants.smallSpacing,
+                children: AppExtensions.allExtensions
+                    .where(
+                      (extension) =>
+                          widget.detail.extensions.contains(extension),
+                    )
                     .map(
-                      (e) => _tagChip(
-                        e,
-                        AppColors.elementSecondary,
-                        textColor: Colors.black,
+                      (e) => Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(44),
+                        ),
+                        child: Text(
+                          e,
+                          style: GoogleFonts.quicksand(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 13,
+                          ),
+                        ),
                       ),
                     )
                     .toList(),
