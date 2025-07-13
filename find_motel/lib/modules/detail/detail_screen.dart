@@ -1,11 +1,18 @@
 // ignore_for_file: library_private_types_in_public_api
 
+import 'dart:io';
 import 'package:find_motel/common/models/motel.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
 import 'package:find_motel/theme/app_colors.dart';
+import 'package:find_motel/common/widgets/common_app_bar.dart';
+import 'package:find_motel/modules/modtel_manager/screen/edit_motel_screen.dart'; // Thêm import này
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:find_motel/modules/home_page/bloc/home_page_bloc.dart';
+import 'package:find_motel/modules/home_page/bloc/home_page_event.dart';
+import 'package:find_motel/common/constants/app_extensions.dart';
 
 // Class chứa các hằng số dùng chung
 class AppConstants {
@@ -26,8 +33,13 @@ String formatVND(dynamic price) {
 
 class RoomDetailScreen extends StatefulWidget {
   final Motel detail;
+  final bool isBottomSheet; // Add this parameter
 
-  const RoomDetailScreen({super.key, required this.detail});
+  const RoomDetailScreen({
+    super.key,
+    required this.detail,
+    this.isBottomSheet = true, // Default to bottom sheet
+  });
 
   @override
   _RoomDetailScreenState createState() => _RoomDetailScreenState();
@@ -35,6 +47,7 @@ class RoomDetailScreen extends StatefulWidget {
 
 class _RoomDetailScreenState extends State<RoomDetailScreen> {
   late String _currentMainImage; // Lưu trữ mainImage hiện tại
+  bool _needsReload = false; // Track whether we need to reload data
 
   @override
   void initState() {
@@ -51,92 +64,111 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Tính maxChildSize để không che BottomNavigationBar
-    final bottomNavHeight =
-        AppConstants.bottomNavBarHeight; // Chiều cao BottomNavigationBar
-    final bottomPadding = MediaQuery.of(
-      context,
-    ).padding.bottom; // Chiều cao bottom bar hệ thống
-    final maxHeightFraction =
-        (MediaQuery.of(context).size.height - bottomNavHeight - bottomPadding) /
-        MediaQuery.of(context).size.height;
-    return DraggableScrollableSheet(
-      initialChildSize: 0.5, // Bắt đầu với 1/2 màn hình
-      minChildSize: 0.5, // Chiều cao tối thiểu: 1/2 màn hình
-      maxChildSize:
-          maxHeightFraction, // Chiều cao tối đa: không che BottomNavigationBar
-      snap: true, // Bật snap giữa các mức
-      snapSizes: [
-        0.5,
-        0.75,
-        maxHeightFraction,
-      ], // Các mức: 1/2, 3/4, max (không che BottomNavigationBar)
-      builder: (context, scrollController) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(AppConstants.borderRadius),
-            ),
-          ),
-          child: SafeArea(
-            bottom: true, // Không che bottom navigation bar hệ thống
-            child: SingleChildScrollView(
-              controller:
-                  scrollController, // Gắn scrollController từ DraggableScrollableSheet
-              padding: const EdgeInsets.all(AppConstants.padding),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildHeader(context),
-                  const SizedBox(height: AppConstants.padding),
-                  _buildMainImage(),
-                  const SizedBox(height: AppConstants.smallSpacing),
-                  _buildImageGallery(),
-                  const SizedBox(height: AppConstants.smallSpacing),
-                  _buildTags(),
-                  const SizedBox(height: AppConstants.smallSpacing),
-                  _buildRoomInfo(),
-                  const SizedBox(height: AppConstants.padding),
-                  _buildAddress(context),
-                  const SizedBox(height: AppConstants.padding),
-                  _buildExtensions(),
-                  const SizedBox(height: AppConstants.padding),
-                  _buildFees(),
-                  const SizedBox(height: AppConstants.padding),
-                  _buildNotes(),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  // Widget hiển thị tiêu đề và nút đóng
-  Widget _buildHeader(BuildContext context) {
-    return Row(
+    // Extract content into a separate method
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Semantics(
-            label: 'Tên phòng: ${widget.detail.name}',
-            child: Text(
-              widget.detail.name,
-              style: GoogleFonts.quicksand(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: AppConstants.primaryColor,
-              ),
-            ),
-          ),
-        ),
-        IconButton(
-          onPressed: () => Navigator.of(context).pop(), // Đóng bottom sheet
-          icon: const Icon(Icons.close),
-          tooltip: 'Đóng',
-        ),
+        const SizedBox(height: AppConstants.padding),
+        _buildMainImage(),
+        const SizedBox(height: AppConstants.smallSpacing),
+        _buildImageGallery(),
+        const SizedBox(height: AppConstants.smallSpacing),
+        _buildTags(),
+        const SizedBox(height: AppConstants.smallSpacing),
+        _buildRoomInfo(),
+        const SizedBox(height: AppConstants.padding),
+        _buildAddress(context),
+        const SizedBox(height: AppConstants.padding),
+        _buildExtensions(),
+        const SizedBox(height: AppConstants.padding),
+        _buildFees(),
+        const SizedBox(height: AppConstants.padding),
+        _buildNotes(),
       ],
+    );
+
+    // Return different layouts based on isBottomSheet
+    if (widget.isBottomSheet) {
+      return Container(
+        // Thêm overlay mờ cho bottom sheet
+        decoration: BoxDecoration(color: Colors.black.withOpacity(0.5)),
+        child: DraggableScrollableSheet(
+          initialChildSize: 0.5,
+          minChildSize: 0.5,
+          maxChildSize: 0.9,
+          snap: true,
+          snapSizes: const [0.5, 0.75, 0.9],
+          builder: (context, scrollController) {
+            return Container(
+              decoration: const BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(AppConstants.borderRadius),
+                ),
+              ),
+              child: SafeArea(
+                bottom: true,
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.all(AppConstants.padding),
+                  child: content,
+                ),
+              ),
+            );
+          },
+        ),
+      );
+    }
+
+    // Normal view
+    return Scaffold(
+      appBar: CommonAppBar(
+        title: widget.detail.name,
+        leadingAsset: 'assets/images/ic_back.svg',
+        leadingIconColor: Colors.white,
+        onLeadingPressed: () => Navigator.pop(context, _needsReload),
+        // Chỉ hiển thị actions khi không phải bottom sheet
+        actions: widget.isBottomSheet
+            ? null
+            : [
+                IconButton(
+                  onPressed: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => EditMotelScreen(motel: widget.detail),
+                      ),
+                    );
+
+                    // Nếu có kết quả trả về (true = đã save thành công), reload data
+                    if (result == true) {
+                      _needsReload = true;
+                      // Trigger reload HomePageBloc
+                      if (context.mounted) {
+                        // Import để access HomePageBloc
+                        try {
+                          context.read<HomePageBloc>().add(LoadMotels());
+                        } catch (e) {
+                          // Handle case where HomePageBloc is not available
+                          print('HomePageBloc not found: $e');
+                        }
+                      }
+                    }
+                  },
+                  icon: const Icon(
+                    Icons.edit, // Đổi icon thành icon edit
+                    color: Colors.white, // Đổi thành màu trắng
+                  ),
+                ),
+              ],
+      ),
+      body: SafeArea(
+        bottom: true,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppConstants.padding),
+          child: content,
+        ),
+      ),
     );
   }
 
@@ -144,25 +176,38 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
   Widget _buildMainImage() {
     return ClipRRect(
       borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-      child: Image.network(
-        _currentMainImage,
-        height: 180,
-        width: double.infinity,
-        fit: BoxFit.cover,
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return const SizedBox(
-            height: 180,
-            child: Center(child: CircularProgressIndicator()),
-          );
-        },
-        errorBuilder: (context, error, stackTrace) {
-          return const SizedBox(
-            height: 180,
-            child: Center(child: Icon(Icons.error, color: Colors.red)),
-          );
-        },
-      ),
+      child: _currentMainImage.startsWith('http')
+          ? Image.network(
+              _currentMainImage,
+              height: 180,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return const SizedBox(
+                  height: 180,
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              },
+              errorBuilder: (context, error, stackTrace) {
+                return const SizedBox(
+                  height: 180,
+                  child: Center(child: Icon(Icons.error, color: Colors.red)),
+                );
+              },
+            )
+          : Image.file(
+              File(_currentMainImage),
+              height: 180,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return const SizedBox(
+                  height: 180,
+                  child: Center(child: Icon(Icons.error, color: Colors.red)),
+                );
+              },
+            ),
     );
   }
 
@@ -195,29 +240,48 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
                           width: 2,
                         ),
                       ),
-                      child: Image.network(
-                        imageUrl,
-                        width: 60,
-                        height: 60,
-                        fit: BoxFit.cover,
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return const SizedBox(
-                            width: 60,
-                            height: 60,
-                            child: Center(child: CircularProgressIndicator()),
-                          );
-                        },
-                        errorBuilder: (context, error, stackTrace) {
-                          return const SizedBox(
-                            width: 60,
-                            height: 60,
-                            child: Center(
-                              child: Icon(Icons.error, color: Colors.red),
+                      child: imageUrl.startsWith('http')
+                          ? Image.network(
+                              imageUrl,
+                              width: 60,
+                              height: 60,
+                              fit: BoxFit.cover,
+                              loadingBuilder:
+                                  (context, child, loadingProgress) {
+                                    if (loadingProgress == null) return child;
+                                    return const SizedBox(
+                                      width: 60,
+                                      height: 60,
+                                      child: Center(
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                    );
+                                  },
+                              errorBuilder: (context, error, stackTrace) {
+                                return const SizedBox(
+                                  width: 60,
+                                  height: 60,
+                                  child: Center(
+                                    child: Icon(Icons.error, color: Colors.red),
+                                  ),
+                                );
+                              },
+                            )
+                          : Image.file(
+                              File(imageUrl),
+                              width: 60,
+                              height: 60,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return const SizedBox(
+                                  width: 60,
+                                  height: 60,
+                                  child: Center(
+                                    child: Icon(Icons.error, color: Colors.red),
+                                  ),
+                                );
+                              },
                             ),
-                          );
-                        },
-                      ),
                     ),
                   ),
                 );
@@ -330,12 +394,30 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
             ? const Text('Không có tiện ích', style: TextStyle(fontSize: 14))
             : Wrap(
                 spacing: AppConstants.smallSpacing,
-                children: widget.detail.extensions
+                runSpacing: AppConstants.smallSpacing,
+                children: AppExtensions.allExtensions
+                    .where(
+                      (extension) =>
+                          widget.detail.extensions.contains(extension),
+                    )
                     .map(
-                      (e) => _tagChip(
-                        e,
-                        AppColors.elementSecondary,
-                        textColor: Colors.black,
+                      (e) => Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(44),
+                        ),
+                        child: Text(
+                          e,
+                          style: GoogleFonts.quicksand(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 13,
+                          ),
+                        ),
                       ),
                     )
                     .toList(),
