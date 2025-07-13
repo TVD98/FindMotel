@@ -7,6 +7,8 @@ abstract class IMotelsService {
     int limit,
   });
 
+  Future<({Motel? motel, String? error})> getMotelById(String motelId);
+
   Future<({String? id, String? error})> addMotel(Motel motel);
 
   /// Update one or many fields of an existing motel document. Returns `null` on

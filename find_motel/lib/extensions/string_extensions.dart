@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:intl/intl.dart';
 
 extension StringExtensions on String {
   Query<Map<String, dynamic>> applyWhereEqualTo(
@@ -38,5 +39,9 @@ extension StringExtensions on String {
         toLowerCase() == 'yes' ||
         toLowerCase() == 'y' ||
         toLowerCase() == 'có';
+  }
+
+  DateTime? parseDate(String format) {
+    return DateFormat(format).tryParse(this);
   }
 }
