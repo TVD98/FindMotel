@@ -1,4 +1,7 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:find_motel/extensions/double_extensions.dart';
+import 'package:find_motel/modules/deal_manager/bloc/deal_detail_bloc.dart';
 import 'package:find_motel/modules/deal_manager/screens/deal_detail_screen.dart';
 import 'package:find_motel/theme/app_colors.dart';
 import 'package:flutter/material.dart';
@@ -22,16 +25,16 @@ class _DealManagerScreenState extends State<DealManagerScreen> {
     return BlocProvider(
       create: (context) => DealManagerBloc()..add(LoadDealsEvent()),
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Quản lý deal'),
-        ),
+        appBar: AppBar(title: const Text('Quản lý deal')),
         body: BlocBuilder<DealManagerBloc, DealManagerState>(
           builder: (context, state) {
             if (state.status == DealManagerStatus.loading) {
               return const Center(child: CircularProgressIndicator());
             }
             if (state.status == DealManagerStatus.failure) {
-              return Center(child: Text(state.errorMessage ?? 'Đã có lỗi xảy ra'));
+              return Center(
+                child: Text(state.errorMessage ?? 'Đã có lỗi xảy ra'),
+              );
             }
             if (state.deals.isEmpty) {
               return const Center(child: Text('Chưa có deal nào'));
@@ -41,14 +44,19 @@ class _DealManagerScreenState extends State<DealManagerScreen> {
               itemBuilder: (context, index) {
                 final deal = state.deals[index];
                 return GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).push(
+                  onTap: () async {
+                    final result = await Navigator.push(
+                      context,
                       MaterialPageRoute(
-                        builder: (_) => DealDetailScreen(deal: deal),
+                        builder: (context) => DealDetailScreen(deal: deal),
                       ),
                     );
+                    if (result is Deal) {
+                      context.read<DealManagerBloc>().add(DealUpdatedEvent(result));
+                    }
                   },
-                  child: _DealItem(deal: deal),);
+                  child: _DealItem(deal: deal),
+                );
               },
             );
           },

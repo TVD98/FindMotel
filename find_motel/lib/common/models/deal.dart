@@ -18,4 +18,26 @@ class Deal {
     required this.motelId,
     required this.motelName,
   });
+
+  copyWith({
+    String? id,
+    String? name,
+    String? phone,
+    double? price,
+    DateTime? schedule,
+    String? saleId,
+    String? motelId,
+    String? motelName,
+  }) {
+    return Deal(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      phone: phone ?? this.phone,
+      price: price ?? this.price,
+      schedule: schedule ?? this.schedule,
+      saleId: saleId ?? this.saleId,
+      motelId: motelId ?? this.motelId,
+      motelName: motelName ?? this.motelName,
+    );
+  }
 }

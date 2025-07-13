@@ -298,9 +298,9 @@ class FirestoreService
   @override
   Future<(List<Deal>?, String?)> fetchDeals({String? saleId}) async {
     try {
-      Query<Map<String, dynamic>> query = _firestore.collection(
-        FirestorePaths.dealsCollection,
-      );
+      Query<Map<String, dynamic>> query = _firestore
+          .collection(FirestorePaths.dealsCollection)
+          .orderBy('schedule', descending: false);
       if (saleId != null && saleId.isNotEmpty) {
         query = query.where('saleId', isEqualTo: saleId);
       }
@@ -330,8 +330,8 @@ class FirestoreService
       await _firestore.collection(FirestorePaths.dealsCollection).add({
         'name': customer.name,
         'phone': customer.phone,
-        'deal': customer.price,
-        'schedule': customer.schedule,
+        'price': customer.price,
+        'schedule': Timestamp.fromDate(customer.schedule),
         'saleId': customer.saleId,
         'motelId': customer.motelId,
         'motelName': customer.motelName,
@@ -364,7 +364,7 @@ class FirestoreService
           .update({
             'name': customer.name,
             'phone': customer.phone,
-            'deal': customer.price,
+            'price': customer.price,
             'schedule': customer.schedule,
             'saleId': customer.saleId,
             'motelId': customer.motelId,
@@ -386,6 +386,22 @@ class FirestoreService
       return null;
     } catch (e) {
       return e.toString();
+    }
+  }
+
+  @override
+  Future<({Motel? motel, String? error})> getMotelById(String motelId) async {
+    try {
+      final doc = await _firestore
+          .collection(FirestorePaths.motelsCollection)
+          .doc(motelId)
+          .get();
+      if (!doc.exists) {
+        return (motel: null, error: 'Motel not found');
+      }
+      return (motel: _motelFromDoc(doc), error: null);
+    } catch (e) {
+      return (motel: null, error: e.toString());
     }
   }
 }

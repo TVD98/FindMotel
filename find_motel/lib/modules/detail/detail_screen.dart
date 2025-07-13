@@ -1,7 +1,11 @@
 // ignore_for_file: library_private_types_in_public_api
 
 import 'dart:io';
+import 'package:find_motel/common/models/deal.dart';
 import 'package:find_motel/common/models/motel.dart';
+import 'package:find_motel/common/models/user_profile.dart';
+import 'package:find_motel/managers/app_data_manager.dart';
+import 'package:find_motel/modules/deal_manager/screens/deal_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -48,6 +52,20 @@ class RoomDetailScreen extends StatefulWidget {
 class _RoomDetailScreenState extends State<RoomDetailScreen> {
   late String _currentMainImage; // Lưu trữ mainImage hiện tại
   bool _needsReload = false; // Track whether we need to reload data
+
+  Deal get _deal => Deal(
+    id: '',
+    name: '',
+    phone: '',
+    price: widget.detail.price,
+    schedule: DateTime.now(),
+    saleId: AppDataManager().currentUserProfile?.email ?? '',
+    motelId: widget.detail.id,
+    motelName: widget.detail.name,
+  );
+
+  bool get _isCanEdit =>
+      AppDataManager().currentUserProfile?.role == UserRole.admin;
 
   @override
   void initState() {
@@ -132,34 +150,49 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
             ? null
             : [
                 IconButton(
-                  onPressed: () async {
-                    final result = await Navigator.push(
+                  onPressed: () {
+                    Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => EditMotelScreen(motel: widget.detail),
+                        builder: (context) => DealDetailScreen(deal: _deal),
                       ),
                     );
-
-                    // Nếu có kết quả trả về (true = đã save thành công), reload data
-                    if (result == true) {
-                      _needsReload = true;
-                      // Trigger reload HomePageBloc
-                      if (context.mounted) {
-                        // Import để access HomePageBloc
-                        try {
-                          context.read<HomePageBloc>().add(LoadMotels());
-                        } catch (e) {
-                          // Handle case where HomePageBloc is not available
-                          print('HomePageBloc not found: $e');
-                        }
-                      }
-                    }
                   },
                   icon: const Icon(
-                    Icons.edit, // Đổi icon thành icon edit
-                    color: Colors.white, // Đổi thành màu trắng
+                    Icons.calendar_month,
+                    color: AppColors.headerLineOnPrimary,
                   ),
                 ),
+                if (_isCanEdit)
+                  IconButton(
+                    onPressed: () async {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => EditMotelScreen(motel: widget.detail),
+                        ),
+                      );
+
+                      // Nếu có kết quả trả về (true = đã save thành công), reload data
+                      if (result == true) {
+                        _needsReload = true;
+                        // Trigger reload HomePageBloc
+                        if (context.mounted) {
+                          // Import để access HomePageBloc
+                          try {
+                            context.read<HomePageBloc>().add(LoadMotels());
+                          } catch (e) {
+                            // Handle case where HomePageBloc is not available
+                            print('HomePageBloc not found: $e');
+                          }
+                        }
+                      }
+                    },
+                    icon: const Icon(
+                      Icons.edit, // Đổi icon thành icon edit
+                      color: Colors.white, // Đổi thành màu trắng
+                    ),
+                  ),
               ],
       ),
       body: SafeArea(
