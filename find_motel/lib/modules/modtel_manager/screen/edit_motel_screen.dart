@@ -1,0 +1,696 @@
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:find_motel/common/models/motel.dart';
+import 'package:find_motel/theme/app_colors.dart';
+import 'package:find_motel/common/widgets/custom_button.dart';
+import 'package:find_motel/common/widgets/rectange_checkbox_list.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:intl/intl.dart';
+import 'package:flutter/services.dart';
+
+class EditMotelScreen extends StatefulWidget {
+  final Motel motel;
+  const EditMotelScreen({super.key, required this.motel});
+
+  @override
+  State<EditMotelScreen> createState() => _EditMotelScreenState();
+}
+
+class _EditMotelScreenState extends State<EditMotelScreen> {
+  late TextEditingController nameController;
+  late TextEditingController roomCodeController;
+  late TextEditingController typeController;
+  late TextEditingController textureController;
+  late TextEditingController commissionController;
+  late TextEditingController priceController;
+  late TextEditingController addressController;
+  late TextEditingController electricityController;
+  late TextEditingController waterController;
+  late TextEditingController otherFeeController;
+  late TextEditingController noteController;
+
+  List<String> selectedExtensions = [];
+  List<Map<String, dynamic>> fees = [];
+  List<String> notes = [];
+
+  late String mainImage;
+  late List<String> images; // url hoặc path local
+
+  @override
+  void initState() {
+    super.initState();
+    nameController = TextEditingController(text: widget.motel.name);
+    roomCodeController = TextEditingController(text: widget.motel.roomCode);
+    typeController = TextEditingController(text: widget.motel.type);
+    textureController = TextEditingController(text: widget.motel.texture);
+    commissionController = TextEditingController(text: widget.motel.commission);
+    priceController = TextEditingController(
+      text: widget.motel.price.toStringAsFixed(0),
+    );
+    addressController = TextEditingController(text: widget.motel.address);
+    electricityController = TextEditingController(text: _getFeeValue('Điện'));
+    waterController = TextEditingController(text: _getFeeValue('Nước'));
+    otherFeeController = TextEditingController(
+      text: _formatVND(_getFeeValue('Chi phí khác')),
+    );
+    noteController = TextEditingController(text: widget.motel.note.join('\n'));
+    selectedExtensions = List<String>.from(widget.motel.extensions);
+    fees = List<Map<String, dynamic>>.from(widget.motel.fees);
+    notes = List<String>.from(widget.motel.note);
+
+    mainImage = widget.motel.thumbnail;
+    images = List<String>.from(widget.motel.images);
+  }
+
+  String _getFeeValue(String name) {
+    final fee = widget.motel.fees.firstWhere(
+      (f) => f['name'] == name,
+      orElse: () => {},
+    );
+    if (fee.isEmpty) return '';
+    // Lấy đúng số tiền, bỏ phần đơn vị và ký tự không phải số
+    final priceRaw = fee['price']?.toString() ?? '';
+    final priceNumber = priceRaw.replaceAll(RegExp(r'[^\d]'), '');
+    return priceNumber;
+  }
+
+  // Hàm format VND
+  String _formatVND(String value) {
+    if (value.isEmpty) return '';
+    final formatter = NumberFormat("#,##0", "vi_VN");
+    return formatter.format(int.tryParse(value) ?? 0);
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery);
+    if (picked != null) {
+      setState(() {
+        images.add(picked.path);
+      });
+    }
+  }
+
+  void _removeImage(int index) {
+    setState(() {
+      if (images[index] == mainImage) {
+        mainImage = images.isNotEmpty ? images[0] : '';
+      }
+      images.removeAt(index);
+    });
+  }
+
+  void _setMainImage(String img) {
+    setState(() {
+      mainImage = img;
+    });
+  }
+
+  Future<void> _showSelectExtensionsDialog() async {
+    final allExtensions = [
+      'Thang máy',
+      'Máy giặt',
+      'Miễn phí gửi xe',
+      'Sân thượng',
+      'Dịch vụ vệ sinh',
+      'Gần trạm xe buýt',
+    ];
+    // Tạo bản sao để chọn tạm thời
+    List<String> tempSelected = List<String>.from(selectedExtensions);
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              title: Text(
+                'Danh Sách Tiện Ích',
+                style: GoogleFonts.quicksand(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                  fontSize: 20,
+                ),
+              ),
+              content: SingleChildScrollView(
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: allExtensions.map((e) {
+                    final isSelected = tempSelected.contains(e);
+                    return ChoiceChip(
+                      label: Text(e),
+                      selected: isSelected,
+                      selectedColor: AppColors.primary.withOpacity(0.15),
+                      backgroundColor: Colors.white,
+                      labelStyle: GoogleFonts.quicksand(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      onSelected: (selected) {
+                        setStateDialog(() {
+                          if (selected) {
+                            tempSelected.add(e);
+                          } else {
+                            tempSelected.remove(e);
+                          }
+                        });
+                      },
+                      side: isSelected
+                          ? BorderSide.none
+                          : const BorderSide(
+                              color: AppColors.primary,
+                              width: 1,
+                            ),
+                    );
+                  }).toList(),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Hủy'),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      selectedExtensions = List<String>.from(tempSelected);
+                    });
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Thêm'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Chỉnh sửa căn hộ'),
+        backgroundColor: Colors.white,
+        foregroundColor: AppColors.primary,
+        elevation: 0,
+      ),
+      backgroundColor: const Color(0xFFF5F5F5),
+      body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Ảnh chính và gallery
+              _buildImageSection(),
+              const SizedBox(height: 16),
+              _divider(),
+              const SizedBox(height: 8),
+              Text(
+                'Thông tin cơ bản:',
+                style: GoogleFonts.quicksand(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              _buildBasicInfoSection(),
+              const SizedBox(height: 16),
+              _divider(),
+              const SizedBox(height: 8),
+              Text(
+                'Tiện ích:',
+                style: GoogleFonts.quicksand(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              _buildExtensionsSection(),
+              const SizedBox(height: 16),
+              _divider(),
+              const SizedBox(height: 8),
+              Text(
+                'Chi phí khác:',
+                style: GoogleFonts.quicksand(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              _buildFeesSection(),
+              const SizedBox(height: 16),
+              _divider(),
+              const SizedBox(height: 8),
+              Text(
+                'Ghi chú:',
+                style: GoogleFonts.quicksand(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              _buildNotesSection(),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(48), // hoặc 50
+                  backgroundColor: AppColors.primary,
+                  textStyle: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  foregroundColor: Colors.white, // Đảm bảo màu chữ trắng
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                onPressed: () {
+                  // TODO: Save logic
+                },
+                child: const Text('Lưu thay đổi'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImageSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Ảnh lớn
+        Stack(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: mainImage.isNotEmpty
+                  ? (mainImage.startsWith('http')
+                        ? Image.network(
+                            mainImage,
+                            height: 140,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                          )
+                        : Image.file(
+                            File(mainImage),
+                            height: 140,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                          ))
+                  : Container(
+                      height: 140,
+                      color: Colors.grey[200],
+                      child: const Icon(
+                        Icons.image,
+                        size: 40,
+                        color: Colors.grey,
+                      ),
+                    ),
+            ),
+            Positioned(
+              top: 8,
+              right: 8,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(20),
+                  onTap: _pickImage,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.4),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.edit,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        // Gallery ảnh nhỏ
+        SizedBox(
+          height: 56,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            children: [
+              ...images.asMap().entries.map((entry) {
+                final idx = entry.key;
+                final img = entry.value;
+                final isSelected = img == mainImage;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: Stack(
+                    children: [
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(8),
+                          onTap: () => _setMainImage(img),
+                          child: Container(
+                            width: 60,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              border: isSelected
+                                  ? Border.all(
+                                      color: AppColors.primary,
+                                      width: 2,
+                                    )
+                                  : null,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: img.startsWith('http')
+                                  ? Image.network(
+                                      img,
+                                      width: 60,
+                                      height: 48,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Image.file(
+                                      File(img),
+                                      width: 60,
+                                      height: 48,
+                                      fit: BoxFit.cover,
+                                    ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 0,
+                        right: 0,
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(10),
+                            onTap: () => _removeImage(idx),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.5),
+                                shape: BoxShape.circle,
+                              ),
+                              padding: const EdgeInsets.all(2),
+                              child: const Icon(
+                                Icons.close,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+              // Nút thêm ảnh
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: _pickImage,
+                  child: Container(
+                    width: 60,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey[400]!),
+                    ),
+                    child: const Icon(
+                      Icons.add_a_photo,
+                      color: Colors.grey,
+                      size: 24,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBasicInfoSection() {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(child: _buildTextField('Tên căn hộ', nameController)),
+            const SizedBox(width: 12),
+            Expanded(child: _buildTextField('Mã phòng', roomCodeController)),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(child: _buildTextField('Kiểu phòng', typeController)),
+            const SizedBox(width: 12),
+            Expanded(child: _buildTextField('Kết cấu', textureController)),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(child: _buildTextField('Hoa hồng', commissionController)),
+            const SizedBox(width: 12),
+            Expanded(child: _buildTextField('Giá thuê', priceController)),
+          ],
+        ),
+        const SizedBox(height: 12),
+        _buildTextField('Địa chỉ', addressController, maxLines: 2),
+      ],
+    );
+  }
+
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller, {
+    int maxLines = 1,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.quicksand(
+            fontWeight: FontWeight.w600,
+            color: AppColors.primary,
+            fontSize: 14,
+          ),
+        ),
+        const SizedBox(height: 4),
+        TextField(
+          controller: controller,
+          maxLines: maxLines,
+          style: GoogleFonts.quicksand(
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+          ),
+          decoration: InputDecoration(
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 10,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: AppColors.strokeLight),
+            ),
+            isDense: true,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildExtensionsSection() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.strokeLight),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: selectedExtensions.map((e) {
+                return Chip(
+                  label: Text(e),
+                  backgroundColor: AppColors.primary.withOpacity(0.15),
+                  labelStyle: GoogleFonts.quicksand(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(
+              Icons.add_circle,
+              color: AppColors.primary,
+              size: 32,
+            ),
+            onPressed: _showSelectExtensionsDialog,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFeesSection() {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: _buildFeeInput(
+                label: 'Điện',
+                controller: electricityController,
+                unit: 'kWh',
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildFeeInput(
+                label: 'Nước',
+                controller: waterController,
+                unit: 'người',
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        // Chỉ một ô nhập chi phí khác, đơn vị tháng
+        _buildFeeInput(
+          label: 'Chi phí khác',
+          controller: otherFeeController,
+          unit: 'tháng',
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFeeInput({
+    required String label,
+    required TextEditingController controller,
+    required String unit,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.quicksand(
+            fontWeight: FontWeight.w600,
+            color: AppColors.primary,
+            fontSize: 14,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: controller,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                // Bỏ onChanged format VND
+                style: GoogleFonts.quicksand(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
+                decoration: InputDecoration(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: AppColors.strokeLight),
+                  ),
+                  isDense: true,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                unit,
+                style: GoogleFonts.quicksand(
+                  color: Colors.grey[700],
+                  fontWeight: FontWeight.w500,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNotesSection() {
+    return TextField(
+      controller: noteController,
+      maxLines: 4,
+      style: GoogleFonts.quicksand(fontSize: 15, fontWeight: FontWeight.w500),
+      decoration: InputDecoration(
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: AppColors.strokeLight),
+        ),
+        isDense: true,
+        hintText: 'Nhập ghi chú...',
+      ),
+    );
+  }
+
+  Widget _divider() =>
+      const Divider(height: 30, thickness: 1, color: AppColors.strokeLight);
+}

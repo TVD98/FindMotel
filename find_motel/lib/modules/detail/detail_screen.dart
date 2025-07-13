@@ -6,6 +6,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
 import 'package:find_motel/theme/app_colors.dart';
+import 'package:find_motel/common/widgets/common_app_bar.dart';
+import 'package:find_motel/modules/modtel_manager/screen/edit_motel_screen.dart'; // Thêm import này
 
 // Class chứa các hằng số dùng chung
 class AppConstants {
@@ -26,8 +28,13 @@ String formatVND(dynamic price) {
 
 class RoomDetailScreen extends StatefulWidget {
   final Motel detail;
+  final bool isBottomSheet; // Add this parameter
 
-  const RoomDetailScreen({super.key, required this.detail});
+  const RoomDetailScreen({
+    super.key,
+    required this.detail,
+    this.isBottomSheet = true, // Default to bottom sheet
+  });
 
   @override
   _RoomDetailScreenState createState() => _RoomDetailScreenState();
@@ -51,92 +58,90 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Tính maxChildSize để không che BottomNavigationBar
-    final bottomNavHeight =
-        AppConstants.bottomNavBarHeight; // Chiều cao BottomNavigationBar
-    final bottomPadding = MediaQuery.of(
-      context,
-    ).padding.bottom; // Chiều cao bottom bar hệ thống
-    final maxHeightFraction =
-        (MediaQuery.of(context).size.height - bottomNavHeight - bottomPadding) /
-        MediaQuery.of(context).size.height;
-    return DraggableScrollableSheet(
-      initialChildSize: 0.5, // Bắt đầu với 1/2 màn hình
-      minChildSize: 0.5, // Chiều cao tối thiểu: 1/2 màn hình
-      maxChildSize:
-          maxHeightFraction, // Chiều cao tối đa: không che BottomNavigationBar
-      snap: true, // Bật snap giữa các mức
-      snapSizes: [
-        0.5,
-        0.75,
-        maxHeightFraction,
-      ], // Các mức: 1/2, 3/4, max (không che BottomNavigationBar)
-      builder: (context, scrollController) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(AppConstants.borderRadius),
-            ),
-          ),
-          child: SafeArea(
-            bottom: true, // Không che bottom navigation bar hệ thống
-            child: SingleChildScrollView(
-              controller:
-                  scrollController, // Gắn scrollController từ DraggableScrollableSheet
-              padding: const EdgeInsets.all(AppConstants.padding),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildHeader(context),
-                  const SizedBox(height: AppConstants.padding),
-                  _buildMainImage(),
-                  const SizedBox(height: AppConstants.smallSpacing),
-                  _buildImageGallery(),
-                  const SizedBox(height: AppConstants.smallSpacing),
-                  _buildTags(),
-                  const SizedBox(height: AppConstants.smallSpacing),
-                  _buildRoomInfo(),
-                  const SizedBox(height: AppConstants.padding),
-                  _buildAddress(context),
-                  const SizedBox(height: AppConstants.padding),
-                  _buildExtensions(),
-                  const SizedBox(height: AppConstants.padding),
-                  _buildFees(),
-                  const SizedBox(height: AppConstants.padding),
-                  _buildNotes(),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  // Widget hiển thị tiêu đề và nút đóng
-  Widget _buildHeader(BuildContext context) {
-    return Row(
+    // Extract content into a separate method
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Semantics(
-            label: 'Tên phòng: ${widget.detail.name}',
-            child: Text(
-              widget.detail.name,
-              style: GoogleFonts.quicksand(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: AppConstants.primaryColor,
+        const SizedBox(height: AppConstants.padding),
+        _buildMainImage(),
+        const SizedBox(height: AppConstants.smallSpacing),
+        _buildImageGallery(),
+        const SizedBox(height: AppConstants.smallSpacing),
+        _buildTags(),
+        const SizedBox(height: AppConstants.smallSpacing),
+        _buildRoomInfo(),
+        const SizedBox(height: AppConstants.padding),
+        _buildAddress(context),
+        const SizedBox(height: AppConstants.padding),
+        _buildExtensions(),
+        const SizedBox(height: AppConstants.padding),
+        _buildFees(),
+        const SizedBox(height: AppConstants.padding),
+        _buildNotes(),
+      ],
+    );
+
+    // Return different layouts based on isBottomSheet
+    if (widget.isBottomSheet) {
+      return Scaffold(
+        body: DraggableScrollableSheet(
+          initialChildSize: 0.5,
+          minChildSize: 0.5,
+          maxChildSize: 0.9,
+          snap: true,
+          snapSizes: const [0.5, 0.75, 0.9],
+          builder: (context, scrollController) {
+            return Container(
+              decoration: const BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(AppConstants.borderRadius),
+                ),
               ),
+              child: SafeArea(
+                bottom: true,
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.all(AppConstants.padding),
+                  child: content,
+                ),
+              ),
+            );
+          },
+        ),
+      );
+    }
+
+    // Normal view
+    return Scaffold(
+      appBar: CommonAppBar(
+        title: widget.detail.name,
+        leadingAsset: 'assets/images/ic_arrow_left.svg',
+        onLeadingPressed: () => Navigator.pop(context),
+        actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => EditMotelScreen(motel: widget.detail),
+                ),
+              );
+            },
+            icon: const Icon(
+              Icons.edit, // Đổi icon thành icon edit
+              color: AppColors.primary,
             ),
           ),
+        ],
+      ),
+      body: SafeArea(
+        bottom: true,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppConstants.padding),
+          child: content,
         ),
-        IconButton(
-          onPressed: () => Navigator.of(context).pop(), // Đóng bottom sheet
-          icon: const Icon(Icons.close),
-          tooltip: 'Đóng',
-        ),
-      ],
+      ),
     );
   }
 

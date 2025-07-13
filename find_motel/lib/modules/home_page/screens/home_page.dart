@@ -11,6 +11,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:find_motel/services/motel/motels_service.dart';
+import 'package:find_motel/common/models/motel.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -138,6 +139,7 @@ class HomePage extends StatelessWidget {
                                   title: motel.name,
                                   address: motel.address,
                                   price: '${motel.price.toStringAsFixed(0)}đ',
+                                  motel: motel, // Pass the full motel object
                                 );
                               }, childCount: state.motels.length),
                               gridDelegate:
@@ -290,49 +292,48 @@ class _MotelCard extends StatelessWidget {
   final String title;
   final String address;
   final String price;
+  final Motel motel; // Add this field
 
   const _MotelCard({
     required this.imageUrl,
     required this.title,
     required this.address,
     required this.price,
+    required this.motel, // Add this required parameter
   });
 
   @override
   Widget build(BuildContext context) {
     return Material(
       color: Colors.transparent,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE0E0E0)),
-        ),
-        child: Column(
-          children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(16),
-              ),
-              child: imageUrl.isEmpty
-                  ? Container(
-                      height: 93,
-                      width: double.infinity,
-                      decoration: const BoxDecoration(color: Color(0xFFE0E0E0)),
-                      child: const Center(
-                        child: Icon(
-                          Icons.image_not_supported_outlined,
-                          size: 40,
-                          color: Colors.white,
-                        ),
-                      ),
-                    )
-                  : Image.network(
-                      imageUrl,
-                      height: 93,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      errorBuilder: (c, e, s) => Container(
+      child: InkWell(
+        // Wrap with InkWell for tap effect
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  RoomDetailScreen(detail: motel, isBottomSheet: false),
+            ),
+          );
+        },
+        borderRadius: BorderRadius.circular(
+          16,
+        ), // Match container border radius
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE0E0E0)),
+          ),
+          child: Column(
+            children: [
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(16),
+                ),
+                child: imageUrl.isEmpty
+                    ? Container(
                         height: 93,
                         width: double.infinity,
                         decoration: const BoxDecoration(
@@ -340,88 +341,108 @@ class _MotelCard extends StatelessWidget {
                         ),
                         child: const Center(
                           child: Icon(
-                            Icons.broken_image_outlined,
+                            Icons.image_not_supported_outlined,
                             size: 40,
                             color: Colors.white,
                           ),
                         ),
-                      ),
-                    ),
-            ),
-            Container(
-              padding: const EdgeInsets.all(8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    height: 18, // Reduced from 20
-                    child: Text(
-                      title,
-                      style: GoogleFonts.quicksand(
-                        color: const Color(0xFF3B7268),
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  const SizedBox(height: 2), // Reduced from 4
-                  SizedBox(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(
-                          Icons.location_on,
-                          color: const Color(0xFFFFB84C),
-                          size: 13,
+                      )
+                    : Image.network(
+                        imageUrl,
+                        height: 93,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (c, e, s) => Container(
+                          height: 93,
+                          width: double.infinity,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFE0E0E0),
+                          ),
+                          child: const Center(
+                            child: Icon(
+                              Icons.broken_image_outlined,
+                              size: 40,
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
-                        const SizedBox(width: 2),
-                        Expanded(
-                          child: Text(
-                            address,
+                      ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      height: 18, // Reduced from 20
+                      child: Text(
+                        title,
+                        style: GoogleFonts.quicksand(
+                          color: const Color(0xFF3B7268),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(height: 2), // Reduced from 4
+                    SizedBox(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.location_on,
+                            color: const Color(0xFFFFB84C),
+                            size: 13,
+                          ),
+                          const SizedBox(width: 2),
+                          Expanded(
+                            child: Text(
+                              address,
+                              style: GoogleFonts.quicksand(
+                                color: const Color(0xFF757575),
+                                fontSize: 11,
+                                height: 1.2,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 2), // Reduced from 8
+                    SizedBox(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min, // Added this
+                        children: [
+                          Icon(
+                            Icons.monetization_on,
+                            color: const Color(0xFFFFB84C),
+                            size: 13,
+                          ),
+                          const SizedBox(width: 2),
+                          Text(
+                            price,
                             style: GoogleFonts.quicksand(
                               color: const Color(0xFF757575),
+                              fontWeight: FontWeight.w600,
                               fontSize: 11,
-                              height: 1.2,
-                              fontWeight: FontWeight.w500,
                             ),
-                            maxLines: 2,
+                            maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 2), // Reduced from 8
-                  SizedBox(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min, // Added this
-                      children: [
-                        Icon(
-                          Icons.monetization_on,
-                          color: const Color(0xFFFFB84C),
-                          size: 13,
-                        ),
-                        const SizedBox(width: 2),
-                        Text(
-                          price,
-                          style: GoogleFonts.quicksand(
-                            color: const Color(0xFF757575),
-                            fontWeight: FontWeight.w600,
-                            fontSize: 11,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
