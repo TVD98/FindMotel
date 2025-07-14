@@ -9,7 +9,9 @@ import 'package:find_motel/services/motel/motels_service.dart';
 
 class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
   final IMotelsService _motelsService;
-  ImportMotelsBloc({IMotelsService? motelsService}) : _motelsService = motelsService ?? FirestoreService(), super(const ImportMotelsState()) {
+  ImportMotelsBloc({IMotelsService? motelsService})
+    : _motelsService = motelsService ?? FirestoreService(),
+      super(const ImportMotelsState()) {
     on<HandleFileEvent>((event, emit) {
       final motels = _parseMotels(event.data);
       emit(state.copyWith(motels: motels));
@@ -17,7 +19,7 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
 
     on<SaveMotelsEvent>((event, emit) async {
       emit(state.copyWith(isLoading: true));
-      try { 
+      try {
         for (final motel in event.motels) {
           final result = await _motelsService.addMotel(motel);
           if (result.error != null) {
@@ -35,13 +37,22 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
   List<Motel> _parseMotels(List<List<String>> data) {
     final motelIndex = AppDataManager().motelIndex;
     final maxFields = motelIndex?.maxFields();
-    final maxColumn = data.map((e) => e.length).toList().reduce((a, b) => a > b ? a : b);
+    final maxColumn = data
+        .map((e) => e.length)
+        .toList()
+        .reduce((a, b) => a > b ? a : b);
     final maxRow = data.length;
-    if (motelIndex == null || motelIndex.start == null || motelIndex.start! > maxRow ||  maxFields == null || maxFields > maxColumn) return [];
+    if (motelIndex == null ||
+        motelIndex.start == null ||
+        motelIndex.start! > maxRow ||
+        maxFields == null ||
+        maxFields > maxColumn)
+      return [];
     final numberIndex = motelIndex.number?.toIndex() ?? 0;
     final streetIndex = motelIndex.street?.toIndex() ?? 0;
     final wardIndex = motelIndex.ward?.toIndex() ?? 0;
     final priceIndex = motelIndex.price?.toIndex() ?? 0;
+    final nameIndex = motelIndex.name?.toIndex() ?? 0;
     final typeIndex = motelIndex.type?.toIndex() ?? 0;
     final roomCodeIndex = motelIndex.roomCode?.toIndex() ?? 0;
     final elevatorIndex = motelIndex.elevator?.toIndex() ?? 0;
@@ -53,6 +64,7 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
     final noteIndex = motelIndex.note?.toIndex() ?? 0;
     final geoPointIndex = motelIndex.geoPoint?.toIndex() ?? 0;
     final textureIndex = motelIndex.texture?.toIndex() ?? 0;
+    final imagesIndex = motelIndex.images?.toIndex() ?? 0;
 
     List<Motel> motelList = [];
     for (int i = motelIndex.start! - 1; i < maxRow; i++) {
@@ -62,6 +74,7 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
         'street': rowData[streetIndex],
         'ward': rowData[wardIndex],
         'price': rowData[priceIndex],
+        'name': rowData[nameIndex],
         'type': rowData[typeIndex],
         'commission': rowData[commissionIndex],
         'geoPoint': rowData[geoPointIndex],
@@ -73,6 +86,7 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
         'car': rowData[carIndex],
         'note': rowData[noteIndex],
         'texture': rowData[textureIndex],
+        'images': rowData[imagesIndex],
       };
       motelList.add(_motelFromJson(motelJson));
     }
@@ -80,9 +94,11 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
   }
 
   Motel _motelFromJson(Map<String, dynamic> json) {
-    final name = 'Nhà trọ ${json['number']} ${json['street']}';
+    final name = '${json['name']}';
     final address = '${json['number']} ${json['street']}, ${json['ward']}';
+    final List<String> keywords = [json['number'], json['street'], json['ward']];
     final carDeposit = (json['car'] as String).toPrice();
+    final images = (json['images'] as String).split(',').map((e) => e.trim()).toList();
     final electricityPrice = (json['electricity'] as String).toPrice();
     final waterPrice = (json['water'] as String).toPrice();
     final otherPrice = (json['other'] as String).toPrice();
@@ -112,10 +128,11 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
       fees: fees,
       note: [json['note'] as String],
       status: RentalStatus.empty,
-      images: [],
-      marker: '',
-      thumbnail: '',
+      images: images,
+      marker: images.first,
+      thumbnail: images.first,
       texture: json['texture'] as String,
+      keywords: keywords
     );
   }
 }

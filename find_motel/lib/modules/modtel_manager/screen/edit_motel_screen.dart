@@ -402,6 +402,7 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
         geoPoint: widget.motel.geoPoint,
         status: widget.motel.status,
         marker: widget.motel.marker,
+        keywords: widget.motel.keywords
       );
 
       // Tạo instance của FirestoreService và update
