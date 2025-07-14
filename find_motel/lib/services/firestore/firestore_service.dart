@@ -56,8 +56,8 @@ class FirestoreService
           .limit(limit);
 
       // 2. Apply Firestore-side filters if present.
-      if (filter?.roomCode != null) {
-        query = filter!.roomCode!.applyWhereEqualTo(query, 'room_code');
+      if (filter?.roomCode != null && filter!.roomCode!.isNotEmpty) {
+        query = filter.roomCode!.applyWhereEqualTo(query, 'room_code');
       }
 
       // 2. Apply Firestore-side filters if present.
@@ -101,6 +101,18 @@ class FirestoreService
       if (filter?.status != null) {
         resultMotels = resultMotels
             .where((motel) => filter!.status!.contains(motel.status.name))
+            .toList();
+      }
+
+      if (filter?.type != null && filter!.type! != 'Khác') {
+        resultMotels = resultMotels
+            .where((motel) => motel.type == filter.type!)
+            .toList();
+      }
+
+      if (filter?.texturies != null && filter!.texturies!.isNotEmpty) {
+        resultMotels = resultMotels
+            .where((motel) => filter.texturies!.contains(motel.texture))
             .toList();
       }
 
