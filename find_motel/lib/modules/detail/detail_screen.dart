@@ -209,38 +209,57 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
   Widget _buildMainImage() {
     return ClipRRect(
       borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-      child: _currentMainImage.startsWith('http')
-          ? Image.network(
-              _currentMainImage,
-              height: 180,
-              width: double.infinity,
-              fit: BoxFit.cover,
-              loadingBuilder: (context, child, loadingProgress) {
-                if (loadingProgress == null) return child;
-                return const SizedBox(
-                  height: 180,
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              },
-              errorBuilder: (context, error, stackTrace) {
-                return const SizedBox(
-                  height: 180,
-                  child: Center(child: Icon(Icons.error, color: Colors.red)),
-                );
-              },
-            )
-          : Image.file(
-              File(_currentMainImage),
-              height: 180,
-              width: double.infinity,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return const SizedBox(
-                  height: 180,
-                  child: Center(child: Icon(Icons.error, color: Colors.red)),
-                );
-              },
-            ),
+      child: _getImageWidget(_currentMainImage, double.infinity, 180),
+    );
+  }
+
+  Widget _getImageWidget(String url, double width, double height) {
+    if (url.isEmpty) {
+      return _buildImageDefault();
+    } else if (url.startsWith('http')) {
+      return Image.network(
+        url,
+        height: height,
+        width: width,
+        fit: BoxFit.cover,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return SizedBox(
+            height: height,
+            width: width,
+            child: Center(child: CircularProgressIndicator()),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) {
+          return SizedBox(
+            height: height,
+            width: width,
+            child: Center(child: Icon(Icons.error, color: Colors.red)),
+          );
+        },
+      );
+    } else {
+      return Image.file(
+        File(url),
+        height: height,
+        width: width,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return SizedBox(
+            height: height,
+            width: width,
+            child: Center(child: Icon(Icons.error, color: Colors.red)),
+          );
+        },
+      );
+    }
+  }
+
+  Widget _buildImageDefault() {
+    return Image.asset(
+      'assets/images/image_default.png',
+      width: double.infinity,
+      height: 180,
     );
   }
 
@@ -273,48 +292,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
                           width: 2,
                         ),
                       ),
-                      child: imageUrl.startsWith('http')
-                          ? Image.network(
-                              imageUrl,
-                              width: 60,
-                              height: 60,
-                              fit: BoxFit.cover,
-                              loadingBuilder:
-                                  (context, child, loadingProgress) {
-                                    if (loadingProgress == null) return child;
-                                    return const SizedBox(
-                                      width: 60,
-                                      height: 60,
-                                      child: Center(
-                                        child: CircularProgressIndicator(),
-                                      ),
-                                    );
-                                  },
-                              errorBuilder: (context, error, stackTrace) {
-                                return const SizedBox(
-                                  width: 60,
-                                  height: 60,
-                                  child: Center(
-                                    child: Icon(Icons.error, color: Colors.red),
-                                  ),
-                                );
-                              },
-                            )
-                          : Image.file(
-                              File(imageUrl),
-                              width: 60,
-                              height: 60,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return const SizedBox(
-                                  width: 60,
-                                  height: 60,
-                                  child: Center(
-                                    child: Icon(Icons.error, color: Colors.red),
-                                  ),
-                                );
-                              },
-                            ),
+                      child: _getImageWidget(imageUrl, 60, 60),
                     ),
                   ),
                 );

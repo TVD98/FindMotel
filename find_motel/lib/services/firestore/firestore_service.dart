@@ -144,6 +144,7 @@ class FirestoreService
       marker: data['marker'] as String? ?? '',
       thumbnail: data['thumbnail'] as String? ?? '',
       texture: data['texture'] as String? ?? '',
+      keywords: List<String>.from(data['keywords'] ?? const [])
     );
   }
 

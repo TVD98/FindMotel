@@ -30,12 +30,12 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
   late TextEditingController addressController;
   late TextEditingController electricityController;
   late TextEditingController waterController;
-  late TextEditingController otherFeeController;
   late TextEditingController noteController;
 
   List<String> selectedExtensions = [];
   List<Map<String, dynamic>> fees = [];
   List<String> notes = [];
+  List<Map<String, dynamic>> customFees = []; // Danh sách phí tùy chỉnh
 
   late String mainImage;
   late List<String> images; // url hoặc path local
@@ -57,13 +57,16 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
     addressController = TextEditingController(text: widget.motel.address);
     electricityController = TextEditingController(text: _getFeeValue('Điện'));
     waterController = TextEditingController(text: _getFeeValue('Nước'));
-    otherFeeController = TextEditingController(
-      text: _formatVND(_getFeeValue('Phí dịch vụ')),
-    );
     noteController = TextEditingController(text: widget.motel.note.join('\n'));
     selectedExtensions = List<String>.from(widget.motel.extensions);
     fees = List<Map<String, dynamic>>.from(widget.motel.fees);
     notes = List<String>.from(widget.motel.note);
+
+    // Khởi tạo custom fees (loại bỏ điện, nước)
+    customFees = widget.motel.fees
+        .where((fee) => !['Điện', 'Nước'].contains(fee['name']))
+        .map((fee) => Map<String, dynamic>.from(fee))
+        .toList();
 
     mainImage = widget.motel.thumbnail;
     images = List<String>.from(widget.motel.images);
@@ -79,13 +82,6 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
     final priceRaw = fee['price']?.toString() ?? '';
     final priceNumber = priceRaw.replaceAll(RegExp(r'[^\d]'), '');
     return priceNumber;
-  }
-
-  // Hàm format VND
-  String _formatVND(String value) {
-    if (value.isEmpty) return '';
-    final formatter = NumberFormat("#,##0", "vi_VN");
-    return formatter.format(int.tryParse(value) ?? 0);
   }
 
   Future<void> _pickImage() async {
@@ -198,6 +194,144 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
     );
   }
 
+  Future<void> _showAddFeeDialog() async {
+    final nameController = TextEditingController();
+    final priceController = TextEditingController();
+    String selectedUnit = 'người';
+    final units = ['người', 'phòng', 'tháng', 'lần'];
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              title: Text(
+                'Thêm Phí Dịch Vụ',
+                style: GoogleFonts.quicksand(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                  fontSize: 20,
+                ),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: nameController,
+                    style: GoogleFonts.quicksand(fontSize: 15),
+                    decoration: InputDecoration(
+                      labelText: 'Tên phí',
+                      labelStyle: GoogleFonts.quicksand(color: AppColors.primary),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: AppColors.primary),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: priceController,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    style: GoogleFonts.quicksand(fontSize: 15),
+                    decoration: InputDecoration(
+                      labelText: 'Số tiền',
+                      labelStyle: GoogleFonts.quicksand(color: AppColors.primary),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: AppColors.primary),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    value: selectedUnit,
+                    style: GoogleFonts.quicksand(fontSize: 15, color: Colors.black),
+                    decoration: InputDecoration(
+                      labelText: 'Đơn vị',
+                      labelStyle: GoogleFonts.quicksand(color: AppColors.primary),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: AppColors.primary),
+                      ),
+                    ),
+                    items: units.map((unit) {
+                      return DropdownMenuItem(
+                        value: unit,
+                        child: Text(unit),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setStateDialog(() {
+                        selectedUnit = value!;
+                      });
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(
+                    'Hủy',
+                    style: GoogleFonts.quicksand(color: Colors.grey),
+                  ),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onPressed: () {
+                    final name = nameController.text.trim();
+                    final price = priceController.text.trim();
+                    
+                    if (name.isNotEmpty && price.isNotEmpty) {
+                      setState(() {
+                        customFees.add({
+                          'name': name,
+                          'price': int.parse(price),
+                          'unit': selectedUnit,
+                        });
+                      });
+                      Navigator.pop(context);
+                    }
+                  },
+                  child: Text(
+                    'Thêm',
+                    style: GoogleFonts.quicksand(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _removeFee(int index) {
+    setState(() {
+      customFees.removeAt(index);
+    });
+  }
+
   Future<void> _saveMotel() async {
     if (_isLoading) return; // Prevent double tap
 
@@ -216,7 +350,6 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
       final address = addressController.text.trim();
       final electricity = electricityController.text.trim();
       final water = waterController.text.trim();
-      final otherFee = otherFeeController.text.trim();
       final note = noteController.text.trim();
 
       // Validation cơ bản
@@ -244,20 +377,11 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
         }
       }
 
-      // Chuẩn bị fees list với giá trị đã clean
-      final cleanOtherFee = otherFee.replaceAll('.', '').replaceAll(' VND', '');
-
+      // Chuẩn bị fees list với custom fees
       final updatedFees = [
         {'name': 'Điện', 'price': int.tryParse(electricity) ?? 0, 'unit': 'số'},
         {'name': 'Nước', 'price': int.tryParse(water) ?? 0, 'unit': 'người'},
-        {
-          'name': 'Phí dịch vụ',
-          'price': int.tryParse(cleanOtherFee) ?? 0,
-          'unit': 'người',
-        },
-        ...fees.where(
-          (fee) => !['Điện', 'Nước', 'Phí dịch vụ'].contains(fee['name']),
-        ),
+        ...customFees, // Thêm các phí tùy chỉnh
       ];
 
       // Tạo object Motel mới với dữ liệu đã update
@@ -278,6 +402,7 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
         geoPoint: widget.motel.geoPoint,
         status: widget.motel.status,
         marker: widget.motel.marker,
+        keywords: widget.motel.keywords
       );
 
       // Tạo instance của FirestoreService và update
@@ -953,12 +1078,68 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 12),
-        // Chỉ một ô nhập phí dịch vụ, đơn vị người
-        _buildFeeInput(
-          label: 'Phí dịch vụ',
-          controller: otherFeeController,
-          unit: 'người',
+        const SizedBox(height: 16),
+        // Hiển thị các phí tùy chỉnh
+        ...customFees.asMap().entries.map((entry) {
+          final index = entry.key;
+          final fee = entry.value;
+          return Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppColors.strokeLight),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        fee['name'],
+                        style: GoogleFonts.quicksand(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Text(
+                        '${NumberFormat("#,##0", "vi_VN").format(fee['price'])} VND/${fee['unit']}',
+                        style: GoogleFonts.quicksand(
+                          fontSize: 13,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: () => _removeFee(index),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+        const SizedBox(height: 8),
+        // Nút thêm phí
+        ElevatedButton.icon(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary.withOpacity(0.1),
+            foregroundColor: AppColors.primary,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            side: BorderSide(color: AppColors.primary.withOpacity(0.3)),
+          ),
+          onPressed: _showAddFeeDialog,
+          icon: const Icon(Icons.add),
+          label: Text(
+            'Thêm phí dịch vụ',
+            style: GoogleFonts.quicksand(fontWeight: FontWeight.w600),
+          ),
         ),
       ],
     );

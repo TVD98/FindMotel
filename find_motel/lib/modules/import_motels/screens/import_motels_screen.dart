@@ -101,9 +101,13 @@ class _ImportMotelsScreenState extends State<ImportMotelsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          _buildField('Tên', motel.name),
+          const SizedBox(height: 4),
           _build2Field('Mã phòng:', motel.roomCode, 'Kết cấu:', motel.texture),
           const SizedBox(height: 4),
           _buildField('Kiểu phòng:', motel.type),
+          const SizedBox(height: 4),
+          _buildField('Giá', motel.price.toVND()),
           const SizedBox(height: 4),
           Padding(
             padding: const EdgeInsets.only(left: 8.0),

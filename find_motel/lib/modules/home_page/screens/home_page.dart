@@ -402,18 +402,23 @@ class _MotelCard extends StatelessWidget {
                         imageUrl,
                         height: 93,
                         width: double.infinity,
-                        fit: BoxFit.cover,
+                        fit: BoxFit.contain,
                         errorBuilder: (c, e, s) => Container(
                           height: 93,
                           width: double.infinity,
                           decoration: const BoxDecoration(
                             color: Color(0xFFE0E0E0),
                           ),
-                          child: const Center(
-                            child: Icon(
-                              Icons.broken_image_outlined,
-                              size: 40,
-                              color: Colors.white,
+                          child: Center(
+                            child: Column(
+                              children: [
+                                Text(e.toString()),
+                                Icon(
+                                  Icons.broken_image_outlined,
+                                  size: 40,
+                                  color: Colors.white,
+                                ),
+                              ],
                             ),
                           ),
                         ),
