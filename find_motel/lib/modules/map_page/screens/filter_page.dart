@@ -44,7 +44,9 @@ class _FilterPageState extends State<FilterPage> {
   late TextEditingController _distanceController;
 
   MotelsFilter get _motelsFilter => MotelsFilter(
-    roomCode: _roomCodeController.text.isEmpty ? null : _roomCodeController.text,
+    roomCode: _roomCodeController.text.isEmpty
+        ? null
+        : _roomCodeController.text,
     address: Address(
       province: _formatStringSelection(_selectedProvince),
       ward: _formatStringSelection(_selectedWard),
@@ -63,6 +65,11 @@ class _FilterPageState extends State<FilterPage> {
   @override
   void initState() {
     super.initState();
+
+    _setupFieldsByFilters();
+  }
+
+  void _setupFieldsByFilters() {
     final initialData = AppDataManager().filterMotels;
     _selectedProvince = initialData.address?.province ?? 'Tất cả';
     _selectedWard = initialData.address?.ward ?? 'Tất cả';
@@ -307,7 +314,7 @@ class _FilterPageState extends State<FilterPage> {
         Expanded(
           child: PriceRangeInputView(
             onPriceRangeChanged: (minPrice, maxPrice) {
-            setState(() {
+              setState(() {
                 _selectedPriceRangeValues = RangeValues(minPrice, maxPrice);
               });
             },
@@ -426,7 +433,11 @@ class _FilterPageState extends State<FilterPage> {
               backgroundColor: AppColors.onPrimary,
               strokeColor: AppColors.strokeLight,
               radius: 4.0,
-              onPressed: () {},
+              onPressed: () {
+                setState(() {
+                  _setupFieldsByFilters();
+                });
+              },
             ),
           ),
         ),
@@ -435,7 +446,7 @@ class _FilterPageState extends State<FilterPage> {
           child: SizedBox(
             height: 38,
             child: CustomButton(
-              title: 'Apply',
+              title: 'Áp dụng',
               textColor: AppColors.onPrimary,
               backgroundColor: AppColors.primary,
               strokeColor: AppColors.strokeLight,

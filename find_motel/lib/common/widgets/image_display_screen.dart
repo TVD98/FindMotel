@@ -59,7 +59,7 @@ class _ImageDisplayScreenState extends State<ImageDisplayScreen> {
       body: Stack(
         children: [
           Padding(
-            padding: const EdgeInsets.only(bottom: 70.0),
+            padding: const EdgeInsets.only(bottom: 100.0),
             child: ReorderableGridView.builder(
               itemCount: _currentImages.length,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -175,7 +175,7 @@ class _ImageDisplayScreenState extends State<ImageDisplayScreen> {
           Positioned(
             left: 0,
             right: 0,
-            bottom: 0, // Cố định ở dưới cùng
+            bottom: 20, // Cố định ở dưới cùng
             child: Container(
               // Có thể dùng Container để thêm padding/margin hoặc màu nền
               color: Theme.of(

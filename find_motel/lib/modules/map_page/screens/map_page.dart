@@ -1,5 +1,3 @@
-// ignore_for_file: depend_on_referenced_packages, deprecated_member_use
-
 import 'package:find_motel/common/models/motel.dart';
 import 'package:find_motel/modules/detail/detail_screen.dart';
 import 'package:find_motel/modules/map_page/bloc/map_page_bloc.dart';

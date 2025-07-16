@@ -43,9 +43,9 @@ class AppDataManager {
   final List<String> allTexturies = [
     'DUPLEX',
     'STUDIO',
-    '1 Phòng ngủ',
-    '2 Phòng Ngủ',
-    '3 Phòng Ngủ',
+    '1 phòng ngủ',
+    '2 phòng ngủ',
+    '3 phòng ngủ',
     'Tách bếp',
   ];
 

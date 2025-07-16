@@ -1,19 +1,48 @@
+import 'package:equatable/equatable.dart';
 import 'package:find_motel/common/models/motel.dart';
+import 'package:find_motel/common/models/user_profile.dart';
 
-abstract class HomePageState {
-  const HomePageState();
-}
+class HomePageState extends Equatable {
+  final bool isLoading;
+  final String? errorMessage;
+  final List<Motel>? motels;
+  final UserProfile? userProfile;
 
-class HomePageInitial extends HomePageState {}
+  const HomePageState({
+    this.isLoading = false,
+    this.errorMessage,
+    this.motels,
+    this.userProfile,
+  });
 
-class HomePageLoading extends HomePageState {}
+  // Factory constructors for different states
+  factory HomePageState.initial() => const HomePageState();
 
-class HomePageLoaded extends HomePageState {
-  final List<Motel> motels;
-  const HomePageLoaded(this.motels);
-}
+  factory HomePageState.loading() => const HomePageState(isLoading: true);
 
-class HomePageError extends HomePageState {
-  final String message;
-  const HomePageError(this.message);
+  factory HomePageState.error(String message) => 
+      HomePageState(errorMessage: message);
+
+  // Copy with method
+  HomePageState copyWith({
+    bool? isLoading,
+    String? errorMessage,
+    List<Motel>? motels,
+    UserProfile? userProfile,
+  }) {
+    return HomePageState(
+      isLoading: isLoading ?? this.isLoading,
+      errorMessage: errorMessage ?? this.errorMessage,
+      motels: motels ?? this.motels,
+      userProfile: userProfile ?? this.userProfile,
+    );
+  }
+
+  @override
+  List<Object?> get props => [isLoading, errorMessage, motels, userProfile];
+
+  // Helper getters
+  bool get hasError => errorMessage != null;
+  bool get hasMotels => motels != null && motels!.isNotEmpty;
+  bool get hasUserProfile => userProfile != null;
 }

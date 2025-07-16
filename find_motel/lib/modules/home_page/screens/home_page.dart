@@ -1,13 +1,7 @@
-import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_bloc.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_event.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_state.dart';
-import 'package:find_motel/modules/user/bloc/user_bloc.dart';
-import 'package:find_motel/modules/user/bloc/user_event.dart';
-import 'package:find_motel/modules/user/bloc/user_state.dart';
-import 'package:find_motel/services/reload_service.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:find_motel/modules/detail/detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -21,60 +15,16 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
-  late StreamSubscription<bool> _reloadSubscription;
-
+class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    // WidgetsBinding.instance.addObserver(this);
 
-    // // Listen to reload stream
-    // _reloadSubscription = ReloadService.reloadStream.listen((shouldReload) {
-    //   if (shouldReload && mounted) {
-    //     context.read<HomePageBloc>().add(LoadMotels());
-    //   }
-    // });
+    context.read<HomePageBloc>().add(LoadUserProfile());
   }
-
-  @override
-  void dispose() {
-    // WidgetsBinding.instance.removeObserver(this);
-    // _reloadSubscription.cancel();
-    super.dispose();
-  }
-
-  // @override
-  // void didChangeAppLifecycleState(AppLifecycleState state) {
-  //   if (state == AppLifecycleState.resumed) {
-  //     // Luôn reload motels khi app được resume
-  //     context.read<HomePageBloc>().add(LoadMotels());
-  //   }
-  //   // Kiểm tra nếu cần reload khi app được active
-  //   if (state == AppLifecycleState.resumed ||
-  //       state == AppLifecycleState.paused) {
-  //     if (ReloadService.getAndClearHomeNeedsReload()) {
-  //       context.read<HomePageBloc>().add(LoadMotels());
-  //     }
-  //   }
-  // }
 
   @override
   Widget build(BuildContext context) {
-    // // Kiểm tra nếu cần reload sau khi quay về home
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   if (ReloadService.getAndClearHomeNeedsReload()) {
-    //     context.read<HomePageBloc>().add(LoadMotels());
-    //   }
-    // });
-
-    // // Thêm timer để check định kỳ (fallback)
-    // Future.delayed(Duration.zero, () {
-    //   if (ReloadService.getAndClearHomeNeedsReload()) {
-    //     context.read<HomePageBloc>().add(LoadMotels());
-    //   }
-    // });
-
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       body: SafeArea(
@@ -102,13 +52,12 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                       sliver: SliverList(
                         delegate: SliverChildListDelegate([
                           // Header section
-                          BlocBuilder<UserBloc, UserState>(
-                            builder: (context, userState) {
+                          BlocBuilder<HomePageBloc, HomePageState>(
+                            builder: (context, state) {
                               String greeting = "Xin chào";
-                              if (userState is UserLoaded &&
-                                  userState.userProfile.name != null) {
+                              if (state.hasUserProfile) {
                                 greeting =
-                                    "Xin chào ${userState.userProfile.name}";
+                                    "Xin chào ${state.userProfile!.name}";
                               }
                               return Text(
                                 greeting,
@@ -175,17 +124,17 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                       padding: EdgeInsets.symmetric(horizontal: padding),
                       sliver: BlocBuilder<HomePageBloc, HomePageState>(
                         builder: (context, state) {
-                          if (state is HomePageLoading) {
+                          if (state.isLoading) {
                             return const SliverFillRemaining(
                               child: Center(child: CircularProgressIndicator()),
                             );
                           }
 
-                          if (state is HomePageError) {
+                          if (state.hasError) {
                             return SliverFillRemaining(
                               child: Center(
                                 child: Text(
-                                  'Error: ${state.message}',
+                                  'Error: ${state.errorMessage}',
                                   style: GoogleFonts.quicksand(
                                     color: Colors.red,
                                   ),
@@ -194,13 +143,13 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                             );
                           }
 
-                          if (state is HomePageLoaded) {
+                          if (state.hasMotels) {
                             return SliverGrid(
                               delegate: SliverChildBuilderDelegate((
                                 context,
                                 idx,
                               ) {
-                                final motel = state.motels[idx];
+                                final motel = state.motels![idx];
                                 return _MotelCard(
                                   imageUrl: motel.thumbnail,
                                   title: motel.name,
@@ -208,7 +157,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                                   price: '${motel.price.toStringAsFixed(0)}đ',
                                   motel: motel, // Pass the full motel object
                                 );
-                              }, childCount: state.motels.length),
+                              }, childCount: state.motels!.length),
                               gridDelegate:
                                   SliverGridDelegateWithFixedCrossAxisCount(
                                     crossAxisCount: crossAxisCount,

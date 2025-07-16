@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:find_motel/managers/app_data_manager.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:find_motel/services/motel/motels_service.dart';
 import 'package:find_motel/services/firestore/firestore_service.dart';
@@ -10,32 +13,38 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
 
   HomePageBloc({IMotelsService? motelsService})
     : _motelsService = motelsService ?? FirestoreService(),
-      super(HomePageInitial()) {
+      super(HomePageState.initial()) {
     on<LoadMotels>(_onLoadMotels);
+    on<LoadUserProfile>(_onLoadUserProfile);
   }
 
-  Future<void> _onLoadMotels(
+  FutureOr<void> _onLoadMotels(
     LoadMotels event,
     Emitter<HomePageState> emit,
   ) async {
     try {
-      emit(HomePageLoading());
-
-      final result = await _motelsService.getMotels(limit: 100);
-
-      if (result.error != null) {
-        emit(HomePageError(result.error!));
-        return;
+      emit(state.copyWith(isLoading: true));
+      final result = await _motelsService.getMotels();
+      if (result.motels != null) {
+        emit(
+          state.copyWith(
+            isLoading: false,
+            motels: result.motels,
+            errorMessage: null,
+          ),
+        );
       }
-
-      if (result.motels == null) {
-        emit(const HomePageError('No motels found'));
-        return;
-      }
-
-      emit(HomePageLoaded(result.motels!));
     } catch (e) {
-      emit(HomePageError(e.toString()));
+      emit(state.copyWith(isLoading: false, errorMessage: e.toString()));
+    }
+  }
+
+  void _onLoadUserProfile(LoadUserProfile event, Emitter<HomePageState> emit) {
+    try {
+      final userProfile = AppDataManager().currentUserProfile;
+      emit(state.copyWith(userProfile: userProfile, errorMessage: null));
+    } catch (e) {
+      emit(state.copyWith(errorMessage: e.toString()));
     }
   }
 }

@@ -18,7 +18,7 @@ class HomeScreen extends StatefulWidget {
   static final List<Widget> _pages = [
     const HomePage(),
     const MapPage(),
-    ProfilePage(),
+    const ProfilePage(),
   ];
 }
 
