@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_bloc.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_event.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_state.dart';
@@ -26,59 +27,53 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
+    // WidgetsBinding.instance.addObserver(this);
 
-    // Listen to reload stream
-    _reloadSubscription = ReloadService.reloadStream.listen((shouldReload) {
-      if (shouldReload && mounted) {
-        context.read<HomePageBloc>().add(LoadMotels());
-      }
-    });
-
-    // Load user profile khi khởi tạo
-    final currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser != null) {
-      context.read<UserBloc>().add(LoadUserProfile(currentUser.email!));
-    }
+    // // Listen to reload stream
+    // _reloadSubscription = ReloadService.reloadStream.listen((shouldReload) {
+    //   if (shouldReload && mounted) {
+    //     context.read<HomePageBloc>().add(LoadMotels());
+    //   }
+    // });
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    _reloadSubscription.cancel();
+    // WidgetsBinding.instance.removeObserver(this);
+    // _reloadSubscription.cancel();
     super.dispose();
   }
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      // Luôn reload motels khi app được resume
-      context.read<HomePageBloc>().add(LoadMotels());
-    }
-    // Kiểm tra nếu cần reload khi app được active
-    if (state == AppLifecycleState.resumed ||
-        state == AppLifecycleState.paused) {
-      if (ReloadService.getAndClearHomeNeedsReload()) {
-        context.read<HomePageBloc>().add(LoadMotels());
-      }
-    }
-  }
+  // @override
+  // void didChangeAppLifecycleState(AppLifecycleState state) {
+  //   if (state == AppLifecycleState.resumed) {
+  //     // Luôn reload motels khi app được resume
+  //     context.read<HomePageBloc>().add(LoadMotels());
+  //   }
+  //   // Kiểm tra nếu cần reload khi app được active
+  //   if (state == AppLifecycleState.resumed ||
+  //       state == AppLifecycleState.paused) {
+  //     if (ReloadService.getAndClearHomeNeedsReload()) {
+  //       context.read<HomePageBloc>().add(LoadMotels());
+  //     }
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
-    // Kiểm tra nếu cần reload sau khi quay về home
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (ReloadService.getAndClearHomeNeedsReload()) {
-        context.read<HomePageBloc>().add(LoadMotels());
-      }
-    });
+    // // Kiểm tra nếu cần reload sau khi quay về home
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   if (ReloadService.getAndClearHomeNeedsReload()) {
+    //     context.read<HomePageBloc>().add(LoadMotels());
+    //   }
+    // });
 
-    // Thêm timer để check định kỳ (fallback)
-    Future.delayed(Duration.zero, () {
-      if (ReloadService.getAndClearHomeNeedsReload()) {
-        context.read<HomePageBloc>().add(LoadMotels());
-      }
-    });
+    // // Thêm timer để check định kỳ (fallback)
+    // Future.delayed(Duration.zero, () {
+    //   if (ReloadService.getAndClearHomeNeedsReload()) {
+    //     context.read<HomePageBloc>().add(LoadMotels());
+    //   }
+    // });
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
@@ -398,12 +393,12 @@ class _MotelCard extends StatelessWidget {
                           ),
                         ),
                       )
-                    : Image.network(
-                        imageUrl,
+                    : CachedNetworkImage(
+                        imageUrl: imageUrl,
                         height: 93,
                         width: double.infinity,
                         fit: BoxFit.contain,
-                        errorBuilder: (c, e, s) => Container(
+                        errorWidget: (c, e, s) => Container(
                           height: 93,
                           width: double.infinity,
                           decoration: const BoxDecoration(

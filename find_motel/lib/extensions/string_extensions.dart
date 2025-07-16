@@ -44,4 +44,29 @@ extension StringExtensions on String {
   DateTime? parseDate(String format) {
     return DateFormat(format).tryParse(this);
   }
+
+  String toImageUrl() {
+    RegExp regExp = RegExp(
+      r'(?:https?:\/\/)?(?:www\.)?drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)(?:\/view)?',
+    );
+    Match? match = regExp.firstMatch(this);
+
+    if (match != null && match.groupCount > 0) {
+      String fileId = match.group(1)!;
+      return 'https://lh3.googleusercontent.com/d/$fileId';
+    } else if (startsWith('https://lh3.googleusercontent.com/d/')) {
+      return this; // Đã là link trực tiếp rồi
+    }
+    // Cố gắng tìm nếu là dạng link rút gọn drive.google.com/open?id=
+    regExp = RegExp(
+      r'(?:https?:\/\/)?(?:www\.)?drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)',
+    );
+    match = regExp.firstMatch(this);
+    if (match != null && match.groupCount > 0) {
+      String fileId = match.group(1)!;
+      return 'https://lh3.googleusercontent.com/d/$fileId';
+    }
+
+    return this; // Không tìm thấy ID hoặc không phải link Drive hợp lệ
+  }
 }

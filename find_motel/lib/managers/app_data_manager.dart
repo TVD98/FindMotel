@@ -1,4 +1,5 @@
 import 'package:find_motel/common/models/area.dart';
+import 'package:find_motel/common/models/import_images_options.dart';
 import 'package:find_motel/services/motel/models/motels_filter.dart';
 import 'package:find_motel/common/models/motel_index.dart';
 import 'package:find_motel/common/models/user_profile.dart';
@@ -20,6 +21,8 @@ class AppDataManager {
   UserProfile? currentUserProfile;
 
   MotelIndex? motelIndex;
+
+  ImportImagesOptions? importImagesOptions;
 
   MotelsFilter filterMotels = MotelsFilter(
     roomCode: null,

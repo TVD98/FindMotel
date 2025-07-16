@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:find_motel/common/models/area.dart';
+import 'package:find_motel/common/models/import_images_options.dart';
 import 'package:find_motel/extensions/string_extensions.dart';
 import 'package:find_motel/services/catalog/catalog_service.dart';
 import 'package:find_motel/common/models/motel_index.dart';
@@ -144,7 +145,7 @@ class FirestoreService
       marker: data['marker'] as String? ?? '',
       thumbnail: data['thumbnail'] as String? ?? '',
       texture: data['texture'] as String? ?? '',
-      keywords: List<String>.from(data['keywords'] ?? const [])
+      keywords: List<String>.from(data['keywords'] ?? const []),
     );
   }
 
@@ -207,6 +208,23 @@ class FirestoreService
       name: data['name'] as String? ?? '',
       wards: List<String>.from(data['wards'] ?? const []),
     );
+  }
+
+  @override
+  Future<({ImportImagesOptions? options, String? error})>
+  fetchImportImagesOptions() async {
+    try {
+      final doc = await _firestore
+          .collection(FirestorePaths.optionsCollection)
+          .doc('import_images')
+          .get();
+      if (!doc.exists) {
+        return (options: null, error: 'Not found options');
+      }
+      return (options: ImportImagesOptions.fromMap(doc.data()!), error: null);
+    } catch (e) {
+      return (options: null, error: e.toString());
+    }
   }
 
   @override

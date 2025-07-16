@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:find_motel/common/widgets/image_display_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -7,7 +8,6 @@ import 'package:intl/intl.dart';
 import 'package:find_motel/common/models/motel.dart';
 import 'package:find_motel/theme/app_colors.dart';
 import 'package:find_motel/services/firestore/firestore_service.dart';
-import 'package:find_motel/services/storage/firebase_storage_service.dart';
 import 'package:find_motel/services/reload_service.dart';
 import 'package:find_motel/common/widgets/common_app_bar.dart';
 import 'package:find_motel/common/constants/app_extensions.dart';
@@ -225,7 +225,9 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
                     style: GoogleFonts.quicksand(fontSize: 15),
                     decoration: InputDecoration(
                       labelText: 'Tên phí',
-                      labelStyle: GoogleFonts.quicksand(color: AppColors.primary),
+                      labelStyle: GoogleFonts.quicksand(
+                        color: AppColors.primary,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -243,7 +245,9 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
                     style: GoogleFonts.quicksand(fontSize: 15),
                     decoration: InputDecoration(
                       labelText: 'Số tiền',
-                      labelStyle: GoogleFonts.quicksand(color: AppColors.primary),
+                      labelStyle: GoogleFonts.quicksand(
+                        color: AppColors.primary,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -256,10 +260,15 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
                     value: selectedUnit,
-                    style: GoogleFonts.quicksand(fontSize: 15, color: Colors.black),
+                    style: GoogleFonts.quicksand(
+                      fontSize: 15,
+                      color: Colors.black,
+                    ),
                     decoration: InputDecoration(
                       labelText: 'Đơn vị',
-                      labelStyle: GoogleFonts.quicksand(color: AppColors.primary),
+                      labelStyle: GoogleFonts.quicksand(
+                        color: AppColors.primary,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -269,10 +278,7 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
                       ),
                     ),
                     items: units.map((unit) {
-                      return DropdownMenuItem(
-                        value: unit,
-                        child: Text(unit),
-                      );
+                      return DropdownMenuItem(value: unit, child: Text(unit));
                     }).toList(),
                     onChanged: (value) {
                       setStateDialog(() {
@@ -301,7 +307,7 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
                   onPressed: () {
                     final name = nameController.text.trim();
                     final price = priceController.text.trim();
-                    
+
                     if (name.isNotEmpty && price.isNotEmpty) {
                       setState(() {
                         customFees.add({
@@ -358,25 +364,6 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
         return;
       }
 
-      // Upload ảnh lên Firebase Storage trước
-      final storageService = FirebaseStorageService();
-      final uploadedImages = await storageService.uploadImages(
-        images,
-        'motels',
-      );
-
-      // Cập nhật mainImage nếu cần
-      String updatedMainImage = mainImage;
-      if (!mainImage.startsWith('http') && uploadedImages.isNotEmpty) {
-        // Tìm ảnh main trong danh sách đã upload
-        final mainIndex = images.indexOf(mainImage);
-        if (mainIndex != -1 && mainIndex < uploadedImages.length) {
-          updatedMainImage = uploadedImages[mainIndex];
-        } else {
-          updatedMainImage = uploadedImages.first;
-        }
-      }
-
       // Chuẩn bị fees list với custom fees
       final updatedFees = [
         {'name': 'Điện', 'price': int.tryParse(electricity) ?? 0, 'unit': 'số'},
@@ -397,12 +384,12 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
         note: note.split('\n'),
         extensions: selectedExtensions,
         fees: updatedFees,
-        images: uploadedImages, // Sử dụng URLs đã upload
-        thumbnail: updatedMainImage, // Sử dụng main image đã upload
+        images: images,
+        thumbnail: images.first,
         geoPoint: widget.motel.geoPoint,
         status: widget.motel.status,
-        marker: widget.motel.marker,
-        keywords: widget.motel.keywords
+        marker: images.first,
+        keywords: widget.motel.keywords,
       );
 
       // Tạo instance của FirestoreService và update
@@ -915,13 +902,28 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
                     ],
                   ),
                 );
-              }).toList(),
+              }),
               // Nút thêm ảnh
               Material(
                 color: Colors.transparent,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(8),
-                  onTap: _pickImage,
+                  onTap: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ImageDisplayScreen(
+                          initialImages: images,
+                        ),
+                      ),
+                    );
+                    if (result is List<String> && result.isNotEmpty) {
+                      setState(() {
+                        images = result;
+                        mainImage = result.first;
+                      });
+                    }
+                  },
                   child: Container(
                     width: 60,
                     height: 48,

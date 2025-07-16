@@ -1,6 +1,4 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:find_motel/common/models/motel.dart';
-import 'package:find_motel/services/motel/models/motels_filter.dart';
 import 'package:find_motel/services/motel/motels_service.dart';
 import 'package:find_motel/services/firestore/firestore_service.dart';
 

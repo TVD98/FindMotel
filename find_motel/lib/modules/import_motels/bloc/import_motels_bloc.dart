@@ -96,9 +96,16 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
   Motel _motelFromJson(Map<String, dynamic> json) {
     final name = '${json['name']}';
     final address = '${json['number']} ${json['street']}, ${json['ward']}';
-    final List<String> keywords = [json['number'], json['street'], json['ward']];
+    final List<String> keywords = [
+      json['number'],
+      json['street'],
+      json['ward'],
+    ];
     final carDeposit = (json['car'] as String).toPrice();
-    final images = (json['images'] as String).split(',').map((e) => e.trim()).toList();
+    final images = (json['images'] as String)
+        .split(',')
+        .map((e) => e.trim().toImageUrl())
+        .toList();
     final electricityPrice = (json['electricity'] as String).toPrice();
     final waterPrice = (json['water'] as String).toPrice();
     final otherPrice = (json['other'] as String).toPrice();
@@ -132,7 +139,7 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
       marker: images.first,
       thumbnail: images.first,
       texture: json['texture'] as String,
-      keywords: keywords
+      keywords: keywords,
     );
   }
 }
