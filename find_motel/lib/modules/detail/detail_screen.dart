@@ -166,28 +166,13 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
                 ),
                 if (_isCanEdit)
                   IconButton(
-                    onPressed: () async {
-                      final result = await Navigator.push(
+                    onPressed: () {
+                      Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => EditMotelScreen(motel: widget.detail),
                         ),
                       );
-
-                      // Nếu có kết quả trả về (true = đã save thành công), reload data
-                      if (result == true) {
-                        _needsReload = true;
-                        // Trigger reload HomePageBloc
-                        if (context.mounted) {
-                          // Import để access HomePageBloc
-                          try {
-                            context.read<HomePageBloc>().add(LoadMotels());
-                          } catch (e) {
-                            // Handle case where HomePageBloc is not available
-                            print('HomePageBloc not found: $e');
-                          }
-                        }
-                      }
                     },
                     icon: const Icon(
                       Icons.edit, // Đổi icon thành icon edit

@@ -9,6 +9,7 @@ import 'package:find_motel/common/widgets/custom_choice_chip.dart';
 import 'package:find_motel/common/widgets/common_app_bar.dart';
 import 'package:find_motel/extensions/double_extensions.dart';
 import 'package:find_motel/managers/app_data_manager.dart';
+import 'package:find_motel/managers/cubit/cubit.dart';
 import 'package:find_motel/modules/map_page/bloc/map_page_bloc.dart';
 import 'package:find_motel/modules/map_page/bloc/map_page_event.dart';
 import 'package:find_motel/modules/map_page/screens/fixed_dropdown_button.dart';
@@ -112,6 +113,7 @@ class _FilterPageState extends State<FilterPage> {
               _buildTextureSection(),
               const SizedBox(height: 16),
               _buildActionButtons(context),
+              const SizedBox(height: 16,)
             ],
           ),
         ),
@@ -453,9 +455,7 @@ class _FilterPageState extends State<FilterPage> {
               radius: 4.0,
               onPressed: () {
                 final MotelsFilter filters = _motelsFilter;
-                _saveFilterMotels(filters);
-
-                context.read<MapBloc>().add(FilterMotelsEvent(filter: filters));
+                context.read<MotelsFilterCubit>().updateFilter(filters);
                 Navigator.of(context).pop();
               },
             ),
@@ -471,10 +471,6 @@ class _FilterPageState extends State<FilterPage> {
 
   String? _formatStringSelection(String? input) =>
       input == 'Tất cả' ? null : input;
-
-  void _saveFilterMotels(MotelsFilter filter) {
-    AppDataManager().filterMotels = filter;
-  }
 
   Widget buildRangeValueText(RangeValues values, double maxValue) {
     final double startValue = values.start;

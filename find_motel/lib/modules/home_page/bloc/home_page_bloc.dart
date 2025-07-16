@@ -15,7 +15,6 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
     : _motelsService = motelsService ?? FirestoreService(),
       super(HomePageState.initial()) {
     on<LoadMotels>(_onLoadMotels);
-    on<LoadUserProfile>(_onLoadUserProfile);
   }
 
   FutureOr<void> _onLoadMotels(
@@ -24,7 +23,10 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
   ) async {
     try {
       emit(state.copyWith(isLoading: true));
-      final result = await _motelsService.getMotels();
+      final result = await _motelsService.getMotels(
+        filter: event.filter,
+        limit: 100,
+      );
       if (result.motels != null) {
         emit(
           state.copyWith(
@@ -33,18 +35,11 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
             errorMessage: null,
           ),
         );
+      } else {
+        emit(state.copyWith(isLoading: false, motels: null));
       }
     } catch (e) {
       emit(state.copyWith(isLoading: false, errorMessage: e.toString()));
-    }
-  }
-
-  void _onLoadUserProfile(LoadUserProfile event, Emitter<HomePageState> emit) {
-    try {
-      final userProfile = AppDataManager().currentUserProfile;
-      emit(state.copyWith(userProfile: userProfile, errorMessage: null));
-    } catch (e) {
-      emit(state.copyWith(errorMessage: e.toString()));
     }
   }
 }

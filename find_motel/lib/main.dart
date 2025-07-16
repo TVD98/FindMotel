@@ -1,3 +1,4 @@
+import 'package:find_motel/managers/cubit/cubit.dart';
 import 'package:find_motel/modules/home/bloc/home_bloc.dart';
 import 'package:find_motel/modules/home/bloc/home_event.dart';
 import 'package:find_motel/modules/home/screens/home_screens.dart';
@@ -58,11 +59,13 @@ class AuthGate extends StatelessWidget {
           return MultiBlocProvider(
             providers: [
               BlocProvider(create: (_) => HomeBloc()..add(LoadUserDataEvent())),
-              BlocProvider(create: (_) => HomePageBloc()..add(LoadMotels())),
+              BlocProvider(create: (_) => HomePageBloc()),
               BlocProvider(
                 create: (_) => MapBloc()..add(FirstLoadMotelsEvent()),
               ),
               BlocProvider(create: (_) => ProfileBloc()),
+              BlocProvider(create: (_) => UserProfileCubit()),
+              BlocProvider(create: (_) => MotelsFilterCubit()..loadFilter()),
             ],
             child: const HomeScreen(),
           );
