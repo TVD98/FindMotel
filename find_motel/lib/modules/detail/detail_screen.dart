@@ -1,6 +1,7 @@
 // ignore_for_file: library_private_types_in_public_api
 
 import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:find_motel/common/models/deal.dart';
 import 'package:find_motel/common/models/motel.dart';
 import 'package:find_motel/common/models/user_profile.dart';
@@ -12,7 +13,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
 import 'package:find_motel/theme/app_colors.dart';
 import 'package:find_motel/common/widgets/common_app_bar.dart';
-import 'package:find_motel/modules/modtel_manager/screen/edit_motel_screen.dart'; // Thêm import này
+import 'package:find_motel/modules/motel_manager/screen/edit_motel_screen.dart'; // Thêm import này
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_bloc.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_event.dart';
@@ -217,20 +218,12 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
     if (url.isEmpty) {
       return _buildImageDefault();
     } else if (url.startsWith('http')) {
-      return Image.network(
-        url,
+      return CachedNetworkImage(
+        imageUrl: url,
         height: height,
         width: width,
         fit: BoxFit.cover,
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return SizedBox(
-            height: height,
-            width: width,
-            child: Center(child: CircularProgressIndicator()),
-          );
-        },
-        errorBuilder: (context, error, stackTrace) {
+        errorWidget: (context, error, stackTrace) {
           return SizedBox(
             height: height,
             width: width,

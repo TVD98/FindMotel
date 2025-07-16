@@ -1,3 +1,5 @@
+import 'package:find_motel/common/models/area.dart';
+import 'package:find_motel/common/models/import_images_options.dart';
 import 'package:find_motel/common/models/motel_index.dart';
 import 'package:find_motel/common/models/user.dart' as fm;
 import 'package:find_motel/modules/home/bloc/home_event.dart';
@@ -46,12 +48,17 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
     on<LoadCatalogEvent>((event, emit) async {
       try {
-        final result = await _catalogService.fetchProvinces();
-        if (result.error != null) {
-          return;
-        }
-        final provinces = result.provinces!;
-        AppDataManager().allProvinces = provinces;
+        final result = await Future.wait([
+          _catalogService.fetchProvinces(),
+          _catalogService.fetchImportImagesOptions(),
+        ]);
+
+        final provincesResult =
+            result[0] as ({String? error, List<Province> provinces});
+        final optionsResult =
+            result[1] as ({String? error, ImportImagesOptions? options});
+        AppDataManager().allProvinces = provincesResult.provinces;
+        AppDataManager().importImagesOptions = optionsResult.options;
       } catch (e) {
         print('[HomeBloc] Error getting catalog: $e');
       }
@@ -64,7 +71,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
           _userDataService.getMotelIndex(),
         ]);
         final userResult = results[0] as ({fm.User? user, String? error});
-        final motelIndexResult = results[1] as ({MotelIndex? motelIndex, String? error});
+        final motelIndexResult =
+            results[1] as ({MotelIndex? motelIndex, String? error});
         AppDataManager().motelIndex = motelIndexResult.motelIndex;
         if (userResult.user == null) {
           return;
