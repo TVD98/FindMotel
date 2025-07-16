@@ -69,4 +69,64 @@ extension StringExtensions on String {
 
     return this; // Không tìm thấy ID hoặc không phải link Drive hợp lệ
   }
+
+  /// Hàm chuẩn hóa chuỗi: chuyển về chữ thường, bỏ dấu, loại bỏ ký tự đặc biệt.
+  ///
+  /// Bạn có thể cài đặt gói 'diacritic' để xử lý bỏ dấu tốt hơn:
+  /// dependencies:
+  ///   diacritic: ^latest_version
+  String normalizeString() {
+    if (isEmpty) {
+      return '';
+    }
+    String normalized = toLowerCase();
+
+    // Nếu sử dụng gói diacritic để bỏ dấu tiếng Việt:
+    // normalized = removeDiacritics(normalized);
+    // Nếu không sử dụng gói diacritic, bạn có thể tự implement hoặc chấp nhận
+    // rằng việc bỏ dấu tiếng Việt thủ công sẽ phức tạp hơn và có thể không hoàn hảo.
+    // Ví dụ đơn giản (chỉ xử lý 'đ' và một số dấu cơ bản, không đầy đủ):
+    normalized = normalized.replaceAll('đ', 'd');
+    normalized = normalized.replaceAll(RegExp(r'[áàảạãăằẳặẵâầẩậẫ]'), 'a');
+    normalized = normalized.replaceAll(RegExp(r'[éèẻẹẽêềểệễ]'), 'e');
+    normalized = normalized.replaceAll(RegExp(r'[íìỉịĩ]'), 'i');
+    normalized = normalized.replaceAll(RegExp(r'[óòỏọõôồổộỗơờởợỡ]'), 'o');
+    normalized = normalized.replaceAll(RegExp(r'[úùủụũưừửựữ]'), 'u');
+    normalized = normalized.replaceAll(RegExp(r'[ýỳỷỵỹ]'), 'y');
+
+    // Loại bỏ các ký tự không phải chữ cái, số, hoặc khoảng trắng
+    normalized = normalized.replaceAll(RegExp(r'[^a-z0-9 ]'), '');
+
+    return normalized.trim();
+  }
+
+  /// Hàm tạo mảng keywords từ một chuỗi tên.
+  ///
+  /// Các từ khóa được chuẩn hóa (chữ thường, không dấu) và loại bỏ trùng lặp.
+  /// Bao gồm từng từ riêng lẻ và cả chuỗi gốc đã chuẩn hóa.
+  List<String> generateKeywords() {
+    final String normalizedName = normalizeString();
+    // Tách chuỗi thành các từ và lọc bỏ các từ rỗng
+    final List<String> words = normalizedName
+        .split(' ')
+        .where((word) => word.isNotEmpty)
+        .toList();
+
+    final Set<String> keywords =
+        <String>{}; // Dùng Set để tránh từ khóa trùng lặp
+
+    // Thêm từng từ riêng lẻ vào Set
+    for (var word in words) {
+      keywords.add(word);
+    }
+
+    // Thêm cả chuỗi gốc đã chuẩn hóa (nếu không rỗng)
+    // Điều này giúp tìm kiếm chính xác cả cụm từ.
+    if (normalizedName.isNotEmpty) {
+      keywords.add(normalizedName);
+    }
+
+    // Chuyển Set thành List và trả về
+    return keywords.toList();
+  }
 }

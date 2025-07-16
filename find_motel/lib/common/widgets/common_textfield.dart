@@ -145,10 +145,10 @@ class _CommonTextfieldState extends State<CommonTextfield> {
         ),
         if (widget.title != null && widget.title!.isNotEmpty)
           Positioned(
-            top: -12.0,
+            top: -8.0,
             left: 16.0,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
               decoration: BoxDecoration(color: widget.titleBackground ?? Colors.white),
               child: Text(
                 widget.title!,

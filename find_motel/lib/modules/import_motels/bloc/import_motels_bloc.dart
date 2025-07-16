@@ -46,8 +46,9 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
         motelIndex.start == null ||
         motelIndex.start! > maxRow ||
         maxFields == null ||
-        maxFields > maxColumn)
+        maxFields > maxColumn) {
       return [];
+    }
     final numberIndex = motelIndex.number?.toIndex() ?? 0;
     final streetIndex = motelIndex.street?.toIndex() ?? 0;
     final wardIndex = motelIndex.ward?.toIndex() ?? 0;
@@ -95,12 +96,15 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
 
   Motel _motelFromJson(Map<String, dynamic> json) {
     final name = '${json['name']}';
-    final address = '${json['number']} ${json['street']}, ${json['ward']}';
-    final List<String> keywords = [
-      json['number'],
-      json['street'],
-      json['ward'],
-    ];
+    final number = '${json['number']}';
+    final street = '${json['street']}';
+    final ward = '${json['ward']}';
+    final address = '$number $street, $ward';
+    final List<String> keywords =
+        number.generateKeywords() +
+        street.generateKeywords() +
+        ward.generateKeywords() +
+        name.generateKeywords();
     final carDeposit = (json['car'] as String).toPrice();
     final images = (json['images'] as String)
         .split(',')

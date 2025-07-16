@@ -35,7 +35,7 @@ class _ProfilePageState extends State<ProfilePage> {
       builder: (context, state) {
         return Scaffold(
           appBar: CommonAppBar(
-            title: 'Hello ${state.name}',
+            title: state.name ?? '',
             leadingAsset: null,
             actions: [
               IconButton(

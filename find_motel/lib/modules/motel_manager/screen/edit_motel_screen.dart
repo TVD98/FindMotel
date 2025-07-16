@@ -1124,7 +1124,7 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
               ],
             ),
           );
-        }).toList(),
+        }),
         const SizedBox(height: 8),
         // Nút thêm phí
         ElevatedButton.icon(
