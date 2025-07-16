@@ -1,5 +1,16 @@
-abstract class HomePageEvent {}
+import 'package:equatable/equatable.dart';
+import 'package:find_motel/services/motel/models/motels_filter.dart';
 
-class LoadMotels extends HomePageEvent {}
+abstract class HomePageEvent extends Equatable {
+  @override
+  List<Object?> get props => [];
+}
 
-class LoadUserProfile extends HomePageEvent {}
+class LoadMotels extends HomePageEvent {
+  final MotelsFilter? filter;
+
+  LoadMotels({this.filter});
+
+  @override
+  List<Object?> get props => [filter];
+}

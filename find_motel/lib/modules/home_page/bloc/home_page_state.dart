@@ -28,18 +28,16 @@ class HomePageState extends Equatable {
     bool? isLoading,
     String? errorMessage,
     List<Motel>? motels,
-    UserProfile? userProfile,
   }) {
     return HomePageState(
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage ?? this.errorMessage,
       motels: motels ?? this.motels,
-      userProfile: userProfile ?? this.userProfile,
     );
   }
 
   @override
-  List<Object?> get props => [isLoading, errorMessage, motels, userProfile];
+  List<Object?> get props => [isLoading, errorMessage, motels];
 
   // Helper getters
   bool get hasError => errorMessage != null;

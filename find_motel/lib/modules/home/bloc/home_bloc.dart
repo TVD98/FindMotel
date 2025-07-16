@@ -77,10 +77,10 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         if (userResult.user == null) {
           return;
         }
-        final userProfile = await _userDataService.getUserProfileByEmail(
+        final userProfileResult = await _userDataService.getUserProfileByEmail(
           userResult.user!.email,
         );
-        AppDataManager().currentUserProfile = userProfile.userProfile;
+        emit(state.copyWith(userProfile: userProfileResult.userProfile));
       } catch (e) {
         print('[HomeBloc] Error getting user data: $e');
       }

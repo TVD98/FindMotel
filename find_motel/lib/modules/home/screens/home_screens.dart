@@ -1,3 +1,4 @@
+import 'package:find_motel/managers/cubit/cubit.dart';
 import 'package:find_motel/modules/home/bloc/home_bloc.dart';
 import 'package:find_motel/modules/home/bloc/home_event.dart';
 import 'package:find_motel/modules/home/bloc/home_state.dart';
@@ -33,10 +34,20 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<HomeBloc, HomeState>(
+    return BlocConsumer<HomeBloc, HomeState>(
+      listener: (context, state) {
+        if (state.userProfile != null) {
+          context.read<UserProfileCubit>().updateUserProfile(
+            state.userProfile!,
+          );
+        }
+      },
       builder: (context, state) {
         return Scaffold(
-          body: HomeScreen._pages[state.selectedIndex],
+          body: IndexedStack(
+            index: state.selectedIndex,
+            children: HomeScreen._pages,
+          ),
           bottomNavigationBar: Theme(
             data: Theme.of(context).copyWith(
               splashFactory: NoSplash.splashFactory,

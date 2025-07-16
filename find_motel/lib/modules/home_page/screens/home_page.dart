@@ -1,8 +1,13 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:find_motel/common/models/user_profile.dart';
+import 'package:find_motel/extensions/double_extensions.dart';
+import 'package:find_motel/managers/app_data_manager.dart';
+import 'package:find_motel/managers/cubit/cubit.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_bloc.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_event.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_state.dart';
 import 'package:find_motel/modules/detail/detail_screen.dart';
+import 'package:find_motel/services/motel/models/motels_filter.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -15,171 +20,184 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   @override
   void initState() {
     super.initState();
 
-    context.read<HomePageBloc>().add(LoadUserProfile());
+    context.read<HomePageBloc>().add(
+      LoadMotels(filter: AppDataManager().filterMotels),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final isDesktop = constraints.maxWidth > 600;
-            final crossAxisCount = isDesktop ? 4 : 2;
-            final padding = isDesktop ? 24.0 : 18.0;
+    super.build(context);
+    return BlocListener<MotelsFilterCubit, MotelsFilter>(
+      listener: (context, filter) => {
+        context.read<HomePageBloc>().add(LoadMotels(filter: filter)),
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF5F5F5),
+        body: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final isDesktop = constraints.maxWidth > 600;
+              final crossAxisCount = isDesktop ? 4 : 2;
+              final padding = isDesktop ? 24.0 : 18.0;
 
-            return Center(
-              child: Container(
-                constraints: BoxConstraints(maxWidth: isDesktop ? 1200 : 430),
-                margin: EdgeInsets.symmetric(
-                  vertical: 8,
-                  horizontal: isDesktop ? 16 : 0,
-                ),
-                color: Colors.white,
-                child: CustomScrollView(
-                  slivers: [
-                    SliverPadding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: padding,
-                        vertical: padding,
+              return Center(
+                child: Container(
+                  constraints: BoxConstraints(maxWidth: isDesktop ? 1200 : 430),
+                  margin: EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: isDesktop ? 16 : 0,
+                  ),
+                  color: Colors.white,
+                  child: CustomScrollView(
+                    slivers: [
+                      SliverPadding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: padding,
+                          vertical: padding,
+                        ),
+                        sliver: SliverList(
+                          delegate: SliverChildListDelegate([
+                            // Header section
+                            BlocBuilder<UserProfileCubit, UserProfile>(
+                              builder: (context, userProfile) {
+                                String greeting = "Xin chào";
+                                if (userProfile.name != null) {
+                                  greeting = "Xin chào ${userProfile.name!}";
+                                }
+                                return Text(
+                                  greeting,
+                                  style: GoogleFonts.quicksand(
+                                    color: const Color(0xFF3B7268),
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: isDesktop ? 24 : 20,
+                                  ),
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                            // Search bar section
+                            _SearchBar(),
+                            const SizedBox(height: 16),
+                            // Filter section - Make it always visible
+                            SizedBox(
+                              height: 38,
+                              child: ListView(
+                                scrollDirection: Axis.horizontal,
+                                children: [
+                                  _FilterChip(
+                                    label: 'Giá phòng',
+                                    selected: true,
+                                    onTap: () {},
+                                  ),
+                                  const SizedBox(width: 10),
+                                  _FilterChip(
+                                    label: 'Khu vực',
+                                    selected: false,
+                                    onTap: () {},
+                                  ),
+                                  const SizedBox(width: 10),
+                                  _FilterChip(
+                                    label: 'Loại phòng',
+                                    selected: false,
+                                    onTap: () {},
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Container(
+                                    width: 38,
+                                    height: 38,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      border: Border.all(
+                                        color: const Color(0xFFE0E0E0),
+                                      ),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Icon(
+                                      Icons.tune,
+                                      color: const Color(0xFF3B7268),
+                                      size: 22,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                          ]),
+                        ),
                       ),
-                      sliver: SliverList(
-                        delegate: SliverChildListDelegate([
-                          // Header section
-                          BlocBuilder<HomePageBloc, HomePageState>(
-                            builder: (context, state) {
-                              String greeting = "Xin chào";
-                              if (state.hasUserProfile) {
-                                greeting =
-                                    "Xin chào ${state.userProfile!.name}";
-                              }
-                              return Text(
-                                greeting,
-                                style: GoogleFonts.quicksand(
-                                  color: const Color(0xFF3B7268),
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: isDesktop ? 24 : 20,
+                      SliverPadding(
+                        padding: EdgeInsets.symmetric(horizontal: padding),
+                        sliver: BlocBuilder<HomePageBloc, HomePageState>(
+                          builder: (context, state) {
+                            if (state.isLoading) {
+                              return const SliverFillRemaining(
+                                child: Center(
+                                  child: CircularProgressIndicator(),
                                 ),
                               );
-                            },
-                          ),
-                          const SizedBox(height: 16),
-                          // Search bar section
-                          _SearchBar(),
-                          const SizedBox(height: 16),
-                          // Filter section - Make it always visible
-                          SizedBox(
-                            height: 38,
-                            child: ListView(
-                              scrollDirection: Axis.horizontal,
-                              children: [
-                                _FilterChip(
-                                  label: 'Giá phòng',
-                                  selected: true,
-                                  onTap: () {},
-                                ),
-                                const SizedBox(width: 10),
-                                _FilterChip(
-                                  label: 'Khu vực',
-                                  selected: false,
-                                  onTap: () {},
-                                ),
-                                const SizedBox(width: 10),
-                                _FilterChip(
-                                  label: 'Loại phòng',
-                                  selected: false,
-                                  onTap: () {},
-                                ),
-                                const SizedBox(width: 10),
-                                Container(
-                                  width: 38,
-                                  height: 38,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    border: Border.all(
-                                      color: const Color(0xFFE0E0E0),
+                            }
+
+                            if (state.hasError) {
+                              return SliverFillRemaining(
+                                child: Center(
+                                  child: Text(
+                                    'Error: ${state.errorMessage}',
+                                    style: GoogleFonts.quicksand(
+                                      color: Colors.red,
                                     ),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Icon(
-                                    Icons.tune,
-                                    color: const Color(0xFF3B7268),
-                                    size: 22,
                                   ),
                                 ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                        ]),
+                              );
+                            }
+
+                            if (state.hasMotels) {
+                              return SliverGrid(
+                                delegate: SliverChildBuilderDelegate((
+                                  context,
+                                  idx,
+                                ) {
+                                  final motel = state.motels![idx];
+                                  return _MotelCard(
+                                    imageUrl: motel.thumbnail,
+                                    title: motel.name,
+                                    address: motel.address,
+                                    price: motel.price.toVND(),
+                                    motel: motel, // Pass the full motel object
+                                  );
+                                }, childCount: state.motels!.length),
+                                gridDelegate:
+                                    SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: crossAxisCount,
+                                      mainAxisSpacing: 16,
+                                      crossAxisSpacing: 16,
+                                      mainAxisExtent: 185,
+                                    ),
+                              );
+                            }
+
+                            return const SliverToBoxAdapter(
+                              child: SizedBox.shrink(),
+                            );
+                          },
+                        ),
                       ),
-                    ),
-                    SliverPadding(
-                      padding: EdgeInsets.symmetric(horizontal: padding),
-                      sliver: BlocBuilder<HomePageBloc, HomePageState>(
-                        builder: (context, state) {
-                          if (state.isLoading) {
-                            return const SliverFillRemaining(
-                              child: Center(child: CircularProgressIndicator()),
-                            );
-                          }
-
-                          if (state.hasError) {
-                            return SliverFillRemaining(
-                              child: Center(
-                                child: Text(
-                                  'Error: ${state.errorMessage}',
-                                  style: GoogleFonts.quicksand(
-                                    color: Colors.red,
-                                  ),
-                                ),
-                              ),
-                            );
-                          }
-
-                          if (state.hasMotels) {
-                            return SliverGrid(
-                              delegate: SliverChildBuilderDelegate((
-                                context,
-                                idx,
-                              ) {
-                                final motel = state.motels![idx];
-                                return _MotelCard(
-                                  imageUrl: motel.thumbnail,
-                                  title: motel.name,
-                                  address: motel.address,
-                                  price: '${motel.price.toStringAsFixed(0)}đ',
-                                  motel: motel, // Pass the full motel object
-                                );
-                              }, childCount: state.motels!.length),
-                              gridDelegate:
-                                  SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: crossAxisCount,
-                                    mainAxisSpacing: 16,
-                                    crossAxisSpacing: 16,
-                                    mainAxisExtent: 185,
-                                  ),
-                            );
-                          }
-
-                          return const SliverToBoxAdapter(
-                            child: SizedBox.shrink(),
-                          );
-                        },
-                      ),
-                    ),
-                    const SliverPadding(padding: EdgeInsets.only(bottom: 16)),
-                  ],
+                      const SliverPadding(padding: EdgeInsets.only(bottom: 16)),
+                    ],
+                  ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );
@@ -298,19 +316,14 @@ class _MotelCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         // Wrap with InkWell for tap effect
-        onTap: () async {
-          final result = await Navigator.push(
+        onTap: () {
+          Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) =>
                   RoomDetailScreen(detail: motel, isBottomSheet: false),
             ),
           );
-
-          // Nếu có kết quả trả về từ EditMotelScreen (true = đã save thành công), reload data
-          if (result == true && context.mounted) {
-            context.read<HomePageBloc>().add(LoadMotels());
-          }
         },
         borderRadius: BorderRadius.circular(
           16,
