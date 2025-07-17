@@ -1,4 +1,5 @@
 import 'package:find_motel/common/models/motel.dart';
+import 'package:find_motel/extensions/double_extensions.dart';
 import 'package:find_motel/managers/cubit/cubit.dart';
 import 'package:find_motel/modules/detail/detail_screen.dart';
 import 'package:find_motel/modules/map_page/bloc/map_page_bloc.dart';
@@ -9,6 +10,7 @@ import 'package:find_motel/services/motel/models/motels_filter.dart';
 import 'package:find_motel/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class MapPage extends StatefulWidget {
@@ -82,10 +84,10 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
           }
 
           if (state.selectedMotel != null) {
-            for (var motelCard in state.cards) {
-              _cardKeys[motelCard.id] = GlobalKey();
-            }
-            _scrollToCard(state.selectedMotel!.id);
+            // for (var motelCard in state.cards) {
+            //   _cardKeys[motelCard.id] = GlobalKey();
+            // }
+            // _scrollToCard(state.selectedMotel!.id);
           }
         },
         builder: (context, state) {
@@ -146,7 +148,7 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
                   left: 0,
                   right: 0,
                   child: SizedBox(
-                    height: 150, // Chiều cao cố định cho slider
+                    height: 254, // Chiều cao cố định cho slider
                     child: ListView.builder(
                       controller: _scrollController,
                       scrollDirection: Axis.horizontal,
@@ -154,8 +156,19 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
                       itemCount: state.cards.length,
                       itemBuilder: (context, index) {
                         final motelCard = state.cards[index];
-                        return _buildMotelCard(
-                          motelCard,
+                        return GestureDetector(
+                          child: _buildMotelCard(motelCard),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => RoomDetailScreen(
+                                  detail: motelCard,
+                                  isBottomSheet: false,
+                                ),
+                              ),
+                            );
+                          },
                         ); // Gọi hàm xây dựng từng thẻ
                       },
                     ),
@@ -169,10 +182,10 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
     );
   }
 
-  Widget _buildMotelCard(MotelCard motelCard) {
+  Widget _buildMotelCard(Motel motelCard) {
     // Cập nhật tham số
     return Container(
-      width: 250,
+      width: MediaQuery.of(context).size.width - 2 * 20,
       margin: const EdgeInsets.symmetric(horizontal: 5),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -185,70 +198,137 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
           ),
         ],
       ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.horizontal(
-              left: Radius.circular(10),
-            ),
-            child: Image.network(
-              // Sử dụng Image.network cho URL ảnh
-              motelCard.image, // Cập nhật: motelCard.image
-              width: 100,
-              height: 150,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  width: 100,
-                  height: 150,
-                  color: Colors.grey[200],
-                  child: const Icon(Icons.error, color: Colors.grey),
-                );
-              },
-            ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    motelCard.name, // Cập nhật: motelCard.name
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      motelCard.name,
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                      ),
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    motelCard.address, // Cập nhật: motelCard.address
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    motelCard.price, // Cập nhật: motelCard.price (đã là String)
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                      color: AppColors.primary,
+                    SvgPicture.asset(
+                      'assets/images/ic_arrow_right.svg',
+                      width: 32,
+                      height: 32,
+                      colorFilter: ColorFilter.mode(
+                        AppColors.primary,
+                        BlendMode.srcIn,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    motelCard.commission, // Cập nhật: motelCard.commission
-                    style: const TextStyle(fontSize: 12, color: Colors.green),
-                  ),
-                ],
+                  ],
+                ),
+                Row(
+                  children: [
+                    Image.asset(
+                      'assets/images/ic_marker.png',
+                      width: 24,
+                      height: 24,
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      motelCard.address,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                        color: AppColors.tertiary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            ClipRRect(
+              borderRadius: const BorderRadius.all(Radius.circular(10)),
+              child: Image.network(
+                motelCard.images.first,
+                width: double.infinity,
+                height: 108,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    width: 100,
+                    height: 150,
+                    color: Colors.grey[200],
+                    child: const Icon(Icons.error, color: Colors.grey),
+                  );
+                },
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 16),
+            Row(
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                const SizedBox(width: 12),
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 4,
+                  ), // Khoảng đệm bên trong Container
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryContainer, // Màu nền của Container
+                    borderRadius: BorderRadius.circular(
+                      2,
+                    ), // Bo tròn 10px cho tất cả các góc
+                  ),
+                  child: Text(
+                    'HH ${motelCard.commission}%',
+                    style: TextStyle(
+                      color: AppColors.onPrimaryContainer, // Màu chữ
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                Spacer(),
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 4,
+                  ), // Khoảng đệm bên trong Container
+                  decoration: BoxDecoration(
+                    color: AppColors.onSurface2, // Màu nền của Container
+                    borderRadius: BorderRadius.circular(
+                      2,
+                    ), // Bo tròn 10px cho tất cả các góc
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Giá thuê: ',
+                        style: TextStyle(
+                          color: AppColors.primary, // Màu chữ
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(width: 2),
+                      Text(
+                        motelCard.price.toVND(),
+                        style: TextStyle(
+                          color: AppColors.elementSecondary, // Màu chữ
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
