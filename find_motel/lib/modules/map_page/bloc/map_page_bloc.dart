@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:typed_data' show Uint8List;
 import 'package:find_motel/common/models/motel.dart';
+import 'package:find_motel/extensions/double_extensions.dart';
 import 'package:find_motel/managers/app_data_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as img;
@@ -193,6 +194,32 @@ class MapBloc extends Bloc<MapEvent, MapState> {
         centerPosition: centerPosition,
         bounds: bounds,
         markers: {...markers},
+        cards: motels.map((motel) {
+          // Định dạng giá (nếu cần)
+          String formattedPrice = motel.price.toVND();
+
+          // Chọn ảnh chính cho MotelCard, ưu tiên thumbnail, nếu không có thì ảnh đầu tiên trong images
+          String imageUrl = '';
+          if (motel.thumbnail.isNotEmpty) {
+            imageUrl = motel.thumbnail;
+          } else if (motel.images.isNotEmpty) {
+            imageUrl = motel.images.first;
+          }
+          // Bạn có thể đặt một ảnh placeholder nếu cả hai đều trống
+          if (imageUrl.isEmpty) {
+            imageUrl =
+                'https://via.placeholder.com/150/CCCCCC/FFFFFF?text=No+Image';
+          }
+
+          return MotelCard(
+            motel.id,
+            motel.name,
+            motel.address,
+            imageUrl, // Sử dụng thumbnail hoặc ảnh đầu tiên
+            motel.commission,
+            formattedPrice, // Sử dụng giá đã định dạng
+          );
+        }).toList(),
         isLoading: false,
       ),
     );
