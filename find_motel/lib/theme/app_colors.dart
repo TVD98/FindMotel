@@ -20,6 +20,7 @@ class AppColors {
 
   // Neutral / grayscale
   static const Color strokeLight = Color(0xFFD1D1D1); // #D1D1D1
+  static const Color strokeHighLight = Color(0xFF9BCFCA); // #B0B0B0
   static const Color elementPrimary = Color(0xFF1F1F1F); // #1F1F1F
   static const Color elementSecondary = Color(0xFF474747); // #474747
 
@@ -34,8 +35,10 @@ class AppColors {
 
   // Product specific background
   static const Color surface = Color(0xFFF5F5F5);
-  static const Color onSurface = Color(0xFF111111);
-  static const Color onSurface2 = Color(0xFFEBEBEB);
+  static const Color onSurface1 = Color(0xFFFFFFFF); // #F0F0F0
+  static const Color onSurface2 = Color(0xFFEBEBEB); // #111111
+  static const Color onSurface = Color(0xFF111111); // #F0F0F0
+  
 
   // Functional
   static const Color success = Color(0xFF2EB67D);

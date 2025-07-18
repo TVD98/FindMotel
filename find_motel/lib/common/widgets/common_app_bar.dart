@@ -68,8 +68,8 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
         title,
         style: const TextStyle(
           color: AppColors.headerLineOnPrimary,
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
+          fontSize: 20,
+          fontWeight: FontWeight.w400,
         ),
       ),
       centerTitle: false,
