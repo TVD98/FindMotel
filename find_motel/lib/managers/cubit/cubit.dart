@@ -1,3 +1,4 @@
+import 'package:find_motel/common/constants/constant.dart';
 import 'package:find_motel/common/models/user_profile.dart';
 import 'package:find_motel/managers/app_data_manager.dart';
 import 'package:find_motel/services/motel/models/motels_filter.dart';
@@ -25,10 +26,10 @@ class MotelsFilterCubit extends Cubit<MotelsFilter> {
           texturies: null,
           type: 'Khác',
           priceRange: Range2D(
-            values: RangeValues(1000000, 10000000),
-            maxValue: 20000000,
+            values: RangeValues(1_000_000, 10_000_000),
+            maxValue: Constant.maxPrice,
           ),
-          distanceRange: Range(value: 10, maxValue: 100),
+          distanceRange: Range(value: 10, maxValue: Constant.maxDistance),
         ),
       );
 

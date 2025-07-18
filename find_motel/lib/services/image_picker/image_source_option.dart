@@ -1,0 +1,4 @@
+enum ImageSourceOption {
+  gallery,
+  link,
+}

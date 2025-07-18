@@ -1,11 +1,11 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:find_motel/common/widgets/common_app_bar.dart';
 import 'package:find_motel/common/widgets/custom_button.dart';
-import 'package:find_motel/extensions/string_extensions.dart';
 import 'package:find_motel/managers/app_data_manager.dart';
+import 'package:find_motel/services/image_picker/image_picker_service.dart';
+import 'package:find_motel/services/image_picker/image_source_option.dart';
 import 'package:find_motel/theme/app_colors.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'package:reorderable_grid_view/reorderable_grid_view.dart';
@@ -25,10 +25,8 @@ class ImageDisplayScreen extends StatefulWidget {
 class _ImageDisplayScreenState extends State<ImageDisplayScreen> {
   late List<String> _currentImages;
   late List<String> _initialImages;
-  late bool _isEnableGallery;
-  late bool _isEnableLink;
+  late ImagePickerService _imagePickerService;
 
-  final ImagePicker _picker = ImagePicker();
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
   List<String> get finalImageUrls {
@@ -48,8 +46,18 @@ class _ImageDisplayScreenState extends State<ImageDisplayScreen> {
     _currentImages = [_kAddImagePlaceholder, ...List.from(_initialImages)];
 
     final importImagesOptions = AppDataManager().importImagesOptions;
-    _isEnableGallery = importImagesOptions?.gallery ?? false;
-    _isEnableLink = importImagesOptions?.link ?? false;
+    final List<ImageSourceOption> imageSourceOptions = [];
+    if (importImagesOptions?.gallery ?? false) {
+      imageSourceOptions.add(ImageSourceOption.gallery);
+    }
+    if (importImagesOptions?.link ?? false) {
+      imageSourceOptions.add(ImageSourceOption.link);
+    }
+    _imagePickerService = ImagePickerService(
+      context: context,
+      addImagesToList: _addImagesToList,
+      options: imageSourceOptions,
+    );
   }
 
   @override
@@ -78,8 +86,9 @@ class _ImageDisplayScreenState extends State<ImageDisplayScreen> {
                     clipBehavior: Clip.antiAlias,
                     child: InkWell(
                       // Dùng InkWell để tạo hiệu ứng chạm
-                      onTap:
-                          _showAddImageOptions, // Khi chạm vào, mở thư viện ảnh
+                      onTap: () {
+                        _pickImages();
+                      },
                       child: const Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -190,6 +199,10 @@ class _ImageDisplayScreenState extends State<ImageDisplayScreen> {
     );
   }
 
+  void _pickImages() {
+    _imagePickerService.showAddImageOptions();
+  }
+
   Widget _buildActionButtons(BuildContext context) {
     return Row(
       children: [
@@ -228,187 +241,11 @@ class _ImageDisplayScreenState extends State<ImageDisplayScreen> {
     );
   }
 
-  // --- Hàm mới để hiển thị dialog tùy chọn thêm ảnh ---
-  void _showAddImageOptions() {
-    if (_isEnableGallery && !_isEnableLink) {
-      _pickImageFromGallery();
-    } else if (!_isEnableGallery && _isEnableLink) {
-      _showPasteLinkDialog();
-    } else {
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text(
-              'Thêm ảnh',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: AppColors.primary,
-              ),
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                ListTile(
-                  leading: const Icon(
-                    Icons.photo_library,
-                    color: AppColors.primary,
-                  ),
-                  title: const Text(
-                    'Chọn từ Thư viện',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                      color: AppColors.elementSecondary,
-                    ),
-                  ),
-                  onTap: () {
-                    Navigator.of(context).pop(); // Đóng dialog
-                    _pickImageFromGallery(); // Gọi hàm chọn ảnh từ thư viện
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.link, color: AppColors.primary),
-                  title: const Text(
-                    'Dán liên kết ảnh',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                      color: AppColors.elementSecondary,
-                    ),
-                  ),
-                  onTap: () {
-                    Navigator.of(context).pop(); // Đóng dialog
-                    _showPasteLinkDialog(); // Gọi hàm hiển thị dialog dán link
-                  },
-                ),
-              ],
-            ),
-          );
-        },
-      );
-    }
-  }
-
-  // --- Hàm chọn ảnh từ thư viện (trước đây là _pickImage) ---
-  Future<void> _pickImageFromGallery() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      final imageUrl = await _uploadImageToFirebase(File(image.path));
-      if (imageUrl != null) {
-        _addImageToList(imageUrl);
-      }
-    }
-  }
-
-  // --- Hàm hiển thị dialog để dán liên kết ảnh ---
-  void _showPasteLinkDialog() {
-    String? pastedLink;
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text(
-            'Dán liên kết ảnh',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: AppColors.primary,
-            ),
-          ),
-          content: TextField(
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-              color: AppColors.elementPrimary,
-            ),
-            decoration: const InputDecoration(
-              hintText: 'Nhập URL ảnh vào đây',
-              border: OutlineInputBorder(),
-            ),
-            onChanged: (value) {
-              pastedLink = value;
-            },
-          ),
-          actions: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  width: 90,
-                  height: 38,
-                  child: CustomButton(
-                    title: 'Hủy',
-                    textColor: AppColors.primary,
-                    backgroundColor: AppColors.onPrimary,
-                    strokeColor: AppColors.strokeLight,
-                    radius: 4.0,
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                  ),
-                ),
-                const SizedBox(width: 16),
-                SizedBox(
-                  width: 90,
-                  height: 38,
-                  child: CustomButton(
-                    title: 'Thêm',
-                    textColor: AppColors.onPrimary,
-                    backgroundColor: AppColors.primary,
-                    strokeColor: AppColors.strokeLight,
-                    radius: 4.0,
-                    onPressed: () {
-                      if (pastedLink != null && pastedLink!.isNotEmpty) {
-                        _addImageToList(pastedLink!.toImageUrl());
-                        Navigator.of(context).pop();
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Vui lòng nhập một liên kết hợp lệ.'),
-                          ),
-                        );
-                      }
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   // --- Hàm chung để thêm URL ảnh vào danh sách ---
-  void _addImageToList(String imageUrl) {
+  void _addImagesToList(List<String> imageUrls) {
     setState(() {
-      _currentImages.add(imageUrl);
+      _currentImages.addAll(imageUrls);
     });
-  }
-
-  Future<String?> _uploadImageToFirebase(File imageFile) async {
-    try {
-      final String fileName =
-          'images/${DateTime.now().millisecondsSinceEpoch}_${imageFile.path.split('/').last}';
-      final Reference ref = _storage.ref().child(fileName);
-      final UploadTask uploadTask = ref.putFile(imageFile);
-      final TaskSnapshot snapshot = await uploadTask;
-      final String downloadUrl = await snapshot.ref.getDownloadURL();
-      return downloadUrl;
-    } catch (e) {
-      print('Lỗi khi tải ảnh lên: $e');
-      return null;
-    }
-  }
-
-  Future<void> _saveChanges() async {
-    setState(() {
-      _initialImages = List.from(_currentImages);
-    });
-    print('Thứ tự ảnh đã lưu: $_currentImages');
   }
 
   void _clearChanges() {

@@ -1,16 +1,17 @@
 import 'dart:io';
-import 'package:find_motel/common/widgets/image_display_screen.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:find_motel/common/widgets/edit_images_screen.dart';
+import 'package:find_motel/managers/app_data_manager.dart';
+import 'package:find_motel/services/motel/motels_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:find_motel/common/models/motel.dart';
 import 'package:find_motel/theme/app_colors.dart';
 import 'package:find_motel/services/firestore/firestore_service.dart';
 import 'package:find_motel/services/reload_service.dart';
 import 'package:find_motel/common/widgets/common_app_bar.dart';
-import 'package:find_motel/common/constants/app_extensions.dart';
 
 class EditMotelScreen extends StatefulWidget {
   final Motel motel;
@@ -42,6 +43,8 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
 
   bool _isLoading = false;
   bool _isDeleting = false;
+
+  final IMotelsService motelsService = FirestoreService();
 
   @override
   void initState() {
@@ -84,25 +87,6 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
     return priceNumber;
   }
 
-  Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final picked = await picker.pickImage(source: ImageSource.gallery);
-    if (picked != null) {
-      setState(() {
-        images.add(picked.path);
-      });
-    }
-  }
-
-  void _removeImage(int index) {
-    setState(() {
-      if (images[index] == mainImage) {
-        mainImage = images.isNotEmpty ? images[0] : '';
-      }
-      images.removeAt(index);
-    });
-  }
-
   void _setMainImage(String img) {
     setState(() {
       mainImage = img;
@@ -110,7 +94,7 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
   }
 
   Future<void> _showSelectExtensionsDialog() async {
-    final allExtensions = AppExtensions.allExtensions;
+    final allExtensions = AppDataManager().allAmenities;
     // Tạo bản sao để chọn tạm thời
     List<String> tempSelected = List<String>.from(selectedExtensions);
 
@@ -388,16 +372,10 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
         thumbnail: images.first,
         geoPoint: widget.motel.geoPoint,
         status: widget.motel.status,
-        marker: images.first,
-        keywords: widget.motel.keywords,
+        marker: images.first
       );
 
-      // Tạo instance của FirestoreService và update
-      final firestoreService = FirestoreService();
-      final error = await firestoreService.updateMotel(
-        widget.motel.id,
-        updatedMotel.toMap(),
-      );
+      final error = await motelsService.updateMotelWithImages(updatedMotel);
 
       if (error == null) {
         // Thành công - trở về màn home và reload data
@@ -806,19 +784,12 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
         ClipRRect(
           borderRadius: BorderRadius.circular(12),
           child: mainImage.isNotEmpty
-              ? (mainImage.startsWith('http')
-                    ? Image.network(
-                        mainImage,
-                        height: 140,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                      )
-                    : Image.file(
-                        File(mainImage),
-                        height: 140,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                      ))
+              ? CachedNetworkImage(
+                  imageUrl: mainImage,
+                  height: 140,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                )
               : Container(
                   height: 140,
                   color: Colors.grey[200],
@@ -832,74 +803,35 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
           child: ListView(
             scrollDirection: Axis.horizontal,
             children: [
-              ...images.asMap().entries.map((entry) {
-                final idx = entry.key;
-                final img = entry.value;
+              ...images.map((img) {
                 final isSelected = img == mainImage;
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
-                  child: Stack(
-                    children: [
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(8),
+                      onTap: () => _setMainImage(img),
+                      child: Container(
+                        width: 60,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          border: isSelected
+                              ? Border.all(color: AppColors.primary, width: 2)
+                              : null,
                           borderRadius: BorderRadius.circular(8),
-                          onTap: () => _setMainImage(img),
-                          child: Container(
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: CachedNetworkImage(
+                            imageUrl: img,
                             width: 60,
                             height: 48,
-                            decoration: BoxDecoration(
-                              border: isSelected
-                                  ? Border.all(
-                                      color: AppColors.primary,
-                                      width: 2,
-                                    )
-                                  : null,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: img.startsWith('http')
-                                  ? Image.network(
-                                      img,
-                                      width: 60,
-                                      height: 48,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : Image.file(
-                                      File(img),
-                                      width: 60,
-                                      height: 48,
-                                      fit: BoxFit.cover,
-                                    ),
-                            ),
+                            fit: BoxFit.cover,
                           ),
                         ),
                       ),
-                      Positioned(
-                        top: 0,
-                        right: 0,
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(10),
-                            onTap: () => _removeImage(idx),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.5),
-                                shape: BoxShape.circle,
-                              ),
-                              padding: const EdgeInsets.all(2),
-                              child: const Icon(
-                                Icons.close,
-                                color: Colors.white,
-                                size: 16,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 );
               }),
@@ -912,9 +844,8 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
                     final result = await Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => ImageDisplayScreen(
-                          initialImages: images,
-                        ),
+                        builder: (_) =>
+                            ImageDisplayScreen(initialImages: images),
                       ),
                     );
                     if (result is List<String> && result.isNotEmpty) {
@@ -935,7 +866,7 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
                     child: const Icon(
                       Icons.add_a_photo,
                       color: Colors.grey,
-                      size: 24,
+                      size: 20,
                     ),
                   ),
                 ),

@@ -15,6 +15,8 @@ abstract class IMotelsService {
   /// success, or an error string if the update fails.
   Future<String?> updateMotel(String motelId, Map<String, dynamic> data);
 
+  Future<String?> updateMotelWithImages(Motel motel);
+
   /// Convenience method for updating a single field.
   Future<String?> updateMotelField(String motelId, String field, dynamic value);
 

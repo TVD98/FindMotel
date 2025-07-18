@@ -7,6 +7,7 @@ import 'package:find_motel/modules/home_page/bloc/home_page_bloc.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_event.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_state.dart';
 import 'package:find_motel/modules/detail/detail_screen.dart';
+import 'package:find_motel/modules/map_page/screens/filter_page.dart';
 import 'package:find_motel/services/motel/models/motels_filter.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -112,20 +113,33 @@ class _HomePageState extends State<HomePage>
                                     onTap: () {},
                                   ),
                                   const SizedBox(width: 10),
-                                  Container(
-                                    width: 38,
-                                    height: 38,
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      border: Border.all(
-                                        color: const Color(0xFFE0E0E0),
+                                  GestureDetector(
+                                    onTap: () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (_) => BlocProvider.value(
+                                            value: context
+                                                .read<MotelsFilterCubit>(),
+                                            child: const FilterPage(),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: Container(
+                                      width: 38,
+                                      height: 38,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        border: Border.all(
+                                          color: const Color(0xFFE0E0E0),
+                                        ),
+                                        borderRadius: BorderRadius.circular(12),
                                       ),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Icon(
-                                      Icons.tune,
-                                      color: const Color(0xFF3B7268),
-                                      size: 22,
+                                      child: Icon(
+                                        Icons.tune,
+                                        color: const Color(0xFF3B7268),
+                                        size: 22,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -359,7 +373,7 @@ class _MotelCard extends StatelessWidget {
                         imageUrl: imageUrl,
                         height: 93,
                         width: double.infinity,
-                        fit: BoxFit.contain,
+                        fit: BoxFit.cover,
                         errorWidget: (c, e, s) => Container(
                           height: 93,
                           width: double.infinity,

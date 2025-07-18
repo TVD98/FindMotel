@@ -4,6 +4,7 @@ import 'package:find_motel/common/models/import_images_options.dart';
 import 'package:find_motel/extensions/string_extensions.dart';
 import 'package:find_motel/services/catalog/catalog_service.dart';
 import 'package:find_motel/common/models/motel_index.dart';
+import 'package:find_motel/services/storage/firebase_storage_service.dart';
 import 'package:find_motel/services/user_data/user_data_service.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:find_motel/common/models/motel.dart';
@@ -22,6 +23,7 @@ class FirestoreService
         IUserDataService,
         ICustomerService {
   final FirebaseFirestore _firestore;
+  final FirebaseStorageService _storageService = FirebaseStorageService();
 
   FirestoreService({FirebaseFirestore? firestore})
     : _firestore = firestore ?? FirebaseFirestore.instance;
@@ -30,9 +32,13 @@ class FirestoreService
   @override
   Future<({String? id, String? error})> addMotel(Motel motel) async {
     try {
+      final List<String> keywords =
+          motel.name.generateKeywords() + motel.address.generateKeywords();
+      final json = motel.toMap();
+      json['keywords'] = keywords;
       final docRef = await _firestore
           .collection(FirestorePaths.motelsCollection)
-          .add(motel.toMap());
+          .add(json);
       return (id: docRef.id, error: null);
     } catch (e) {
       return (id: null, error: e.toString());
@@ -56,9 +62,16 @@ class FirestoreService
           .collection(FirestorePaths.motelsCollection)
           .limit(limit);
 
-      // 2. Apply Firestore-side filters if present.
+      // if (filter?.keywords != null && filter!.keywords!.isNotEmpty) {
+      //   query = filter.keywords!.applyWhereIn(query, 'keywords');
+      // }
+
+      // // 2. Apply Firestore-side filters if present.
+      // if (filter?.roomCode != null && filter!.roomCode!.isNotEmpty) {
+      //   query = filter.roomCode!.applyWhereEqualTo(query, 'room_code');
+      // }
       if (filter?.roomCode != null && filter!.roomCode!.isNotEmpty) {
-        query = filter.roomCode!.applyWhereEqualTo(query, 'room_code');
+        query = filter.roomCode!.applyWhereIn(query, 'keywords');
       }
 
       // 2. Apply Firestore-side filters if present.
@@ -145,7 +158,6 @@ class FirestoreService
       marker: data['marker'] as String? ?? '',
       thumbnail: data['thumbnail'] as String? ?? '',
       texture: data['texture'] as String? ?? '',
-      keywords: List<String>.from(data['keywords'] ?? const []),
     );
   }
 
@@ -172,6 +184,27 @@ class FirestoreService
           .collection(FirestorePaths.motelsCollection)
           .doc(motelId)
           .update(data);
+      return null;
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
+  @override
+  Future<String?> updateMotelWithImages(Motel motel) async {
+    try {
+      final json = motel.toMap();
+      final List<String> keywords =
+          motel.name.generateKeywords() + motel.address.generateKeywords();
+      final List<String> imageUrls = await _storageService.uploadImages(
+        motel.images,
+      );
+      json['images'] = imageUrls;
+      json['keywords'] = keywords;
+      await _firestore
+          .collection(FirestorePaths.motelsCollection)
+          .doc(motel.id)
+          .update(json);
       return null;
     } catch (e) {
       return e.toString();

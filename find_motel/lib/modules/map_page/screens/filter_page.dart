@@ -1,5 +1,4 @@
-// ignore_for_file: library_private_types_in_public_api
-
+import 'package:find_motel/common/constants/constant.dart';
 import 'package:find_motel/common/models/area.dart';
 import 'package:find_motel/common/widgets/common_textfield.dart';
 import 'package:find_motel/common/widgets/price_range_input.dart';
@@ -10,8 +9,6 @@ import 'package:find_motel/common/widgets/common_app_bar.dart';
 import 'package:find_motel/extensions/double_extensions.dart';
 import 'package:find_motel/managers/app_data_manager.dart';
 import 'package:find_motel/managers/cubit/cubit.dart';
-import 'package:find_motel/modules/map_page/bloc/map_page_bloc.dart';
-import 'package:find_motel/modules/map_page/bloc/map_page_event.dart';
 import 'package:find_motel/modules/map_page/screens/fixed_dropdown_button.dart';
 import 'package:find_motel/services/motel/models/motels_filter.dart';
 import 'package:flutter/material.dart';
@@ -22,7 +19,7 @@ class FilterPage extends StatefulWidget {
   const FilterPage({super.key});
 
   @override
-  _FilterPageState createState() => _FilterPageState();
+  State<FilterPage> createState() => _FilterPageState();
 }
 
 class _FilterPageState extends State<FilterPage> {
@@ -56,10 +53,13 @@ class _FilterPageState extends State<FilterPage> {
     status: _selectedStatusList.isEmpty ? null : _selectedStatusList,
     texturies: _selectedTextureList.isEmpty ? null : _selectedTextureList,
     type: _selectedRoomType,
-    priceRange: Range2D(values: _selectedPriceRangeValues, maxValue: 20000000),
+    priceRange: Range2D(
+      values: _selectedPriceRangeValues,
+      maxValue: Constant.maxPrice,
+    ),
     distanceRange: Range(
-      value: double.tryParse(_distanceController.text) ?? 100,
-      maxValue: 10,
+      value: double.tryParse(_distanceController.text) ?? Constant.maxDistance,
+      maxValue: Constant.maxDistance,
     ),
   );
 
@@ -79,7 +79,8 @@ class _FilterPageState extends State<FilterPage> {
     _selectedTextureList = initialData.texturies ?? [];
     _selectedRoomType = initialData.type ?? 'Khác';
     _selectedPriceRangeValues =
-        initialData.priceRange?.values ?? const RangeValues(0, 10000000);
+        initialData.priceRange?.values ??
+        const RangeValues(1_000_000, 10_000_000);
     _roomCodeController = TextEditingController(text: initialData.roomCode);
     _distanceController = TextEditingController(
       text: initialData.distanceRange?.value.toString(),
@@ -113,7 +114,7 @@ class _FilterPageState extends State<FilterPage> {
               _buildTextureSection(),
               const SizedBox(height: 16),
               _buildActionButtons(context),
-              const SizedBox(height: 16,)
+              const SizedBox(height: 16),
             ],
           ),
         ),
@@ -316,9 +317,7 @@ class _FilterPageState extends State<FilterPage> {
         Expanded(
           child: PriceRangeInputView(
             onPriceRangeChanged: (minPrice, maxPrice) {
-              setState(() {
-                _selectedPriceRangeValues = RangeValues(minPrice, maxPrice);
-              });
+              _selectedPriceRangeValues = RangeValues(minPrice, maxPrice);
             },
             initialValues: _selectedPriceRangeValues,
           ),

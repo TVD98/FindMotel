@@ -17,13 +17,12 @@ import 'package:find_motel/modules/motel_manager/screen/edit_motel_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_bloc.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_event.dart';
-import 'package:find_motel/common/constants/app_extensions.dart';
 
 // Class chứa các hằng số dùng chung
 class AppConstants {
   static const primaryColor = AppColors.primary; // Màu xanh chủ đạo
   static const padding = 16.0; // Khoảng cách lề
-  static const borderRadius = 12.0; // Bo góc
+  static const borderRadius = 10.0; // Bo góc
   static const smallSpacing = 8.0; // Khoảng cách nhỏ
   static const chipBorderRadius = 44.0; // Bo góc cho chip
   static const bottomNavBarHeight =
@@ -257,19 +256,18 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
                 return GestureDetector(
                   onTap: () =>
                       _updateMainImage(imageUrl), // Cập nhật mainImage khi nhấn
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(
-                      AppConstants.smallSpacing,
-                    ),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: _currentMainImage == imageUrl
-                              ? AppConstants.primaryColor
-                              : Colors.transparent,
-                          width: 2,
-                        ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(4.0),
+                      border: Border.all(
+                        color: _currentMainImage == imageUrl
+                            ? AppConstants.primaryColor
+                            : Colors.transparent,
+                        width: 1,
                       ),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(4.0),
                       child: _getImageWidget(imageUrl, 60, 60),
                     ),
                   ),
@@ -384,7 +382,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
             : Wrap(
                 spacing: AppConstants.smallSpacing,
                 runSpacing: AppConstants.smallSpacing,
-                children: AppExtensions.allExtensions
+                children: AppDataManager().allAmenities
                     .where(
                       (extension) =>
                           widget.detail.extensions.contains(extension),

@@ -1,5 +1,6 @@
 import 'package:find_motel/common/widgets/common_textfield.dart';
 import 'package:find_motel/extensions/double_extensions.dart';
+import 'package:find_motel/extensions/string_extensions.dart';
 import 'package:find_motel/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 // CommonTextfield đã được cập nhật ở trên
@@ -36,27 +37,23 @@ class _PriceRangeInputViewState extends State<PriceRangeInputView> {
     // Lắng nghe sự thay đổi của text fields để kích hoạt callback
     _minPriceController.addListener(_notifyParentOnPriceChange);
     _maxPriceController.addListener(_notifyParentOnPriceChange);
-  }
 
-  // Hàm tiện ích để loại bỏ định dạng tiền tệ
-  String _unformatCurrency(String formattedText) {
-    return formattedText.replaceAll(RegExp(r'[^0-9]'), '');
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _notifyParentOnPriceChange();
+    });
   }
-
   void _notifyParentOnPriceChange() {
     // Lấy giá trị sau khi loại bỏ định dạng để truyền đi
-    final double minPrice = double.parse(
-      _unformatCurrency(_minPriceController.text),
-    );
-    final double maxPrice = double.parse(
-      _unformatCurrency(_maxPriceController.text),
-    );
+    final double minPrice = _minPriceController.text.toPrice();
+    final double maxPrice = _maxPriceController.text.toPrice();
 
     widget.onPriceRangeChanged?.call(minPrice, maxPrice);
   }
 
   @override
   void dispose() {
+    _minPriceController.removeListener(_notifyParentOnPriceChange);
+    _maxPriceController.removeListener(_notifyParentOnPriceChange);
     _minPriceController.dispose();
     _maxPriceController.dispose();
     super.dispose();
