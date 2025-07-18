@@ -21,10 +21,6 @@ class MapPage extends StatefulWidget {
 }
 
 class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
-  static const LatLng _defaultCenter = LatLng(
-    21.0285,
-    105.8542,
-  ); // Tọa độ mặc định (Hà Nội)
   late GoogleMapController mapController;
   final ScrollController _scrollController = ScrollController();
   final Map<String, GlobalKey> _cardKeys = {};
@@ -70,39 +66,32 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
       },
       child: BlocConsumer<MapBloc, MapState>(
         listener: (context, state) {
-          // Cập nhật vị trí camera khi trạng thái thay đổi
-          if (state.bounds != null) {
-            mapController.animateCamera(
-              CameraUpdate.newLatLngBounds(state.bounds!, 50),
-            );
-          } else if (state.centerPosition != null) {
-            mapController.animateCamera(
-              CameraUpdate.newCameraPosition(
-                CameraPosition(target: state.centerPosition!, zoom: 12.0),
-              ),
-            );
-          }
-
-          if (state.selectedMotel != null) {
-            // for (var motelCard in state.cards) {
-            //   _cardKeys[motelCard.id] = GlobalKey();
-            // }
-            // _scrollToCard(state.selectedMotel!.id);
-          }
+          // // Cập nhật vị trí camera khi trạng thái thay đổi
+          // if (state.bounds != null) {
+          //   mapController.animateCamera(
+          //     CameraUpdate.newLatLngBounds(state.bounds!, 50),
+          //   );
+          // } else if (state.centerPosition != null) {
+          //   mapController.animateCamera(
+          //     CameraUpdate.newCameraPosition(
+          //       CameraPosition(target: state.centerPosition!, zoom: 12.0),
+          //     ),
+          //   );
+          // }
         },
         builder: (context, state) {
           return Stack(
             children: [
-              GoogleMap(
-                onMapCreated: _onMapCreated,
-                initialCameraPosition: CameraPosition(
-                  target: state.centerPosition ?? _defaultCenter,
-                  zoom: 13.0,
-                ),
-                markers: state.markers,
-                myLocationEnabled: true,
-                buildingsEnabled: false,
-              ),
+              // GoogleMap(
+              //   onMapCreated: _onMapCreated,
+              //   initialCameraPosition: CameraPosition(
+              //     target: state.centerPosition ?? _defaultCenter,
+              //     zoom: 13.0,
+              //   ),
+              //   markers: state.markers,
+              //   myLocationEnabled: true,
+              //   buildingsEnabled: false,
+              // ),
               Positioned(
                 top: 50,
                 right: 16,
@@ -330,15 +319,6 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
           ],
         ),
       ),
-    );
-  }
-
-  void showRoomDetailBottomSheet(BuildContext context, Motel motel) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true, // Cho phép bottom sheet chiếm gần hết màn hình
-      backgroundColor: Colors.transparent, // Nền trong suốt để bo góc
-      builder: (context) => RoomDetailScreen(detail: motel),
     );
   }
 }

@@ -1,10 +1,29 @@
 import 'dart:io';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:path/path.dart' as p;
 
 class FirebaseStorageService {
-  /// Upload một ảnh lên Firebase Storage
-  /// Trả về URL của ảnh đã upload hoặc null nếu có lỗi
-  /// Tạm thời trả về path gốc để không lỗi
-  Future<String?> uploadImage(String filePath, String folder) async {
+  Future<String?> _uploadFile(File file, String folder) async {
+    try {
+      final String fileName = p.basename(file.path);
+      final String destination =
+          '$folder/${DateTime.now().millisecondsSinceEpoch}_$fileName';
+
+      final Reference storageRef = FirebaseStorage.instance.ref().child(
+        destination,
+      );
+
+      final UploadTask uploadTask = storageRef.putFile(file);
+
+      final TaskSnapshot taskSnapshot = await uploadTask;
+
+      return await taskSnapshot.ref.getDownloadURL();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<String?> uploadImage(String filePath) async {
     try {
       final file = File(filePath);
       if (!await file.exists()) {
@@ -12,33 +31,26 @@ class FirebaseStorageService {
         return null;
       }
 
-      // TODO: Implement Firebase Storage upload
-      // Tạm thời trả về path gốc
-      return filePath;
+      return _uploadFile(file, 'images');
     } catch (e) {
       print('Lỗi upload ảnh: $e');
       return null;
     }
   }
 
-  /// Upload nhiều ảnh cùng lúc
-  /// Trả về list URL của các ảnh đã upload
-  Future<List<String>> uploadImages(
-    List<String> filePaths,
-    String folder,
-  ) async {
+  Future<List<String>> uploadImages(List<String> filePaths) async {
     final List<String> uploadedUrls = [];
 
     for (final filePath in filePaths) {
       // Chỉ upload những ảnh local (không phải URL)
-      if (!filePath.startsWith('http')) {
-        final url = await uploadImage(filePath, folder);
+      if (filePath.startsWith('http')) {
+        // Giữ lại URL cũ
+        uploadedUrls.add(filePath);
+      } else {
+        final url = await uploadImage(filePath);
         if (url != null) {
           uploadedUrls.add(url);
         }
-      } else {
-        // Giữ lại URL cũ
-        uploadedUrls.add(filePath);
       }
     }
 

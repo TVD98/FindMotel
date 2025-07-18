@@ -100,11 +100,6 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
     final street = '${json['street']}';
     final ward = '${json['ward']}';
     final address = '$number $street, $ward';
-    final List<String> keywords =
-        number.generateKeywords() +
-        street.generateKeywords() +
-        ward.generateKeywords() +
-        name.generateKeywords();
     final carDeposit = (json['car'] as String).toPrice();
     final images = (json['images'] as String)
         .split(',')
@@ -143,7 +138,6 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
       marker: images.first,
       thumbnail: images.first,
       texture: json['texture'] as String,
-      keywords: keywords,
     );
   }
 }

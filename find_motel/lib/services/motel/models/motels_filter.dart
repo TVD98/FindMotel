@@ -76,6 +76,7 @@ class Address implements QueryFilter {
 }
 
 class MotelsFilter {
+  final String? keywords;
   final String? roomCode;
   final Address? address;
   final List<String>? amenities;
@@ -86,6 +87,7 @@ class MotelsFilter {
   final Range? distanceRange;
 
   MotelsFilter({
+    this.keywords,
     this.roomCode,
     this.address,
     this.amenities,

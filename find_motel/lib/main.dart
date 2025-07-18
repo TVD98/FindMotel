@@ -1,9 +1,10 @@
+import 'dart:ui';
+
 import 'package:find_motel/managers/cubit/cubit.dart';
 import 'package:find_motel/modules/home/bloc/home_bloc.dart';
 import 'package:find_motel/modules/home/bloc/home_event.dart';
 import 'package:find_motel/modules/home/screens/home_screens.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_bloc.dart';
-import 'package:find_motel/modules/home_page/bloc/home_page_event.dart';
 import 'package:find_motel/modules/authentication/screens/login_screen.dart';
 import 'package:find_motel/modules/map_page/bloc/map_page_bloc.dart';
 import 'package:find_motel/modules/map_page/bloc/map_page_event.dart';
@@ -30,6 +31,14 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'FindMotel',
+      scrollBehavior: MaterialScrollBehavior().copyWith(
+        dragDevices: {
+          PointerDeviceKind.mouse,
+          PointerDeviceKind.touch,
+          PointerDeviceKind.stylus,
+          PointerDeviceKind.unknown,
+        },
+      ),
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),

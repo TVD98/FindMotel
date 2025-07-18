@@ -35,7 +35,6 @@ class Motel {
   final String marker;
   final String thumbnail;
   final String texture;
-  final List<String> keywords;
 
   Motel({
     required this.id,
@@ -54,7 +53,6 @@ class Motel {
     required this.marker,
     required this.thumbnail,
     required this.texture,
-    required this.keywords
   });
 
   /// Convert this [Motel] instance to a Map suitable for Firestore.
@@ -75,7 +73,6 @@ class Motel {
       'marker': marker,
       'thumbnail': thumbnail,
       'texture': texture,
-      'keywords': keywords
     };
   }
 }
