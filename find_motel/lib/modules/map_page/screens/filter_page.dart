@@ -1,13 +1,15 @@
 // ignore_for_file: library_private_types_in_public_api
 
 import 'package:find_motel/common/models/area.dart';
+import 'package:find_motel/common/widgets/common_textfield.dart';
+import 'package:find_motel/common/widgets/price_range_input.dart';
 import 'package:find_motel/common/widgets/rectange_checkbox_list.dart';
 import 'package:find_motel/common/widgets/custom_button.dart';
 import 'package:find_motel/common/widgets/custom_choice_chip.dart';
-import 'package:find_motel/common/widgets/integer_range_slider.dart';
-import 'package:find_motel/common/widgets/integer_slider.dart';
 import 'package:find_motel/common/widgets/common_app_bar.dart';
+import 'package:find_motel/extensions/double_extensions.dart';
 import 'package:find_motel/managers/app_data_manager.dart';
+import 'package:find_motel/managers/cubit/cubit.dart';
 import 'package:find_motel/modules/map_page/bloc/map_page_bloc.dart';
 import 'package:find_motel/modules/map_page/bloc/map_page_event.dart';
 import 'package:find_motel/modules/map_page/screens/fixed_dropdown_button.dart';
@@ -24,42 +26,64 @@ class FilterPage extends StatefulWidget {
 }
 
 class _FilterPageState extends State<FilterPage> {
-  final List<String> _allAmenitiesOptions = ['Thang máy', 'Xe'];
-  final List<String> _allRoomCodeOptions = [
-    'Tất cả',
-    'L3',
-    '301',
-    '201',
-    'P4',
-    '101',
-    'lửng B',
-    'G01',
-  ];
+  final List<String> _allAmenitiesOptions = AppDataManager().allAmenities;
   final List<Province> _allProvinceOptions = AppDataManager().allProvinces;
   final List<CheckboxItem> _allStatusOptions = AppDataManager().allStatus
       .map((e) => (e.name, e.title))
       .toList();
+  final List<String> _allTextureOptions = AppDataManager().allTexturies;
+  final List<String> _allRoomTypeOptions = AppDataManager().allRoomTypies;
 
-  late String _selectedRoomCode;
   late String _selectedProvince;
   late String _selectedWard;
+  late String _selectedRoomType;
   late List<String> _selectedAmenities;
   late List<String> _selectedStatusList;
+  late List<String> _selectedTextureList;
   late RangeValues _selectedPriceRangeValues;
-  late int _selectedDistanceKm;
+  late TextEditingController _roomCodeController;
+  late TextEditingController _distanceController;
+
+  MotelsFilter get _motelsFilter => MotelsFilter(
+    roomCode: _roomCodeController.text.isEmpty
+        ? null
+        : _roomCodeController.text,
+    address: Address(
+      province: _formatStringSelection(_selectedProvince),
+      ward: _formatStringSelection(_selectedWard),
+    ),
+    amenities: _selectedAmenities.isEmpty ? null : _selectedAmenities,
+    status: _selectedStatusList.isEmpty ? null : _selectedStatusList,
+    texturies: _selectedTextureList.isEmpty ? null : _selectedTextureList,
+    type: _selectedRoomType,
+    priceRange: Range2D(values: _selectedPriceRangeValues, maxValue: 20000000),
+    distanceRange: Range(
+      value: double.tryParse(_distanceController.text) ?? 100,
+      maxValue: 10,
+    ),
+  );
 
   @override
   void initState() {
     super.initState();
+
+    _setupFieldsByFilters();
+  }
+
+  void _setupFieldsByFilters() {
     final initialData = AppDataManager().filterMotels;
-    _selectedRoomCode = initialData.roomCode ?? 'Tất cả';
     _selectedProvince = initialData.address?.province ?? 'Tất cả';
     _selectedWard = initialData.address?.ward ?? 'Tất cả';
     _selectedAmenities = initialData.amenities ?? [];
     _selectedStatusList = initialData.status ?? [];
+    _selectedTextureList = initialData.texturies ?? [];
+    _selectedRoomType = initialData.type ?? 'Khác';
     _selectedPriceRangeValues =
-        initialData.priceRange?.values ?? const RangeValues(0, 11);
-    _selectedDistanceKm = initialData.distanceRange?.value.toInt() ?? 11;
+        initialData.priceRange?.values ?? const RangeValues(0, 10000000);
+    _roomCodeController = TextEditingController(text: initialData.roomCode);
+    _distanceController = TextEditingController(
+      text: initialData.distanceRange?.value.toString(),
+    );
   }
 
   @override
@@ -78,13 +102,18 @@ class _FilterPageState extends State<FilterPage> {
               _divider(),
               _buildAmenitiesSection(),
               _divider(),
-              _buildStatusSection(),
-              _divider(),
               _buildPriceRangeSection(),
               _divider(),
               _buildDistanceSection(),
+              _divider(),
+              _buildRoomTypeSection(),
+              _divider(),
+              _buildStatusSection(),
+              _divider(),
+              _buildTextureSection(),
               const SizedBox(height: 16),
               _buildActionButtons(context),
+              const SizedBox(height: 16,)
             ],
           ),
         ),
@@ -110,14 +139,11 @@ class _FilterPageState extends State<FilterPage> {
             ),
           ),
         ),
-        FixedDropdownButton(
-          value: _selectedRoomCode,
-          items: _allRoomCodeOptions,
-          onChanged: (value) {
-            setState(() {
-              _selectedRoomCode = value ?? 'Tất cả';
-            });
-          },
+        Expanded(
+          child: CommonTextfield(
+            controller: _roomCodeController,
+            style: TextFieldStyle.medium,
+          ),
         ),
       ],
     );
@@ -161,6 +187,7 @@ class _FilterPageState extends State<FilterPage> {
                         value: _selectedProvince,
                         items: _allProvinceOptions.map((e) => e.name).toList(),
                         width: 162.0,
+                        style: DropdownStyle.medium,
                         onChanged: (value) {
                           setState(() {
                             _selectedProvince = value ?? 'Tất cả';
@@ -193,6 +220,7 @@ class _FilterPageState extends State<FilterPage> {
                                   (e) => e.name == _selectedProvince,
                                 )]
                                 .wards,
+                        style: DropdownStyle.medium,
                         onChanged: (value) {
                           setState(() {
                             _selectedWard = value ?? 'Tất cả';
@@ -272,79 +300,123 @@ class _FilterPageState extends State<FilterPage> {
   }
 
   Widget _buildPriceRangeSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
       children: [
-        Row(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: Text(
-                'Giá thuê:',
-                style: TextStyle(
-                  fontSize: 16.0,
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+        Padding(
+          padding: const EdgeInsets.only(right: 8.0),
+          child: Text(
+            'Giá thuê:',
+            style: TextStyle(
+              fontSize: 16.0,
+              color: AppColors.primary,
+              fontWeight: FontWeight.bold,
             ),
-            buildRangeValueText(_selectedPriceRangeValues, 10, 'triệu'),
-          ],
+          ),
         ),
-        IntegerRangeSlider(
-          minValue: 0,
-          maxValue: 11,
-          initialRange: _selectedPriceRangeValues,
-          labelsBuilder: (values) {
-            final int maxValue = values.end.round();
-            return RangeLabels(
-              '${values.start.round()}',
-              maxValue == 11 ? '10+' : '$maxValue',
-            );
-          },
-          onChanged: (values) {
-            setState(() {
-              _selectedPriceRangeValues = values;
-            });
-          },
+        Expanded(
+          child: PriceRangeInputView(
+            onPriceRangeChanged: (minPrice, maxPrice) {
+              setState(() {
+                _selectedPriceRangeValues = RangeValues(minPrice, maxPrice);
+              });
+            },
+            initialValues: _selectedPriceRangeValues,
+          ),
         ),
       ],
     );
   }
 
   Widget _buildDistanceSection() {
+    return Row(
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(right: 8.0),
+          child: Text(
+            'Phạm vi:',
+            style: TextStyle(
+              fontSize: 16.0,
+              color: AppColors.primary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        Text(
+          '<=',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w400,
+            color: AppColors.elementSecondary,
+          ),
+        ),
+        const SizedBox(width: 8),
+        SizedBox(
+          width: 90,
+          child: CommonTextfield(
+            controller: _distanceController,
+            style: TextFieldStyle.medium,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          'km',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w400,
+            color: AppColors.elementSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRoomTypeSection() {
+    return Row(
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(right: 12.0),
+          child: Text(
+            'Kiểu phòng:',
+            style: TextStyle(
+              fontSize: 16.0,
+              color: AppColors.primary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        Expanded(
+          child: RectangeCheckboxList(
+            items: _allRoomTypeOptions.map((e) => (e, e)).toList(),
+            initialSelected: [_selectedRoomType],
+            selectionMode: CheckboxListSelectionMode.single,
+            onChange: (value) {
+              _selectedRoomType = value.first;
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTextureSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: Text(
-                'Phạm vi:',
-                style: TextStyle(
-                  fontSize: 16.0,
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            buildRangeValueText(
-              RangeValues(0, _selectedDistanceKm.toDouble()),
-              10,
-              'km',
-            ),
-          ],
+        Text(
+          'Kết cấu:',
+          style: TextStyle(
+            fontSize: 16.0,
+            color: AppColors.primary,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-        IntegerSlider(
-          minValue: 1,
-          maxValue: 11,
-          initialValue: _selectedDistanceKm,
-          labelBuilder: (v) => v == 11 ? '10+' : v.toString(),
-          onChanged: (val) {
-            setState(() {
-              _selectedDistanceKm = val;
-            });
+        RectangeCheckboxList(
+          items: _allTextureOptions.map((e) => (e, e)).toList(),
+          initialSelected: _selectedTextureList,
+          displayMode: CheckboxListDisplayMode.grid,
+          gridCrossAxisCount: 3,
+          onChange: (value) {
+            _selectedTextureList = value;
           },
         ),
       ],
@@ -359,11 +431,15 @@ class _FilterPageState extends State<FilterPage> {
             height: 38,
             child: CustomButton(
               title: 'Xoá',
-              textColor: AppColors.onPrimary,
-              backgroundColor: AppColors.primary,
+              textColor: AppColors.primary,
+              backgroundColor: AppColors.onPrimary,
               strokeColor: AppColors.strokeLight,
               radius: 4.0,
-              onPressed: () {},
+              onPressed: () {
+                setState(() {
+                  _setupFieldsByFilters();
+                });
+              },
             ),
           ),
         ),
@@ -372,37 +448,14 @@ class _FilterPageState extends State<FilterPage> {
           child: SizedBox(
             height: 38,
             child: CustomButton(
-              title: 'Apply',
+              title: 'Áp dụng',
               textColor: AppColors.onPrimary,
               backgroundColor: AppColors.primary,
               strokeColor: AppColors.strokeLight,
               radius: 4.0,
               onPressed: () {
-                final MotelsFilter filters = MotelsFilter(
-                  roomCode: _formatStringSelection(_selectedRoomCode),
-                  address: Address(
-                    province: _formatStringSelection(_selectedProvince),
-                    ward: _formatStringSelection(_selectedWard),
-                  ),
-                  amenities: _selectedAmenities.isEmpty
-                      ? null
-                      : _selectedAmenities,
-                  status: _selectedStatusList.isEmpty
-                      ? null
-                      : _selectedStatusList,
-                  priceRange: Range2D(
-                    values: _selectedPriceRangeValues,
-                    maxValue: 10,
-                  ),
-                  distanceRange: Range(
-                    value: _selectedDistanceKm.toDouble(),
-                    maxValue: 10,
-                  ),
-                );
-
-                _saveFilterMotels(filters);
-
-                context.read<MapBloc>().add(FilterMotelsEvent(filter: filters));
+                final MotelsFilter filters = _motelsFilter;
+                context.read<MotelsFilterCubit>().updateFilter(filters);
                 Navigator.of(context).pop();
               },
             ),
@@ -419,20 +472,16 @@ class _FilterPageState extends State<FilterPage> {
   String? _formatStringSelection(String? input) =>
       input == 'Tất cả' ? null : input;
 
-  void _saveFilterMotels(MotelsFilter filter) {
-    AppDataManager().filterMotels = filter;
-  }
-
-  Widget buildRangeValueText(RangeValues values, int maxValue, String unit) {
-    final int startValue = values.start.round();
-    final int endValue = values.end.round();
+  Widget buildRangeValueText(RangeValues values, double maxValue) {
+    final double startValue = values.start;
+    final double endValue = values.end;
     final String content;
     if (endValue > maxValue) {
-      content = '> $startValue $unit';
+      content = '> ${startValue.toVND()}';
     } else if (startValue == 0) {
-      content = '< $endValue $unit';
+      content = '< ${endValue.toVND()}';
     } else {
-      content = '$startValue - $endValue $unit';
+      content = '${startValue.toVND()} - ${endValue.toVND()}';
     }
 
     return Text(

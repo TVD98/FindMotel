@@ -5,6 +5,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 class RectangeCheckbox extends StatelessWidget {
   final bool isSelected;
   final String text;
+  final String selectedIcon;
+  final String unselectedIcon;
   final VoidCallback onTap; // Callback khi người dùng chạm vào
 
   const RectangeCheckbox({
@@ -12,6 +14,8 @@ class RectangeCheckbox extends StatelessWidget {
     required this.isSelected,
     required this.text,
     required this.onTap,
+    required this.selectedIcon,
+    required this.unselectedIcon,
   });
 
   @override
@@ -23,9 +27,7 @@ class RectangeCheckbox extends StatelessWidget {
             MainAxisSize.min, // Đảm bảo Row chỉ chiếm không gian cần thiết
         children: [
           SvgPicture.asset(
-            isSelected
-                ? 'assets/images/ic_checked_box.svg'
-                : 'assets/images/ic_unchecked_box.svg',
+            isSelected ? selectedIcon : unselectedIcon,
             width: 18,
             height: 18,
           ),

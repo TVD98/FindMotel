@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 
 class CustomDropdownButton<T> extends StatelessWidget {
   final T? value;
@@ -23,11 +24,11 @@ class CustomDropdownButton<T> extends StatelessWidget {
     this.borderColor = Colors.grey,
     this.borderRadius = 8.0,
     this.backgroundColor = Colors.white,
-    this.rightIconAsset = 'assets/images/dropdown_icon.png',
+    this.rightIconAsset = 'assets/images/ic_arrow_down.svg',
     this.width = 200.0,
     this.height = 50.0,
     this.horizontalPadding = 16.0,
-    this.iconSize = 24.0,
+    this.iconSize = 48.0,
     this.menuItemFontSize = 16.0,
     this.menuItemTextColor = Colors.black,
   });
@@ -61,7 +62,11 @@ class CustomDropdownButton<T> extends StatelessWidget {
           }).toList(),
           onChanged: onChanged,
           isExpanded: true,
-          icon: Image.asset(rightIconAsset, width: iconSize, height: iconSize),
+          icon: SvgPicture.asset(
+            rightIconAsset,
+            width: iconSize,
+            height: iconSize,
+          ),
           underline: const SizedBox.shrink(),
           dropdownColor: backgroundColor,
         ),

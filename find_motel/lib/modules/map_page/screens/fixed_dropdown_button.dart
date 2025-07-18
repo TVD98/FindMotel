@@ -2,10 +2,14 @@ import 'package:find_motel/common/widgets/custom_dropdown_button.dart';
 import 'package:flutter/material.dart';
 import 'package:find_motel/theme/app_colors.dart';
 
+enum DropdownStyle { large, medium }
+
 class FixedDropdownButton extends StatefulWidget {
   final List<String> items;
   final String? value;
   final double width;
+  final double height;
+  final DropdownStyle style;
   final ValueChanged<String?>? onChanged;
 
   const FixedDropdownButton({
@@ -13,6 +17,8 @@ class FixedDropdownButton extends StatefulWidget {
     required this.items,
     this.value,
     this.width = 120.0,
+    this.height = 26,
+    this.style = DropdownStyle.large,
     this.onChanged,
   });
 
@@ -23,6 +29,14 @@ class FixedDropdownButton extends StatefulWidget {
 class _FixedDropdownButtonState extends State<FixedDropdownButton> {
   @override
   Widget build(BuildContext context) {
+    final double iconSize;
+    switch (widget.style) {
+      case DropdownStyle.large:
+        iconSize = 24;
+      case DropdownStyle.medium:
+        iconSize = 16;
+        break;
+    }
     return CustomDropdownButton<String>(
       value: widget.value,
       items: widget.items,
@@ -30,11 +44,10 @@ class _FixedDropdownButtonState extends State<FixedDropdownButton> {
       borderColor: AppColors.strokeLight,
       borderRadius: 4.0,
       backgroundColor: Colors.white,
-      rightIconAsset: 'assets/images/ic_arrow_down_rectange.png',
       width: widget.width,
-      height: 26.0,
+      height: widget.height,
       horizontalPadding: 8.0,
-      iconSize: 18.0,
+      iconSize: iconSize,
       menuItemFontSize: 14.0,
       menuItemTextColor: AppColors.elementSecondary,
     );

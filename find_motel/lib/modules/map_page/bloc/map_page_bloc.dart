@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:typed_data' show Uint8List;
 import 'package:find_motel/common/models/motel.dart';
+import 'package:find_motel/extensions/double_extensions.dart';
 import 'package:find_motel/managers/app_data_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as img;
@@ -193,6 +194,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
         centerPosition: centerPosition,
         bounds: bounds,
         markers: {...markers},
+        cards: motels,
         isLoading: false,
       ),
     );

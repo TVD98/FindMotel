@@ -9,7 +9,9 @@ class AppColors {
 
   // Primary brand color
   static const Color primary = Color(0xFF248078);
+  static const Color primaryContainer = Color(0xFF9BCFCA);
   static const Color onPrimary = Color(0xFFFFFFFF); // #FFFFFF
+  static const Color onPrimaryContainer = Color(0xFF03221A);
 
   // Secondary accent
   static const Color secondary = Color(0xFF4CAF50);

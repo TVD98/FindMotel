@@ -24,12 +24,16 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
   /// Optional list of widgets to display in the AppBar actions.
   final List<Widget>? actions;
 
+  /// Color for the leading icon. Defaults to Colors.white.
+  final Color? leadingIconColor;
+
   const CommonAppBar({
     super.key,
     required this.title,
     this.leadingAsset = 'assets/images/ic_back.svg',
     this.onLeadingPressed,
     this.actions,
+    this.leadingIconColor = Colors.white,
   });
 
   @override
@@ -50,7 +54,14 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
                   onLeadingPressed!();
                 }
               },
-              icon: SvgPicture.asset(leadingAsset!, height: 24, width: 24),
+              icon: SvgPicture.asset(
+                leadingAsset!,
+                height: 24,
+                width: 24,
+                colorFilter: leadingIconColor != null
+                    ? ColorFilter.mode(leadingIconColor!, BlendMode.srcIn)
+                    : null,
+              ),
             )
           : null,
       title: Text(

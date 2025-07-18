@@ -12,7 +12,8 @@ class FutureInfo {
 
 enum Future {
   customer,
-  import;
+  import,
+  account;
 
   FutureInfo get info {
     switch (this) {
@@ -25,8 +26,14 @@ enum Future {
       case Future.import:
         return FutureInfo(
           title: 'Nhập dữ liệu',
-          description: 'Thêm danh sách khách hàng từ file excel',
+          description: 'Thêm danh sách nhà trọ từ file excel',
           icon: 'assets/images/ic_import.png',
+        );
+      case Future.account:
+        return FutureInfo(
+          title: 'Quản lý tài khoản',
+          description: 'Thêm, sửa và xóa tài khoản',
+          icon: 'assets/images/ic_account_manager.png',
         );
     }
   }
@@ -39,7 +46,12 @@ class ProfileState {
   final List<Future> futures;
   ProfileState({this.name, this.avatar, this.email, this.futures = const []});
 
-  ProfileState copyWith({String? name, String? avatar, String? email, List<Future>? futures}) {
+  ProfileState copyWith({
+    String? name,
+    String? avatar,
+    String? email,
+    List<Future>? futures,
+  }) {
     return ProfileState(
       name: name ?? this.name,
       avatar: avatar ?? this.avatar,

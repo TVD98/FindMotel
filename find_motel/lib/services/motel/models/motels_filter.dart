@@ -51,13 +51,10 @@ class Range2D implements QueryFilter {
   @override
   Query<Map<String, dynamic>> apply(Query<Map<String, dynamic>> query) {
     if (values.start > 0) {
-      query = query.where(
-        'price',
-        isGreaterThanOrEqualTo: values.start * 1000000,
-      );
+      query = query.where('price', isGreaterThanOrEqualTo: values.start);
     }
     if (values.end <= maxValue) {
-      query = query.where('price', isLessThanOrEqualTo: values.end * 1000000);
+      query = query.where('price', isLessThanOrEqualTo: values.end);
     }
     return query;
   }
@@ -83,6 +80,8 @@ class MotelsFilter {
   final Address? address;
   final List<String>? amenities;
   final List<String>? status;
+  final List<String>? texturies;
+  final String? type;
   final Range2D? priceRange;
   final Range? distanceRange;
 
@@ -91,6 +90,8 @@ class MotelsFilter {
     this.address,
     this.amenities,
     this.status,
+    this.texturies,
+    this.type,
     this.priceRange,
     this.distanceRange,
   });

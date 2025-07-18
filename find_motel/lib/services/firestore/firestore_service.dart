@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:find_motel/common/models/area.dart';
+import 'package:find_motel/common/models/import_images_options.dart';
 import 'package:find_motel/extensions/string_extensions.dart';
 import 'package:find_motel/services/catalog/catalog_service.dart';
 import 'package:find_motel/common/models/motel_index.dart';
@@ -10,9 +11,16 @@ import 'package:find_motel/services/motel/motels_service.dart';
 import 'package:find_motel/services/motel/models/motels_filter.dart';
 import 'package:find_motel/constants/firestore_paths.dart';
 import 'package:find_motel/common/models/user_profile.dart';
+import 'package:find_motel/common/models/deal.dart';
+import 'package:find_motel/services/customer/customer_service.dart';
 
 /// Service that fetches motel data from Firebase Cloud Firestore.
-class FirestoreService implements IMotelsService, ICatalogService, IUserDataService {
+class FirestoreService
+    implements
+        IMotelsService,
+        ICatalogService,
+        IUserDataService,
+        ICustomerService {
   final FirebaseFirestore _firestore;
 
   FirestoreService({FirebaseFirestore? firestore})
@@ -49,8 +57,8 @@ class FirestoreService implements IMotelsService, ICatalogService, IUserDataServ
           .limit(limit);
 
       // 2. Apply Firestore-side filters if present.
-      if (filter?.roomCode != null) {
-        query = filter!.roomCode!.applyWhereEqualTo(query, 'room_code');
+      if (filter?.roomCode != null && filter!.roomCode!.isNotEmpty) {
+        query = filter.roomCode!.applyWhereEqualTo(query, 'room_code');
       }
 
       // 2. Apply Firestore-side filters if present.
@@ -64,8 +72,8 @@ class FirestoreService implements IMotelsService, ICatalogService, IUserDataServ
       // composite indexes. Skip them for now or adjust according to your
       // Firestore index setup.
 
-      // 3. Execute the query.
-      final snapshot = await query.get();
+      // 3. Execute the query with GetOptions to force server fetch.
+      final snapshot = await query.get(const GetOptions(source: Source.server));
 
       // 4. Map Firestore docs -> Motel models.
       final List<Motel> fetchedMotels = snapshot.docs
@@ -97,6 +105,18 @@ class FirestoreService implements IMotelsService, ICatalogService, IUserDataServ
             .toList();
       }
 
+      if (filter?.type != null && filter!.type! != 'Khác') {
+        resultMotels = resultMotels
+            .where((motel) => motel.type == filter.type!)
+            .toList();
+      }
+
+      if (filter?.texturies != null && filter!.texturies!.isNotEmpty) {
+        resultMotels = resultMotels
+            .where((motel) => filter.texturies!.contains(motel.texture))
+            .toList();
+      }
+
       return (motels: resultMotels, error: null);
     } catch (e) {
       return (motels: null, error: e.toString());
@@ -125,6 +145,7 @@ class FirestoreService implements IMotelsService, ICatalogService, IUserDataServ
       marker: data['marker'] as String? ?? '',
       thumbnail: data['thumbnail'] as String? ?? '',
       texture: data['texture'] as String? ?? '',
+      keywords: List<String>.from(data['keywords'] ?? const []),
     );
   }
 
@@ -190,6 +211,23 @@ class FirestoreService implements IMotelsService, ICatalogService, IUserDataServ
   }
 
   @override
+  Future<({ImportImagesOptions? options, String? error})>
+  fetchImportImagesOptions() async {
+    try {
+      final doc = await _firestore
+          .collection(FirestorePaths.optionsCollection)
+          .doc('import_images')
+          .get();
+      if (!doc.exists) {
+        return (options: null, error: 'Not found options');
+      }
+      return (options: ImportImagesOptions.fromMap(doc.data()!), error: null);
+    } catch (e) {
+      return (options: null, error: e.toString());
+    }
+  }
+
+  @override
   Future<({UserProfile? userProfile, String? error})> getUserProfileByEmail(
     String email,
   ) async {
@@ -237,6 +275,164 @@ class FirestoreService implements IMotelsService, ICatalogService, IUserDataServ
       return (motelIndex: MotelIndex.fromJson(doc.data()), error: null);
     } catch (e) {
       return (motelIndex: null, error: e.toString());
+    }
+  }
+
+  @override
+  Future<({List<UserProfile>? users, String? error})> getAllUsers() async {
+    try {
+      final querySnapshot = await _firestore
+          .collection(FirestorePaths.usersCollection)
+          .limit(100)
+          .get();
+      return (
+        users: querySnapshot.docs
+            .map((doc) => _userProfileFromDoc(doc))
+            .toList(),
+        error: null,
+      );
+    } catch (e) {
+      return (users: null, error: e.toString());
+    }
+  }
+
+  @override
+  Future<bool> updateUserRole({
+    required String userId,
+    required UserRole newRole,
+  }) async {
+    try {
+      await _firestore
+          .collection(FirestorePaths.usersCollection)
+          .doc(userId)
+          .update({'role': newRole.name});
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> deleteUser(String userId) async {
+    try {
+      await _firestore
+          .collection(FirestorePaths.usersCollection)
+          .doc(userId)
+          .delete();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // ICustomerService implementation
+  @override
+  Future<(List<Deal>?, String?)> fetchDeals({String? saleId}) async {
+    try {
+      Query<Map<String, dynamic>> query = _firestore
+          .collection(FirestorePaths.dealsCollection)
+          .orderBy('schedule', descending: false);
+      if (saleId != null && saleId.isNotEmpty) {
+        query = query.where('saleId', isEqualTo: saleId);
+      }
+      final snapshot = await query.get();
+      final customers = snapshot.docs.map((doc) {
+        final data = doc.data();
+        return Deal(
+          id: doc.id,
+          name: data['name'] ?? '',
+          phone: data['phone'] ?? '',
+          price: data['price'] as double,
+          schedule: (data['schedule'] as Timestamp).toDate(),
+          saleId: data['saleId'] ?? '',
+          motelId: data['motelId'] ?? '',
+          motelName: data['motelName'] ?? '',
+        );
+      }).toList();
+      return (customers, null);
+    } catch (e) {
+      return (null, e.toString());
+    }
+  }
+
+  @override
+  Future<(bool, String?)> addDeal(Deal customer) async {
+    try {
+      await _firestore.collection(FirestorePaths.dealsCollection).add({
+        'name': customer.name,
+        'phone': customer.phone,
+        'price': customer.price,
+        'schedule': Timestamp.fromDate(customer.schedule),
+        'saleId': customer.saleId,
+        'motelId': customer.motelId,
+        'motelName': customer.motelName,
+      });
+      return (true, null);
+    } catch (e) {
+      return (false, e.toString());
+    }
+  }
+
+  @override
+  Future<(bool, String?)> deleteDeal(String id) async {
+    try {
+      await _firestore
+          .collection(FirestorePaths.dealsCollection)
+          .doc(id)
+          .delete();
+      return (true, null);
+    } catch (e) {
+      return (false, e.toString());
+    }
+  }
+
+  @override
+  Future<(bool, String?)> updateDeal(Deal customer) async {
+    try {
+      await _firestore
+          .collection(FirestorePaths.dealsCollection)
+          .doc(customer.id)
+          .update({
+            'name': customer.name,
+            'phone': customer.phone,
+            'price': customer.price,
+            'schedule': customer.schedule,
+            'saleId': customer.saleId,
+            'motelId': customer.motelId,
+            'motelName': customer.motelName,
+          });
+      return (true, null);
+    } catch (e) {
+      return (false, e.toString());
+    }
+  }
+
+  @override
+  Future<String?> deleteMotel(String motelId) async {
+    try {
+      await _firestore
+          .collection(FirestorePaths.motelsCollection)
+          .doc(motelId)
+          .delete();
+      return null;
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
+  @override
+  Future<({Motel? motel, String? error})> getMotelById(String motelId) async {
+    try {
+      final doc = await _firestore
+          .collection(FirestorePaths.motelsCollection)
+          .doc(motelId)
+          .get();
+      if (!doc.exists) {
+        return (motel: null, error: 'Motel not found');
+      }
+      return (motel: _motelFromDoc(doc), error: null);
+    } catch (e) {
+      return (motel: null, error: e.toString());
     }
   }
 }
