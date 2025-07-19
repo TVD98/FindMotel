@@ -16,4 +16,10 @@ abstract class IUserDataService {
   /// 
   /// Returns `true` if the deletion was successful, `false` otherwise.
   Future<bool> deleteUser(String userId);
+
+  Future<bool> updateUserProfile({
+    required String userId,
+    required String name,
+    required String avatar
+  });
 }

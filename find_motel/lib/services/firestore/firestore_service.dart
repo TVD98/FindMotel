@@ -346,6 +346,28 @@ class FirestoreService
   }
 
   @override
+  Future<bool> updateUserProfile({
+    required String userId,
+    required String name,
+    required String avatar,
+  }) async {
+    try {
+      Map<String, dynamic> json = {'name': name};
+      String? imageUrl = await _storageService.uploadImage(avatar);
+      if (imageUrl != null) {
+        json['avatar'] = imageUrl;
+      }
+      await _firestore
+          .collection(FirestorePaths.usersCollection)
+          .doc(userId)
+          .update(json);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  @override
   Future<bool> deleteUser(String userId) async {
     try {
       await _firestore

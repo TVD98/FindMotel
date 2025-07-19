@@ -7,7 +7,6 @@ import 'package:find_motel/services/image_picker/image_source_option.dart';
 import 'package:find_motel/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'dart:io';
 import 'package:reorderable_grid_view/reorderable_grid_view.dart';
 
 // Đặt một hằng số cho placeholder
@@ -27,8 +26,6 @@ class _ImageDisplayScreenState extends State<ImageDisplayScreen> {
   late List<String> _initialImages;
   late ImagePickerService _imagePickerService;
 
-  final FirebaseStorage _storage = FirebaseStorage.instance;
-
   List<String> get finalImageUrls {
     // Tạo một bản sao để tránh sửa đổi trực tiếp _currentImages
     final List<String> result = List.from(_currentImages);
@@ -45,18 +42,10 @@ class _ImageDisplayScreenState extends State<ImageDisplayScreen> {
     // Khởi tạo _currentImages với placeholder ở đầu
     _currentImages = [_kAddImagePlaceholder, ...List.from(_initialImages)];
 
-    final importImagesOptions = AppDataManager().importImagesOptions;
-    final List<ImageSourceOption> imageSourceOptions = [];
-    if (importImagesOptions?.gallery ?? false) {
-      imageSourceOptions.add(ImageSourceOption.gallery);
-    }
-    if (importImagesOptions?.link ?? false) {
-      imageSourceOptions.add(ImageSourceOption.link);
-    }
     _imagePickerService = ImagePickerService(
       context: context,
       addImagesToList: _addImagesToList,
-      options: imageSourceOptions,
+      options: AppDataManager().importImagesOptions?.imageSourceOptions() ?? [],
     );
   }
 
