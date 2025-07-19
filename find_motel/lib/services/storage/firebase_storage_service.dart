@@ -25,13 +25,17 @@ class FirebaseStorageService {
 
   Future<String?> uploadImage(String filePath) async {
     try {
-      final file = File(filePath);
-      if (!await file.exists()) {
-        print('File không tồn tại: $filePath');
-        return null;
-      }
+      if (filePath.startsWith('http')) {
+        return filePath;
+      } else {
+        final file = File(filePath);
+        if (!await file.exists()) {
+          print('File không tồn tại: $filePath');
+          return null;
+        }
 
-      return _uploadFile(file, 'images');
+        return _uploadFile(file, 'images');
+      }
     } catch (e) {
       print('Lỗi upload ảnh: $e');
       return null;
@@ -42,15 +46,9 @@ class FirebaseStorageService {
     final List<String> uploadedUrls = [];
 
     for (final filePath in filePaths) {
-      // Chỉ upload những ảnh local (không phải URL)
-      if (filePath.startsWith('http')) {
-        // Giữ lại URL cũ
-        uploadedUrls.add(filePath);
-      } else {
-        final url = await uploadImage(filePath);
-        if (url != null) {
-          uploadedUrls.add(url);
-        }
+      final url = await uploadImage(filePath);
+      if (url != null) {
+        uploadedUrls.add(url);
       }
     }
 
