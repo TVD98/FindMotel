@@ -16,14 +16,14 @@ class SettingState extends Equatable {
   SettingState copyWith({
     String? name,
     String? avatar,
-    bool? isSaving,
     String? email,
+    bool? isSaving,
   }) {
     return SettingState(
       name: name ?? this.name,
       avatar: avatar ?? this.avatar,
-      isSaving: isSaving ?? this.isSaving,
       email: email ?? this.email,
+      isSaving: isSaving ?? this.isSaving,
     );
   }
 
