@@ -23,7 +23,10 @@ class MapPage extends StatefulWidget {
 class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
   late GoogleMapController mapController;
   final ScrollController _scrollController = ScrollController();
-  final Map<String, GlobalKey> _cardKeys = {};
+  final LatLng _defaultCenter = const LatLng(
+    10.762622,
+    106.660172,
+  ); // Vĩ độ TP.HCM
 
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
@@ -32,26 +35,18 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
 
-  void _scrollToCard(String? motelId) {
-    if (motelId == null || !_cardKeys.containsKey(motelId)) return;
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
-    final RenderBox renderBox =
-        _cardKeys[motelId]!.currentContext!.findRenderObject() as RenderBox;
-    final double offset =
-        renderBox.localToGlobal(Offset.zero).dx + _scrollController.offset;
-
-    // Tính toán vị trí cuộn để đưa thẻ vào giữa (hoặc gần giữa) màn hình
-    // Chiều rộng của thẻ cố định là 250 + 2*5 (margin) = 260
-    final double cardWidth =
-        260.0; // Đây là chiều rộng của mỗi card (width + horizontal margin)
-    final double screenWidth = MediaQuery.of(context).size.width;
-    final double targetOffset = offset - (screenWidth / 2) + (cardWidth / 2);
+  void _scrollToItem(int index) {
+    final double cardTotalWidth = (MediaQuery.of(context).size.width - 40) + 10;
+    final double offset = index * cardTotalWidth;
 
     _scrollController.animateTo(
-      targetOffset.clamp(
-        0.0,
-        _scrollController.position.maxScrollExtent,
-      ), // Giới hạn offset trong phạm vi cuộn
+      offset,
       duration: const Duration(milliseconds: 500),
       curve: Curves.easeInOut,
     );
@@ -66,32 +61,39 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
       },
       child: BlocConsumer<MapBloc, MapState>(
         listener: (context, state) {
-          // // Cập nhật vị trí camera khi trạng thái thay đổi
-          // if (state.bounds != null) {
-          //   mapController.animateCamera(
-          //     CameraUpdate.newLatLngBounds(state.bounds!, 50),
-          //   );
-          // } else if (state.centerPosition != null) {
-          //   mapController.animateCamera(
-          //     CameraUpdate.newCameraPosition(
-          //       CameraPosition(target: state.centerPosition!, zoom: 12.0),
-          //     ),
-          //   );
-          // }
+          // Cập nhật vị trí camera khi trạng thái thay đổi
+          if (state.bounds != null) {
+            mapController.animateCamera(
+              CameraUpdate.newLatLngBounds(state.bounds!, 50),
+            );
+          } else if (state.centerPosition != null) {
+            mapController.animateCamera(
+              CameraUpdate.newCameraPosition(
+                CameraPosition(target: state.centerPosition!, zoom: 12.0),
+              ),
+            );
+          }
+
+          if (state.selectedMotel != null && state.cards.isNotEmpty) {
+            final motelIndex = state.cards.indexWhere(
+              (motel) => motel.id == state.selectedMotel!.id,
+            );
+            _scrollToItem(motelIndex);
+          }
         },
         builder: (context, state) {
           return Stack(
             children: [
-              // GoogleMap(
-              //   onMapCreated: _onMapCreated,
-              //   initialCameraPosition: CameraPosition(
-              //     target: state.centerPosition ?? _defaultCenter,
-              //     zoom: 13.0,
-              //   ),
-              //   markers: state.markers,
-              //   myLocationEnabled: true,
-              //   buildingsEnabled: false,
-              // ),
+              GoogleMap(
+                onMapCreated: _onMapCreated,
+                initialCameraPosition: CameraPosition(
+                  target: state.centerPosition ?? _defaultCenter,
+                  zoom: 13.0,
+                ),
+                markers: state.markers,
+                myLocationEnabled: true,
+                buildingsEnabled: false,
+              ),
               Positioned(
                 top: 50,
                 right: 16,
