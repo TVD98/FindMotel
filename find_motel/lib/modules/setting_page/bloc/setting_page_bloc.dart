@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:find_motel/services/firestore/firestore_service.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'setting_page_event.dart';
 import 'setting_page_state.dart';
@@ -10,8 +10,8 @@ class SettingBloc extends Bloc<SettingEvent, SettingState> {
   final userSetting = AppDataManager().currentUserProfile;
   final IUserDataService _userDataService;
 
-  SettingBloc({required IUserDataService userDataService})
-    : _userDataService = userDataService,
+  SettingBloc({IUserDataService? userDataService})
+    : _userDataService = userDataService ?? FirestoreService(),
     super(SettingState()) {
     on<LoadSettingEvent>((event, emit) async {
       // Cập nhật trạng thái với thông tin người dùng
@@ -31,14 +31,16 @@ class SettingBloc extends Bloc<SettingEvent, SettingState> {
     });
     on<SaveSetting>((event, emit) async {
       emit(state.copyWith(isSaving: true));
-      // TODO: Thêm logic lưu cài đặt vào backend hoặc local
       final bool success = await _userDataService.updateUserProfile(
         userId: userSetting?.id ?? '',
         name: state.name ?? '',
         avatar: state.avatar ?? '',
       );
-      // await Future.delayed(const Duration(seconds: 1));
-      emit(state.copyWith(isSaving: false));
+      if (success) {
+        emit(state.copyWith(isSaving: false, isSaved: true));
+      } else {
+        emit(state.copyWith(isSaving: false));
+      }
     });
   }
 }

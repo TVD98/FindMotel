@@ -1,3 +1,7 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:find_motel/common/models/user_profile.dart';
+import 'package:find_motel/managers/app_data_manager.dart';
+import 'package:find_motel/managers/cubit/cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/setting_page_bloc.dart';
@@ -29,6 +33,7 @@ class _SettingPageState extends State<SettingPage> {
     // Khởi tạo ImagePickerService trong initState
     _imagePickerService = ImagePickerService(
       context: context, // Truyền context hiện tại
+      options: AppDataManager().importImagesOptions?.imageSourceOptions() ?? [],
       addImagesToList: (urls) {
         // Callback này sẽ được gọi khi ảnh được chọn
         if (mounted) {
@@ -47,7 +52,18 @@ class _SettingPageState extends State<SettingPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<SettingBloc, SettingState>(
+    return BlocConsumer<SettingBloc, SettingState>(
+      listener: (context, state) {
+        if (state.isSaved) {
+          context.read<UserProfileCubit>().updateUserProfile(
+            AppDataManager().currentUserProfile!.copyWith(
+              name: state.name,
+              avatar: state.avatar,
+            ),
+          );
+          Navigator.pop(context);
+        }
+      },
       builder: (context, state) {
         return Scaffold(
           appBar: CommonAppBar(
@@ -69,8 +85,8 @@ class _SettingPageState extends State<SettingPage> {
                       backgroundColor: AppColors.strokeHighLight,
                       child: state.avatar != null && state.avatar!.isNotEmpty
                           ? ClipOval(
-                              child: Image.network(
-                                state.avatar!,
+                              child: CachedNetworkImage(
+                                imageUrl: state.avatar!,
                                 width: 100,
                                 height: 100,
                                 alignment: Alignment.center,
@@ -165,13 +181,6 @@ class _SettingPageState extends State<SettingPage> {
                         ? null
                         : () {
                             context.read<SettingBloc>().add(SaveSetting());
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Cài đặt đã được lưu!'),
-                              ),
-                            );
-                            // Thực hiện push profile_page() với dữ liệu người dùng mới
-                            //Đang gặp lỗi BlocProvider...
                           },
                   ),
                 ),

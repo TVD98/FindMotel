@@ -1,6 +1,5 @@
 import 'package:find_motel/common/constants/constant.dart';
 import 'package:find_motel/common/models/user_profile.dart';
-import 'package:find_motel/extensions/string_extensions.dart';
 import 'package:find_motel/managers/app_data_manager.dart';
 import 'package:find_motel/services/motel/models/motels_filter.dart';
 import 'package:flutter/material.dart';

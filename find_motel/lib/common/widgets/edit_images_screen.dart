@@ -3,10 +3,8 @@ import 'package:find_motel/common/widgets/common_app_bar.dart';
 import 'package:find_motel/common/widgets/custom_button.dart';
 import 'package:find_motel/managers/app_data_manager.dart';
 import 'package:find_motel/services/image_picker/image_picker_service.dart';
-import 'package:find_motel/services/image_picker/image_source_option.dart';
 import 'package:find_motel/theme/app_colors.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:reorderable_grid_view/reorderable_grid_view.dart';
 
 // Đặt một hằng số cho placeholder

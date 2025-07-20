@@ -35,6 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<HomeBloc, HomeState>(
+      listenWhen: (previous, current) => previous.userProfile != current.userProfile,
       listener: (context, state) {
         if (state.userProfile != null) {
           context.read<UserProfileCubit>().updateUserProfile(

@@ -1,3 +1,4 @@
+import 'package:find_motel/extensions/string_extensions.dart';
 import 'package:find_motel/services/image_picker/image_source_option.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -153,7 +154,7 @@ class ImagePickerService {
                     radius: 4.0,
                     onPressed: () {
                       if (pastedLink != null && pastedLink!.isNotEmpty) {
-                        addImagesToList([pastedLink!]);
+                        addImagesToList([pastedLink!.toImageUrl()]);
                         Navigator.of(dialogContext).pop();
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(

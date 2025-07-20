@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:find_motel/common/models/user_profile.dart';
 import 'package:find_motel/managers/app_data_manager.dart';
 import 'package:find_motel/managers/cubit/cubit.dart';
@@ -17,7 +18,6 @@ import 'package:find_motel/modules/profile_page/bloc/profile_page_state.dart';
 import 'package:flutter/material.dart';
 import 'package:find_motel/common/widgets/common_app_bar.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:find_motel/services/firestore/firestore_service.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -26,10 +26,11 @@ class ProfilePage extends StatefulWidget {
   State<ProfilePage> createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClientMixin {
+class _ProfilePageState extends State<ProfilePage>
+    with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
-  
+
   @override
   void initState() {
     super.initState();
@@ -57,17 +58,20 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
               actions: [
                 IconButton(
                   onPressed: () {
-                    // TODO: handle settings tap
                     Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => BlocProvider(
-                        // Cung cấp Bloc ngay trước khi đẩy màn hình
-                        create: (context) => SettingBloc(userDataService: FirestoreService()),
-                        child: const SettingPage(),
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => MultiBlocProvider(
+                          providers: [
+                            BlocProvider(create: (_) => SettingBloc()),
+                            BlocProvider.value(
+                              value: context.read<UserProfileCubit>(),
+                            ),
+                          ],
+                          child: const SettingPage(),
+                        ),
                       ),
-                    ),
-                  );
+                    );
                   },
                   icon: SvgPicture.asset(
                     'assets/images/ic_setting.svg',
@@ -169,7 +173,13 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
         fit: BoxFit.contain,
       );
     }
-    return CircleAvatar(radius: 50, backgroundImage: NetworkImage(avatar));
+    return CircleAvatar(
+      radius: 50,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(50),
+        child: CachedNetworkImage(imageUrl: avatar, width: 100, height: 100, fit: BoxFit.cover,),
+      ),
+    );
   }
 
   _divider() =>
