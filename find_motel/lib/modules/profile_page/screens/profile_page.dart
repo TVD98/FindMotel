@@ -6,7 +6,7 @@ import 'package:find_motel/modules/deal_manager/screens/deal_manager_screen.dart
 import 'package:find_motel/modules/import_motels/bloc/import_motels_bloc.dart';
 import 'package:find_motel/modules/import_motels/screens/import_motels_screen.dart';
 import 'package:find_motel/modules/profile_page/bloc/profile_page_event.dart';
-import 'package:find_motel/modules/setting_page/screens/setting-page.dart';
+import 'package:find_motel/modules/setting_page/screens/setting_page.dart';
 import 'package:find_motel/modules/setting_page/bloc/setting_page_bloc.dart';
 import 'package:find_motel/theme/app_colors.dart';
 import 'package:find_motel/common/widgets/custom_button.dart';
@@ -17,6 +17,7 @@ import 'package:find_motel/modules/profile_page/bloc/profile_page_state.dart';
 import 'package:flutter/material.dart';
 import 'package:find_motel/common/widgets/common_app_bar.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:find_motel/services/firestore/firestore_service.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -62,7 +63,7 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
                     MaterialPageRoute(
                       builder: (context) => BlocProvider(
                         // Cung cấp Bloc ngay trước khi đẩy màn hình
-                        create: (context) => SettingBloc(),
+                        create: (context) => SettingBloc(userDataService: FirestoreService()),
                         child: const SettingPage(),
                       ),
                     ),
