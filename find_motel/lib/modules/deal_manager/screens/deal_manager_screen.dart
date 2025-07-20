@@ -1,7 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:find_motel/extensions/double_extensions.dart';
-import 'package:find_motel/modules/deal_manager/bloc/deal_detail_bloc.dart';
 import 'package:find_motel/modules/deal_manager/screens/deal_detail_screen.dart';
 import 'package:find_motel/theme/app_colors.dart';
 import 'package:flutter/material.dart';

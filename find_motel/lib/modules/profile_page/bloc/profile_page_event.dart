@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:find_motel/common/models/user_profile.dart';
 
 abstract class ProfileEvent extends Equatable {
   const ProfileEvent();
@@ -8,7 +9,9 @@ abstract class ProfileEvent extends Equatable {
 }
 
 class LoadProfileEvent extends ProfileEvent {
-  const LoadProfileEvent();
+  final UserProfile? userProfile;
+
+  const LoadProfileEvent({this.userProfile});
 }
 
 class LogoutEvent extends ProfileEvent {

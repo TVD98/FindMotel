@@ -9,6 +9,7 @@ class MapState extends Equatable {
   final LatLng? centerPosition;
   final LatLngBounds? bounds;
   final Set<Marker> markers;
+  final List<Motel> cards;
   final Motel? selectedMotel;
   final bool isLoading;
   final String? error;
@@ -18,6 +19,7 @@ class MapState extends Equatable {
     this.centerPosition,
     this.bounds,
     this.markers = const {},
+    this.cards = const [],
     this.selectedMotel,
     this.isLoading = false,
     this.error,
@@ -28,6 +30,7 @@ class MapState extends Equatable {
     LatLng? centerPosition,
     LatLngBounds? bounds,
     Set<Marker>? markers,
+    List<Motel>? cards,
     Motel? selectedMotel,
     bool? isLoading,
     String? error,
@@ -37,6 +40,7 @@ class MapState extends Equatable {
       centerPosition: centerPosition ?? this.centerPosition,
       bounds: bounds ?? this.bounds,
       markers: markers ?? this.markers,
+      cards: cards ?? this.cards,
       selectedMotel: selectedMotel,
       isLoading: isLoading ?? this.isLoading,
       error: error,
@@ -49,6 +53,7 @@ class MapState extends Equatable {
     centerPosition,
     bounds,
     markers,
+    cards,
     selectedMotel,
     isLoading,
     error,

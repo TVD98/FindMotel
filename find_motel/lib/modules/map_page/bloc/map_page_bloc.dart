@@ -193,6 +193,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
         centerPosition: centerPosition,
         bounds: bounds,
         markers: {...markers},
+        cards: motels,
         isLoading: false,
       ),
     );

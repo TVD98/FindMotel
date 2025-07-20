@@ -1,10 +1,14 @@
-// ignore_for_file: use_build_context_synchronously
-
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:find_motel/common/models/user_profile.dart';
+import 'package:find_motel/managers/app_data_manager.dart';
+import 'package:find_motel/managers/cubit/cubit.dart';
 import 'package:find_motel/modules/account_manager/screens/account_manager_screen.dart';
 import 'package:find_motel/modules/deal_manager/screens/deal_manager_screen.dart';
 import 'package:find_motel/modules/import_motels/bloc/import_motels_bloc.dart';
 import 'package:find_motel/modules/import_motels/screens/import_motels_screen.dart';
 import 'package:find_motel/modules/profile_page/bloc/profile_page_event.dart';
+import 'package:find_motel/modules/setting_page/screens/setting_page.dart';
+import 'package:find_motel/modules/setting_page/bloc/setting_page_bloc.dart';
 import 'package:find_motel/theme/app_colors.dart';
 import 'package:find_motel/common/widgets/custom_button.dart';
 import 'package:find_motel/utilities/excel_reader.dart';
@@ -22,113 +26,141 @@ class ProfilePage extends StatefulWidget {
   State<ProfilePage> createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class _ProfilePageState extends State<ProfilePage>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   @override
   void initState() {
     super.initState();
-    context.read<ProfileBloc>().add(const LoadProfileEvent());
+
+    context.read<ProfileBloc>().add(
+      LoadProfileEvent(userProfile: AppDataManager().currentUserProfile),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ProfileBloc, ProfileState>(
-      builder: (context, state) {
-        return Scaffold(
-          appBar: CommonAppBar(
-            title: 'Hello ${state.name}',
-            leadingAsset: null,
-            actions: [
-              IconButton(
-                onPressed: () {
-                  // TODO: handle settings tap
-                },
-                icon: SvgPicture.asset(
-                  'assets/images/ic_setting.svg',
-                  height: 24,
-                  width: 24,
-                ),
-              ),
-            ],
-          ),
-          body: BlocBuilder<ProfileBloc, ProfileState>(
-            builder: (context, state) {
-              return Stack(
-                fit: StackFit.expand,
-                children: [
-                  SingleChildScrollView(
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 16, right: 16),
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            const SizedBox(height: 48),
-                            _buildAvatar(state.avatar),
-                            const SizedBox(height: 20),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Text(
-                                  'Email: ',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.primary,
-                                  ),
-                                ),
-                                Text(
-                                  state.email ?? '',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w400,
-                                    color: AppColors.elementPrimary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            _divider(),
-                            Column(
-                              children: [
-                                for (Future future in state.futures)
-                                  _buildCard(future),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 50,
-                    left: 0,
-                    right: 0,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: SizedBox(
-                        height: 44,
-                        child: CustomButton(
-                          title: 'Đăng xuất',
-                          icon: Icons.logout,
-                          textColor: AppColors.onPrimary,
-                          backgroundColor: AppColors.primary,
-                          onPressed: () {
-                            context.read<ProfileBloc>().add(
-                              const LogoutEvent(),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
+    super.build(context);
+    return BlocListener<UserProfileCubit, UserProfile>(
+      listener: (context, userProfile) {
+        context.read<ProfileBloc>().add(
+          LoadProfileEvent(userProfile: userProfile),
         );
       },
+      child: BlocBuilder<ProfileBloc, ProfileState>(
+        builder: (context, state) {
+          return Scaffold(
+            appBar: CommonAppBar(
+              title: state.name ?? '',
+              leadingAsset: null,
+              actions: [
+                IconButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => MultiBlocProvider(
+                          providers: [
+                            BlocProvider(create: (_) => SettingBloc()),
+                            BlocProvider.value(
+                              value: context.read<UserProfileCubit>(),
+                            ),
+                          ],
+                          child: const SettingPage(),
+                        ),
+                      ),
+                    );
+                  },
+                  icon: SvgPicture.asset(
+                    'assets/images/ic_setting.svg',
+                    height: 24,
+                    width: 24,
+                  ),
+                ),
+              ],
+            ),
+            body: BlocBuilder<ProfileBloc, ProfileState>(
+              builder: (context, state) {
+                return Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    SingleChildScrollView(
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 16, right: 16),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              const SizedBox(height: 48),
+                              _buildAvatar(state.avatar),
+                              const SizedBox(height: 20),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'Email: ',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                  Text(
+                                    state.email ?? '',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w400,
+                                      color: AppColors.elementPrimary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              _divider(),
+                              Column(
+                                children: [
+                                  for (Future future in state.futures)
+                                    _buildCard(future),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 50,
+                      left: 0,
+                      right: 0,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: SizedBox(
+                          height: 44,
+                          child: CustomButton(
+                            title: 'Đăng xuất',
+                            icon: Icons.logout,
+                            textColor: AppColors.onPrimary,
+                            backgroundColor: AppColors.primary,
+                            onPressed: () {
+                              context.read<ProfileBloc>().add(
+                                const LogoutEvent(),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -141,7 +173,13 @@ class _ProfilePageState extends State<ProfilePage> {
         fit: BoxFit.contain,
       );
     }
-    return CircleAvatar(radius: 50, backgroundImage: NetworkImage(avatar));
+    return CircleAvatar(
+      radius: 50,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(50),
+        child: CachedNetworkImage(imageUrl: avatar, width: 100, height: 100, fit: BoxFit.cover,),
+      ),
+    );
   }
 
   _divider() =>

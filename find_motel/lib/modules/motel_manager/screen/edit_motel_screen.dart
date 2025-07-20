@@ -1,16 +1,16 @@
-import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:find_motel/common/widgets/edit_images_screen.dart';
+import 'package:find_motel/managers/app_data_manager.dart';
+import 'package:find_motel/services/motel/motels_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:find_motel/common/models/motel.dart';
 import 'package:find_motel/theme/app_colors.dart';
 import 'package:find_motel/services/firestore/firestore_service.dart';
-import 'package:find_motel/services/storage/firebase_storage_service.dart';
 import 'package:find_motel/services/reload_service.dart';
 import 'package:find_motel/common/widgets/common_app_bar.dart';
-import 'package:find_motel/common/constants/app_extensions.dart';
 
 class EditMotelScreen extends StatefulWidget {
   final Motel motel;
@@ -42,6 +42,8 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
 
   bool _isLoading = false;
   bool _isDeleting = false;
+
+  final IMotelsService motelsService = FirestoreService();
 
   @override
   void initState() {
@@ -84,25 +86,6 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
     return priceNumber;
   }
 
-  Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final picked = await picker.pickImage(source: ImageSource.gallery);
-    if (picked != null) {
-      setState(() {
-        images.add(picked.path);
-      });
-    }
-  }
-
-  void _removeImage(int index) {
-    setState(() {
-      if (images[index] == mainImage) {
-        mainImage = images.isNotEmpty ? images[0] : '';
-      }
-      images.removeAt(index);
-    });
-  }
-
   void _setMainImage(String img) {
     setState(() {
       mainImage = img;
@@ -110,7 +93,7 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
   }
 
   Future<void> _showSelectExtensionsDialog() async {
-    final allExtensions = AppExtensions.allExtensions;
+    final allExtensions = AppDataManager().allAmenities;
     // Tạo bản sao để chọn tạm thời
     List<String> tempSelected = List<String>.from(selectedExtensions);
 
@@ -225,7 +208,9 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
                     style: GoogleFonts.quicksand(fontSize: 15),
                     decoration: InputDecoration(
                       labelText: 'Tên phí',
-                      labelStyle: GoogleFonts.quicksand(color: AppColors.primary),
+                      labelStyle: GoogleFonts.quicksand(
+                        color: AppColors.primary,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -243,7 +228,9 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
                     style: GoogleFonts.quicksand(fontSize: 15),
                     decoration: InputDecoration(
                       labelText: 'Số tiền',
-                      labelStyle: GoogleFonts.quicksand(color: AppColors.primary),
+                      labelStyle: GoogleFonts.quicksand(
+                        color: AppColors.primary,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -256,10 +243,15 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
                     value: selectedUnit,
-                    style: GoogleFonts.quicksand(fontSize: 15, color: Colors.black),
+                    style: GoogleFonts.quicksand(
+                      fontSize: 15,
+                      color: Colors.black,
+                    ),
                     decoration: InputDecoration(
                       labelText: 'Đơn vị',
-                      labelStyle: GoogleFonts.quicksand(color: AppColors.primary),
+                      labelStyle: GoogleFonts.quicksand(
+                        color: AppColors.primary,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -269,10 +261,7 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
                       ),
                     ),
                     items: units.map((unit) {
-                      return DropdownMenuItem(
-                        value: unit,
-                        child: Text(unit),
-                      );
+                      return DropdownMenuItem(value: unit, child: Text(unit));
                     }).toList(),
                     onChanged: (value) {
                       setStateDialog(() {
@@ -301,7 +290,7 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
                   onPressed: () {
                     final name = nameController.text.trim();
                     final price = priceController.text.trim();
-                    
+
                     if (name.isNotEmpty && price.isNotEmpty) {
                       setState(() {
                         customFees.add({
@@ -358,25 +347,6 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
         return;
       }
 
-      // Upload ảnh lên Firebase Storage trước
-      final storageService = FirebaseStorageService();
-      final uploadedImages = await storageService.uploadImages(
-        images,
-        'motels',
-      );
-
-      // Cập nhật mainImage nếu cần
-      String updatedMainImage = mainImage;
-      if (!mainImage.startsWith('http') && uploadedImages.isNotEmpty) {
-        // Tìm ảnh main trong danh sách đã upload
-        final mainIndex = images.indexOf(mainImage);
-        if (mainIndex != -1 && mainIndex < uploadedImages.length) {
-          updatedMainImage = uploadedImages[mainIndex];
-        } else {
-          updatedMainImage = uploadedImages.first;
-        }
-      }
-
       // Chuẩn bị fees list với custom fees
       final updatedFees = [
         {'name': 'Điện', 'price': int.tryParse(electricity) ?? 0, 'unit': 'số'},
@@ -397,19 +367,14 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
         note: note.split('\n'),
         extensions: selectedExtensions,
         fees: updatedFees,
-        images: uploadedImages, // Sử dụng URLs đã upload
-        thumbnail: updatedMainImage, // Sử dụng main image đã upload
+        images: images,
+        thumbnail: images.first,
         geoPoint: widget.motel.geoPoint,
         status: widget.motel.status,
-        marker: widget.motel.marker,
+        marker: images.first
       );
 
-      // Tạo instance của FirestoreService và update
-      final firestoreService = FirestoreService();
-      final error = await firestoreService.updateMotel(
-        widget.motel.id,
-        updatedMotel.toMap(),
-      );
+      final error = await motelsService.updateMotelWithImages(updatedMotel);
 
       if (error == null) {
         // Thành công - trở về màn home và reload data
@@ -818,19 +783,12 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
         ClipRRect(
           borderRadius: BorderRadius.circular(12),
           child: mainImage.isNotEmpty
-              ? (mainImage.startsWith('http')
-                    ? Image.network(
-                        mainImage,
-                        height: 140,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                      )
-                    : Image.file(
-                        File(mainImage),
-                        height: 140,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                      ))
+              ? CachedNetworkImage(
+                  imageUrl: mainImage,
+                  height: 140,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                )
               : Container(
                   height: 140,
                   color: Colors.grey[200],
@@ -844,83 +802,58 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
           child: ListView(
             scrollDirection: Axis.horizontal,
             children: [
-              ...images.asMap().entries.map((entry) {
-                final idx = entry.key;
-                final img = entry.value;
+              ...images.map((img) {
                 final isSelected = img == mainImage;
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
-                  child: Stack(
-                    children: [
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(8),
+                      onTap: () => _setMainImage(img),
+                      child: Container(
+                        width: 60,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          border: isSelected
+                              ? Border.all(color: AppColors.primary, width: 2)
+                              : null,
                           borderRadius: BorderRadius.circular(8),
-                          onTap: () => _setMainImage(img),
-                          child: Container(
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: CachedNetworkImage(
+                            imageUrl: img,
                             width: 60,
                             height: 48,
-                            decoration: BoxDecoration(
-                              border: isSelected
-                                  ? Border.all(
-                                      color: AppColors.primary,
-                                      width: 2,
-                                    )
-                                  : null,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: img.startsWith('http')
-                                  ? Image.network(
-                                      img,
-                                      width: 60,
-                                      height: 48,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : Image.file(
-                                      File(img),
-                                      width: 60,
-                                      height: 48,
-                                      fit: BoxFit.cover,
-                                    ),
-                            ),
+                            fit: BoxFit.cover,
                           ),
                         ),
                       ),
-                      Positioned(
-                        top: 0,
-                        right: 0,
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(10),
-                            onTap: () => _removeImage(idx),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.5),
-                                shape: BoxShape.circle,
-                              ),
-                              padding: const EdgeInsets.all(2),
-                              child: const Icon(
-                                Icons.close,
-                                color: Colors.white,
-                                size: 16,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 );
-              }).toList(),
+              }),
               // Nút thêm ảnh
               Material(
                 color: Colors.transparent,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(8),
-                  onTap: _pickImage,
+                  onTap: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            ImageDisplayScreen(initialImages: images),
+                      ),
+                    );
+                    if (result is List<String> && result.isNotEmpty) {
+                      setState(() {
+                        images = result;
+                        mainImage = result.first;
+                      });
+                    }
+                  },
                   child: Container(
                     width: 60,
                     height: 48,
@@ -932,7 +865,7 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
                     child: const Icon(
                       Icons.add_a_photo,
                       color: Colors.grey,
-                      size: 24,
+                      size: 20,
                     ),
                   ),
                 ),
@@ -1121,7 +1054,7 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
               ],
             ),
           );
-        }).toList(),
+        }),
         const SizedBox(height: 8),
         // Nút thêm phí
         ElevatedButton.icon(

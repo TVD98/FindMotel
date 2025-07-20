@@ -1,6 +1,7 @@
 // ignore_for_file: library_private_types_in_public_api
 
 import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:find_motel/common/models/deal.dart';
 import 'package:find_motel/common/models/motel.dart';
 import 'package:find_motel/common/models/user_profile.dart';
@@ -12,17 +13,16 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
 import 'package:find_motel/theme/app_colors.dart';
 import 'package:find_motel/common/widgets/common_app_bar.dart';
-import 'package:find_motel/modules/modtel_manager/screen/edit_motel_screen.dart'; // Thêm import này
+import 'package:find_motel/modules/motel_manager/screen/edit_motel_screen.dart'; // Thêm import này
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_bloc.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_event.dart';
-import 'package:find_motel/common/constants/app_extensions.dart';
 
 // Class chứa các hằng số dùng chung
 class AppConstants {
   static const primaryColor = AppColors.primary; // Màu xanh chủ đạo
   static const padding = 16.0; // Khoảng cách lề
-  static const borderRadius = 12.0; // Bo góc
+  static const borderRadius = 10.0; // Bo góc
   static const smallSpacing = 8.0; // Khoảng cách nhỏ
   static const chipBorderRadius = 44.0; // Bo góc cho chip
   static const bottomNavBarHeight =
@@ -165,28 +165,13 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
                 ),
                 if (_isCanEdit)
                   IconButton(
-                    onPressed: () async {
-                      final result = await Navigator.push(
+                    onPressed: () {
+                      Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => EditMotelScreen(motel: widget.detail),
                         ),
                       );
-
-                      // Nếu có kết quả trả về (true = đã save thành công), reload data
-                      if (result == true) {
-                        _needsReload = true;
-                        // Trigger reload HomePageBloc
-                        if (context.mounted) {
-                          // Import để access HomePageBloc
-                          try {
-                            context.read<HomePageBloc>().add(LoadMotels());
-                          } catch (e) {
-                            // Handle case where HomePageBloc is not available
-                            print('HomePageBloc not found: $e');
-                          }
-                        }
-                      }
                     },
                     icon: const Icon(
                       Icons.edit, // Đổi icon thành icon edit
@@ -209,38 +194,49 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
   Widget _buildMainImage() {
     return ClipRRect(
       borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-      child: _currentMainImage.startsWith('http')
-          ? Image.network(
-              _currentMainImage,
-              height: 180,
-              width: double.infinity,
-              fit: BoxFit.cover,
-              loadingBuilder: (context, child, loadingProgress) {
-                if (loadingProgress == null) return child;
-                return const SizedBox(
-                  height: 180,
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              },
-              errorBuilder: (context, error, stackTrace) {
-                return const SizedBox(
-                  height: 180,
-                  child: Center(child: Icon(Icons.error, color: Colors.red)),
-                );
-              },
-            )
-          : Image.file(
-              File(_currentMainImage),
-              height: 180,
-              width: double.infinity,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return const SizedBox(
-                  height: 180,
-                  child: Center(child: Icon(Icons.error, color: Colors.red)),
-                );
-              },
-            ),
+      child: _getImageWidget(_currentMainImage, double.infinity, 180),
+    );
+  }
+
+  Widget _getImageWidget(String url, double width, double height) {
+    if (url.isEmpty) {
+      return _buildImageDefault();
+    } else if (url.startsWith('http')) {
+      return CachedNetworkImage(
+        imageUrl: url,
+        height: height,
+        width: width,
+        fit: BoxFit.cover,
+        errorWidget: (context, error, stackTrace) {
+          return SizedBox(
+            height: height,
+            width: width,
+            child: Center(child: Icon(Icons.error, color: Colors.red)),
+          );
+        },
+      );
+    } else {
+      return Image.file(
+        File(url),
+        height: height,
+        width: width,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return SizedBox(
+            height: height,
+            width: width,
+            child: Center(child: Icon(Icons.error, color: Colors.red)),
+          );
+        },
+      );
+    }
+  }
+
+  Widget _buildImageDefault() {
+    return Image.asset(
+      'assets/images/image_default.png',
+      width: double.infinity,
+      height: 180,
     );
   }
 
@@ -260,61 +256,19 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
                 return GestureDetector(
                   onTap: () =>
                       _updateMainImage(imageUrl), // Cập nhật mainImage khi nhấn
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(
-                      AppConstants.smallSpacing,
-                    ),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: _currentMainImage == imageUrl
-                              ? AppConstants.primaryColor
-                              : Colors.transparent,
-                          width: 2,
-                        ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(4.0),
+                      border: Border.all(
+                        color: _currentMainImage == imageUrl
+                            ? AppConstants.primaryColor
+                            : Colors.transparent,
+                        width: 1,
                       ),
-                      child: imageUrl.startsWith('http')
-                          ? Image.network(
-                              imageUrl,
-                              width: 60,
-                              height: 60,
-                              fit: BoxFit.cover,
-                              loadingBuilder:
-                                  (context, child, loadingProgress) {
-                                    if (loadingProgress == null) return child;
-                                    return const SizedBox(
-                                      width: 60,
-                                      height: 60,
-                                      child: Center(
-                                        child: CircularProgressIndicator(),
-                                      ),
-                                    );
-                                  },
-                              errorBuilder: (context, error, stackTrace) {
-                                return const SizedBox(
-                                  width: 60,
-                                  height: 60,
-                                  child: Center(
-                                    child: Icon(Icons.error, color: Colors.red),
-                                  ),
-                                );
-                              },
-                            )
-                          : Image.file(
-                              File(imageUrl),
-                              width: 60,
-                              height: 60,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return const SizedBox(
-                                  width: 60,
-                                  height: 60,
-                                  child: Center(
-                                    child: Icon(Icons.error, color: Colors.red),
-                                  ),
-                                );
-                              },
-                            ),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(4.0),
+                      child: _getImageWidget(imageUrl, 60, 60),
                     ),
                   ),
                 );
@@ -428,7 +382,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
             : Wrap(
                 spacing: AppConstants.smallSpacing,
                 runSpacing: AppConstants.smallSpacing,
-                children: AppExtensions.allExtensions
+                children: AppDataManager().allAmenities
                     .where(
                       (extension) =>
                           widget.detail.extensions.contains(extension),

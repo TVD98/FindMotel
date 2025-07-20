@@ -5,6 +5,7 @@ class MotelIndex {
   String? number;
   String? street;
   String? ward;
+  String? name;
   String? price;
   String? type;
   String? roomCode;
@@ -17,6 +18,7 @@ class MotelIndex {
   String? note;
   String? geoPoint;
   String? texture;
+  String? images;
 
   MotelIndex({
     this.start,
@@ -24,6 +26,7 @@ class MotelIndex {
     this.street,
     this.ward,
     this.price,
+    this.name,
     this.type,
     this.roomCode,
     this.elevator,
@@ -35,6 +38,7 @@ class MotelIndex {
     this.note,
     this.geoPoint,
     this.texture,
+    this.images,
   });
 
   factory MotelIndex.fromJson(Map<String, dynamic> json) => MotelIndex(
@@ -42,6 +46,7 @@ class MotelIndex {
     number: json['number'] as String?,
     street: json['street'] as String?,
     ward: json['ward'] as String?,
+    name: json['name'] as String?,
     price: json['price'] as String?,
     type: json['type'] as String?,
     roomCode: json['room_code'] as String?,
@@ -54,6 +59,7 @@ class MotelIndex {
     note: json['note'] as String?,
     geoPoint: json['geo_point'] as String?,
     texture: json['texture'] as String?,
+    images: json['images'] as String?,
   );
 
   int? maxFields() {
@@ -61,6 +67,7 @@ class MotelIndex {
       street,
       ward,
       price,
+      name,
       type,
       roomCode,
       elevator,
@@ -72,6 +79,7 @@ class MotelIndex {
       note,
       geoPoint,
       texture,
+      images
     ].map((e) => e?.toIndex()).where((e) => e != null).cast<int>().toList();
     if (indexList.isEmpty) return null;
     return indexList.reduce((a, b) => a > b ? a : b);

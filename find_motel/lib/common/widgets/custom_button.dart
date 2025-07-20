@@ -1,3 +1,4 @@
+import 'package:find_motel/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class CustomButton extends StatelessWidget {
@@ -15,9 +16,9 @@ class CustomButton extends StatelessWidget {
     super.key,
     required this.title,
     this.icon,
-    this.textColor = Colors.white, // Mặc định màu chữ trắng
-    this.backgroundColor = Colors.blue, // Mặc định màu nền xanh
-    this.strokeColor = Colors.transparent, // Mặc định không có viền
+    this.textColor = AppColors.onPrimary, // Mặc định màu chữ trắng
+    this.backgroundColor = AppColors.primary, // Mặc định màu nền xanh
+    this.strokeColor = AppColors.strokeLight, // Mặc định không có viền
     this.iconColor,
     this.radius = 8.0, // Mặc định bo tròn 8.0
     this.onPressed,

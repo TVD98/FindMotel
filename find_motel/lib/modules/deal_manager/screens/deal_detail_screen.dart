@@ -10,7 +10,6 @@ import 'package:find_motel/utilities/mask_input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:intl/intl.dart';
 
 import '../bloc/deal_detail_bloc.dart';
 import '../bloc/deal_detail_event.dart';
@@ -51,22 +50,6 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
     scheduleController = TextEditingController(
       text: widget.deal.schedule.toFormattedString('dd/MM/yyyy'),
     );
-    priceController.addListener(_onPriceChanged);
-  }
-
-  void _onPriceChanged() {
-    final text = priceController.text.replaceAll(RegExp(r'[^0-9]'), '');
-    if (text.isEmpty) {
-      priceController.value = TextEditingValue(text: '');
-      return;
-    }
-    final formatted = NumberFormat('#,###', 'vi_VN').format(int.parse(text));
-    if (priceController.text != formatted) {
-      priceController.value = TextEditingValue(
-        text: formatted,
-        selection: TextSelection.collapsed(offset: formatted.length),
-      );
-    }
   }
 
   @override
