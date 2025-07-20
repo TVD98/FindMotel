@@ -101,8 +101,9 @@ extension StringExtensions on String {
     normalized = normalized.replaceAll(RegExp(r'[úùủụũưừửựữ]'), 'u');
     normalized = normalized.replaceAll(RegExp(r'[ýỳỷỵỹ]'), 'y');
 
-    // Loại bỏ các ký tự không phải chữ cái, số, hoặc khoảng trắng
-    normalized = normalized.replaceAll(RegExp(r'[^a-z0-9 ]'), '');
+    normalized = normalized.replaceAll(RegExp(r'[^a-z0-9 /\-]'), '');
+
+    normalized = normalized.replaceAll(RegExp(r'\s+'), ' ');
 
     return normalized.trim();
   }
@@ -113,18 +114,23 @@ extension StringExtensions on String {
   /// Bao gồm từng từ riêng lẻ và cả chuỗi gốc đã chuẩn hóa.
   List<String> generateKeywords() {
     final String normalizedName = normalizeString();
-    // Tách chuỗi thành các từ và lọc bỏ các từ rỗng
-    final List<String> words = normalizedName
-        .split(' ')
-        .where((word) => word.isNotEmpty)
+    final List<String> parts = normalizedName
+        .split(RegExp(r'[ /\-]')) // Tách bằng khoảng trắng, '/', hoặc '-'
+        .where((part) => part.isNotEmpty)
         .toList();
 
     final Set<String> keywords =
         <String>{}; // Dùng Set để tránh từ khóa trùng lặp
 
     // Thêm từng từ riêng lẻ vào Set
-    for (var word in words) {
+    for (var word in parts) {
       keywords.add(word);
+    }
+
+    for (int i = 0; i < parts.length - 1; i++) {
+      // Ghép hai từ liền kề với một khoảng trắng ở giữa
+      final String biGram = '${parts[i]} ${parts[i + 1]}';
+      keywords.add(biGram);
     }
 
     // Thêm cả chuỗi gốc đã chuẩn hóa (nếu không rỗng)
