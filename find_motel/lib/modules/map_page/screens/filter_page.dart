@@ -41,17 +41,17 @@ class _FilterPageState extends State<FilterPage> {
   late TextEditingController _roomCodeController;
   late TextEditingController _distanceController;
 
-  MotelsFilter get _motelsFilter => MotelsFilter(
+  MotelsFilter get _motelsFilter => AppDataManager().filterMotels.copyWith(
     roomCode: _roomCodeController.text.isEmpty
-        ? null
+        ? ''
         : _roomCodeController.text,
     address: Address(
       province: _formatStringSelection(_selectedProvince),
       ward: _formatStringSelection(_selectedWard),
     ),
-    amenities: _selectedAmenities.isEmpty ? null : _selectedAmenities,
-    status: _selectedStatusList.isEmpty ? null : _selectedStatusList,
-    texturies: _selectedTextureList.isEmpty ? null : _selectedTextureList,
+    amenities: _selectedAmenities.isEmpty ? [] : _selectedAmenities,
+    status: _selectedStatusList.isEmpty ? [] : _selectedStatusList,
+    texturies: _selectedTextureList.isEmpty ? [] : _selectedTextureList,
     type: _selectedRoomType,
     priceRange: Range2D(
       values: _selectedPriceRangeValues,

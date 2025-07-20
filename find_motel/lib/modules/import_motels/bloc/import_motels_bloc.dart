@@ -125,7 +125,7 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
       id: '',
       name: name,
       address: address,
-      price: (json['price'] as String).toPrice(),
+      price: (json['price'] as String).toPrice() * 1000,
       type: json['type'] as String,
       commission: json['commission'] as String,
       geoPoint: (json['geoPoint'] as String).toGeoPoint(),

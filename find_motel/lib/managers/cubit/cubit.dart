@@ -1,5 +1,6 @@
 import 'package:find_motel/common/constants/constant.dart';
 import 'package:find_motel/common/models/user_profile.dart';
+import 'package:find_motel/extensions/string_extensions.dart';
 import 'package:find_motel/managers/app_data_manager.dart';
 import 'package:find_motel/services/motel/models/motels_filter.dart';
 import 'package:flutter/material.dart';
@@ -38,6 +39,12 @@ class MotelsFilterCubit extends Cubit<MotelsFilter> {
   }
 
   void updateFilter(MotelsFilter filter) {
+    AppDataManager().filterMotels = filter;
+    emit(filter);
+  }
+
+  void search(String text) {
+    final filter = state.copyWith(keywords: text);
     AppDataManager().filterMotels = filter;
     emit(filter);
   }

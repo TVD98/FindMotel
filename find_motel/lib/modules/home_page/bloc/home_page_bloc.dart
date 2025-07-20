@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:find_motel/managers/app_data_manager.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:find_motel/services/motel/motels_service.dart';
 import 'package:find_motel/services/firestore/firestore_service.dart';

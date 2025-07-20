@@ -10,13 +10,6 @@ extension StringExtensions on String {
     return query.where(field, isEqualTo: this);
   }
 
-  Query<Map<String, dynamic>> applyWhereIn(
-    Query<Map<String, dynamic>> query,
-    String field,
-  ) {
-    return query.where(field, arrayContains: this);
-  }
-
   int? toIndex() {
     if (length != 1) return null; // Chỉ chấp nhận 1 ký tự
     final upperChar = toUpperCase();
@@ -141,5 +134,24 @@ extension StringExtensions on String {
 
     // Chuyển Set thành List và trả về
     return keywords.toList();
+  }
+
+  String normalizeAddressString() {
+    String result = this;
+
+    // Danh sách các cụm từ cần loại bỏ
+    final List<String> phrasesToRemove = ['phường', 'xã', 'đặc khu'];
+
+    for (String phrase in phrasesToRemove) {
+      result = result.replaceAll(
+        RegExp(r'\b' + phrase + r'\b', caseSensitive: false),
+        '',
+      );
+    }
+
+    // Loại bỏ khoảng trắng thừa do việc xóa cụm từ gây ra
+    result = result.replaceAll(RegExp(r'\s+'), ' ').trim();
+
+    return result.normalizeString();
   }
 }

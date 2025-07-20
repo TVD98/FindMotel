@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:find_motel/common/models/user_profile.dart';
+import 'package:find_motel/common/widgets/common_search.dart';
 import 'package:find_motel/extensions/double_extensions.dart';
 import 'package:find_motel/managers/app_data_manager.dart';
 import 'package:find_motel/managers/cubit/cubit.dart';
@@ -87,7 +88,12 @@ class _HomePageState extends State<HomePage>
                             ),
                             const SizedBox(height: 16),
                             // Search bar section
-                            _SearchBar(),
+                            SearchBarWithCallback(
+                              hintText: 'Nhập vào tên hoặc địa chỉ…',
+                              onSearchPressed: (value) {
+                                context.read<MotelsFilterCubit>().search(value);
+                              },
+                            ),
                             const SizedBox(height: 16),
                             // Filter section - Make it always visible
                             SizedBox(
@@ -95,24 +101,6 @@ class _HomePageState extends State<HomePage>
                               child: ListView(
                                 scrollDirection: Axis.horizontal,
                                 children: [
-                                  _FilterChip(
-                                    label: 'Giá phòng',
-                                    selected: true,
-                                    onTap: () {},
-                                  ),
-                                  const SizedBox(width: 10),
-                                  _FilterChip(
-                                    label: 'Khu vực',
-                                    selected: false,
-                                    onTap: () {},
-                                  ),
-                                  const SizedBox(width: 10),
-                                  _FilterChip(
-                                    label: 'Loại phòng',
-                                    selected: false,
-                                    onTap: () {},
-                                  ),
-                                  const SizedBox(width: 10),
                                   GestureDetector(
                                     onTap: () {
                                       Navigator.of(context).push(
@@ -141,6 +129,24 @@ class _HomePageState extends State<HomePage>
                                         size: 22,
                                       ),
                                     ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  _FilterChip(
+                                    label: 'Giá phòng',
+                                    selected: true,
+                                    onTap: () {},
+                                  ),
+                                  const SizedBox(width: 10),
+                                  _FilterChip(
+                                    label: 'Khu vực',
+                                    selected: false,
+                                    onTap: () {},
+                                  ),
+                                  const SizedBox(width: 10),
+                                  _FilterChip(
+                                    label: 'Loại phòng',
+                                    selected: false,
+                                    onTap: () {},
                                   ),
                                 ],
                               ),
@@ -213,46 +219,6 @@ class _HomePageState extends State<HomePage>
             },
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _SearchBar extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 46,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(44),
-        border: Border.all(color: const Color(0xFFE0E0E0)),
-      ),
-      child: Row(
-        children: [
-          const SizedBox(width: 16),
-          Icon(Icons.search, color: const Color(0xFFBDBDBD), size: 22),
-          const SizedBox(width: 8),
-          Expanded(
-            child: TextField(
-              style: GoogleFonts.quicksand(
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-              ),
-              decoration: InputDecoration(
-                hintText: 'Nhập vào tên hoặc địa chỉ…',
-                hintStyle: GoogleFonts.quicksand(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFFBDBDBD),
-                ),
-                border: InputBorder.none,
-                isDense: true,
-                contentPadding: EdgeInsets.zero,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

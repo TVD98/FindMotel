@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:find_motel/common/models/area.dart';
 import 'package:find_motel/common/models/import_images_options.dart';
+import 'package:find_motel/extensions/list_string_extensions.dart';
 import 'package:find_motel/extensions/string_extensions.dart';
 import 'package:find_motel/services/catalog/catalog_service.dart';
 import 'package:find_motel/common/models/motel_index.dart';
@@ -62,24 +63,23 @@ class FirestoreService
           .collection(FirestorePaths.motelsCollection)
           .limit(limit);
 
-      // if (filter?.keywords != null && filter!.keywords!.isNotEmpty) {
-      //   query = filter.keywords!.applyWhereIn(query, 'keywords');
-      // }
+      List<String> keywords = [];
+      if (filter?.keywords != null && filter!.keywords!.isNotEmpty) {
+        keywords.add(filter.keywords!);
+      }
+      if (filter?.address != null) {
+        keywords = filter!.address!.makeKeywords(keywords);
+      }
+      query = keywords.applyArrayContainsAny(query, 'keywords');
 
-      // // 2. Apply Firestore-side filters if present.
-      // if (filter?.roomCode != null && filter!.roomCode!.isNotEmpty) {
-      //   query = filter.roomCode!.applyWhereEqualTo(query, 'room_code');
-      // }
+      // 2. Apply Firestore-side filters if present.
       if (filter?.roomCode != null && filter!.roomCode!.isNotEmpty) {
-        query = filter.roomCode!.applyWhereIn(query, 'keywords');
+        query = filter.roomCode!.applyWhereEqualTo(query, 'room_code');
       }
 
       // 2. Apply Firestore-side filters if present.
       if (filter?.priceRange != null) {
         query = filter!.priceRange!.apply(query);
-      }
-      if (filter?.address != null) {
-        query = filter!.address!.apply(query);
       }
       // NOTE: Amenities / status arrays cannot be indexed easily without
       // composite indexes. Skip them for now or adjust according to your
@@ -102,25 +102,25 @@ class FirestoreService
             .toList();
       }
 
-      if (filter?.amenities != null) {
+      if (filter?.amenities != null && filter!.amenities!.isNotEmpty) {
         resultMotels = resultMotels
             .where(
               (motel) => motel.extensions.any(
-                (extension) => filter!.amenities!.contains(extension),
+                (extension) => filter.amenities!.contains(extension),
               ),
             )
             .toList();
       }
 
-      if (filter?.status != null) {
+      if (filter?.status != null && filter!.status!.isNotEmpty) {
         resultMotels = resultMotels
-            .where((motel) => filter!.status!.contains(motel.status.name))
+            .where((motel) => filter.status!.contains(motel.status.name))
             .toList();
       }
 
       if (filter?.type != null && filter!.type! != 'Khác') {
         resultMotels = resultMotels
-            .where((motel) => motel.type == filter.type!)
+            .where((motel) => motel.type == filter.type)
             .toList();
       }
 
