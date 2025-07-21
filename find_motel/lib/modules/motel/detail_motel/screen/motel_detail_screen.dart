@@ -1,19 +1,19 @@
 import 'dart:io';
+import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:find_motel/common/models/deal.dart';
 import 'package:find_motel/common/models/motel.dart';
-import 'package:find_motel/common/models/user_profile.dart';
 import 'package:find_motel/managers/app_data_manager.dart';
 import 'package:find_motel/modules/deal_manager/screens/deal_detail_screen.dart';
 import 'package:find_motel/services/firestore/firestore_service.dart';
-import 'package:find_motel/services/motel/motels_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
 import 'package:find_motel/theme/app_colors.dart';
+import 'package:find_motel/theme/app_textStyle.dart';
 import 'package:find_motel/common/widgets/common_app_bar.dart';
-import 'package:find_motel/modules/motel_manager/screen/edit_motel_screen.dart';
+import 'package:find_motel/modules/motel/edit_motel/edit_motel_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_bloc.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_event.dart';
@@ -22,11 +22,10 @@ import 'package:find_motel/modules/motel/detail_motel/bloc/motel_detail_event.da
 import 'package:find_motel/modules/motel/detail_motel/bloc/motel_detail_state.dart';
 
 class AppConstants {
-  static const primaryColor = AppColors.primary;
   static const padding = 16.0;
   static const borderRadius = 10.0;
-  static const smallSpacing = 8.0;
-  static const chipBorderRadius = 44.0;
+  static const spacing = 12.0;
+  static const chipBorderRadius = 4.0;
   static const bottomNavBarHeight = 56.0;
 }
 
@@ -35,22 +34,21 @@ String formatVND(dynamic price) {
   return formatter.format(price);
 }
 
-class MotelDetailScreen extends StatefulWidget { 
+class MotelDetailScreen extends StatefulWidget {
   final Motel detail;
   final bool isBottomSheet;
 
-  const MotelDetailScreen({ 
+  const MotelDetailScreen({
     super.key,
     required this.detail,
     this.isBottomSheet = true,
   });
 
   @override
-  _MotelDetailScreenState createState() => _MotelDetailScreenState(); 
+  _MotelDetailScreenState createState() => _MotelDetailScreenState();
 }
 
-class _MotelDetailScreenState extends State<MotelDetailScreen> { 
-
+class _MotelDetailScreenState extends State<MotelDetailScreen> {
   @override
   void initState() {
     super.initState();
@@ -59,29 +57,29 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => MotelDetailBloc( 
+      create: (context) => MotelDetailBloc(
         initialMotelDetail: widget.detail,
         motelsService: FirestoreService(),
       ),
       child: Builder(
         builder: (blocContext) {
-          return BlocConsumer<MotelDetailBloc, MotelDetailState>( 
+          return BlocConsumer<MotelDetailBloc, MotelDetailState>(
             listener: (context, state) {
-              if (state is MotelDetailLoaded && state.needsReloadHome) { 
+              if (state is MotelDetailLoaded && state.needsReloadHome) {
                 blocContext.read<HomePageBloc>().add(LoadMotels());
                 Navigator.pop(blocContext, true);
-              } else if (state is MotelDetailError) { 
+              } else if (state is MotelDetailError) {
                 ScaffoldMessenger.of(blocContext).showSnackBar(
                   SnackBar(content: Text('Lỗi: ${state.message}')),
                 );
               }
             },
             builder: (blocContext, state) {
-              if (state is MotelDetailLoading) { 
+              if (state is MotelDetailLoading) {
                 return const Scaffold(
                   body: Center(child: CircularProgressIndicator()),
                 );
-              } else if (state is MotelDetailError) { 
+              } else if (state is MotelDetailError) {
                 return Scaffold(
                   appBar: CommonAppBar(
                     title: 'Lỗi',
@@ -90,38 +88,63 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
                   ),
                   body: Center(child: Text(state.message)),
                 );
-              } else if (state is MotelDetailLoaded) { 
+                //Code trên chuyển qua xử lý trong motelddetailbloc--?  Xử lý sau
+              } else if (state is MotelDetailLoaded) {
                 final Motel currentMotelDetail = state.motelDetail;
                 final String currentMainImage = state.currentMainImage;
                 final bool isCanEdit = state.isCanEdit;
 
-                final content = Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: AppConstants.padding),
-                    _buildMainImage(currentMainImage),
-                    const SizedBox(height: AppConstants.smallSpacing),
-                    _buildImageGallery(currentMotelDetail.images, currentMainImage, (newImage) {
-                      blocContext.read<MotelDetailBloc>().add(MotelDetailUpdateMainImage(newImage));
-                    }),
-                    const SizedBox(height: AppConstants.smallSpacing),
-                    _buildTags(currentMotelDetail.commission, currentMotelDetail.price),
-                    const SizedBox(height: AppConstants.smallSpacing),
-                    _buildRoomInfo(currentMotelDetail.roomCode, currentMotelDetail.type),
-                    const SizedBox(height: AppConstants.padding),
-                    _buildAddress(blocContext, currentMotelDetail.address, currentMotelDetail.geoPoint),
-                    const SizedBox(height: AppConstants.padding),
-                    _buildExtensions(currentMotelDetail.extensions),
-                    const SizedBox(height: AppConstants.padding),
-                    _buildFees(currentMotelDetail.fees),
-                    const SizedBox(height: AppConstants.padding),
-                    _buildNotes(currentMotelDetail.note),
-                  ],
+                final content = SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(16, 34, 16, 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: AppConstants.spacing),
+                      _buildRoomInfo(
+                        currentMotelDetail.roomCode,
+                        currentMotelDetail.type,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildMainImage(currentMainImage),
+                      const SizedBox(height: AppConstants.spacing),
+                      _buildImageGallery(
+                        currentMotelDetail.images,
+                        currentMainImage,
+                        (newImage) {
+                          blocContext.read<MotelDetailBloc>().add(
+                            MotelDetailUpdateMainImage(newImage),
+                          );
+                        },
+                      ),
+
+                      //   ],
+                      // ),
+                      const SizedBox(height: AppConstants.spacing),
+                      _buildTags(
+                        currentMotelDetail.commission,
+                        currentMotelDetail.price,
+                      ),
+                      _divider(),
+                      _buildAddress(
+                        blocContext,
+                        currentMotelDetail.address,
+                        currentMotelDetail.geoPoint,
+                      ),
+                      _divider(),
+                      _buildExtensions(currentMotelDetail.extensions),
+                      _divider(),
+                      _buildFees(currentMotelDetail.fees),
+                      _divider(),
+                      _buildNotes(currentMotelDetail.note),
+                    ],
+                  ),
                 );
 
                 if (widget.isBottomSheet) {
                   return Container(
-                    decoration: BoxDecoration(color: Colors.black.withOpacity(0.5)),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.5),
+                    ),
                     child: DraggableScrollableSheet(
                       initialChildSize: 0.5,
                       minChildSize: 0.5,
@@ -140,7 +163,9 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
                             bottom: true,
                             child: SingleChildScrollView(
                               controller: scrollController,
-                              padding: const EdgeInsets.all(AppConstants.padding),
+                              padding: const EdgeInsets.all(
+                                AppConstants.padding,
+                              ),
                               child: content,
                             ),
                           ),
@@ -155,26 +180,32 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
                     title: currentMotelDetail.name,
                     leadingAsset: 'assets/images/ic_back.svg',
                     leadingIconColor: Colors.white,
-                    onLeadingPressed: () => Navigator.pop(blocContext, state.needsReloadHome),
+                    onLeadingPressed: () =>
+                        Navigator.pop(blocContext, state.needsReloadHome),
                     actions: widget.isBottomSheet
                         ? null
                         : [
                             IconButton(
                               onPressed: () {
-                                final Deal _deal = Deal(
+                                final Deal deal = Deal(
                                   id: '',
                                   name: '',
                                   phone: '',
                                   price: currentMotelDetail.price,
                                   schedule: DateTime.now(),
-                                  saleId: AppDataManager().currentUserProfile?.email ?? '',
+                                  saleId:
+                                      AppDataManager()
+                                          .currentUserProfile
+                                          ?.email ??
+                                      '',
                                   motelId: currentMotelDetail.id,
                                   motelName: currentMotelDetail.name,
                                 );
                                 Navigator.push(
                                   blocContext,
                                   MaterialPageRoute(
-                                    builder: (context) => DealDetailScreen(deal: _deal),
+                                    builder: (context) =>
+                                        DealDetailScreen(deal: deal),
                                   ),
                                 );
                               },
@@ -189,11 +220,15 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
                                   final bool? result = await Navigator.push(
                                     blocContext,
                                     MaterialPageRoute(
-                                      builder: (_) => EditMotelScreen(motel: currentMotelDetail),
+                                      builder: (_) => EditMotelScreen(
+                                        motel: currentMotelDetail,
+                                      ),
                                     ),
                                   );
                                   if (result == true) {
-                                    blocContext.read<MotelDetailBloc>().add(MotelDetailMotelUpdated()); 
+                                    blocContext.read<MotelDetailBloc>().add(
+                                      MotelDetailMotelUpdated(),
+                                    );
                                   }
                                 },
                                 icon: const Icon(
@@ -220,11 +255,14 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
     );
   }
 
-// Widget hiển thị ảnh chính
+  _divider() =>
+      const Divider(height: 25.0, thickness: 1.0, color: AppColors.strokeLight);
+
+  // Widget hiển thị ảnh chính
   Widget _buildMainImage(String currentMainImage) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-      child: _getImageWidget(currentMainImage, double.infinity, 180),
+      child: _getImageWidget(currentMainImage, 246, 144),
     );
   }
 
@@ -265,23 +303,25 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
   Widget _buildImageDefault() {
     return Image.asset(
       'assets/images/image_default.png',
-      width: double.infinity,
-      height: 180,
+      width: 246,
+      height: 144,
     );
   }
 
   // Widget hiển thị danh sách ảnh thu nhỏ
- 
-  Widget _buildImageGallery(List<String> images, String currentMainImage, ValueChanged<String> onImageSelected) {
+
+  Widget _buildImageGallery(
+    List<String> images,
+    String currentMainImage,
+    ValueChanged<String> onImageSelected,
+  ) {
     return images.isEmpty
         ? const Text('Không có hình ảnh', style: TextStyle(fontSize: 14))
         : SizedBox(
-            height: 60,
-            child: ListView.separated(
+            height: 28,
+            child: ListView.builder(
               scrollDirection: Axis.horizontal,
               itemCount: images.length,
-              separatorBuilder: (_, __) =>
-                  const SizedBox(width: AppConstants.smallSpacing),
               itemBuilder: (_, index) {
                 final imageUrl = images[index];
                 return GestureDetector(
@@ -291,14 +331,14 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
                       borderRadius: BorderRadius.circular(4.0),
                       border: Border.all(
                         color: currentMainImage == imageUrl
-                            ? AppConstants.primaryColor
+                            ? AppColors.primary
                             : Colors.transparent,
                         width: 1,
                       ),
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(4.0),
-                      child: _getImageWidget(imageUrl, 60, 60),
+                      child: _getImageWidget(imageUrl, 42, 28),
                     ),
                   ),
                 );
@@ -310,13 +350,21 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
   // Widget hiển thị hoa hồng và giá thuê
   Widget _buildTags(String commission, double price) {
     return Row(
+      mainAxisSize: MainAxisSize.max,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _tagChip("HH $commission", Colors.teal),
-        const SizedBox(width: 12),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: _tagChip(
+            "HH $commission",
+            AppColors.primaryContainer,
+            textColor: AppColors.onPrimaryContainer,
+          ),
+        ),
         _tagChip(
           "Giá thuê: ${formatVND(price)}đ/tháng",
-          Colors.grey.shade300,
-          textColor: Colors.black,
+          AppColors.onSurface2,
+          textColor: AppColors.elementSecondary,
         ),
       ],
     );
@@ -330,16 +378,16 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
           'Mã phòng: $roomCode',
           style: GoogleFonts.quicksand(
             fontSize: 14,
-            color: AppConstants.primaryColor,
-            fontWeight: FontWeight.w600,
+            color: AppColors.primary,
+            fontWeight: AppTextStyle.semiBold,
           ),
         ),
         Text(
           'Kiểu phòng: $type',
           style: GoogleFonts.quicksand(
             fontSize: 14,
-            color: AppConstants.primaryColor,
-            fontWeight: FontWeight.w600,
+            color: AppColors.primary,
+            fontWeight: AppTextStyle.semiBold,
           ),
         ),
       ],
@@ -350,48 +398,71 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Icon(Icons.location_on, color: AppConstants.primaryColor),
-        const SizedBox(height: AppConstants.smallSpacing / 2),
-        Text(address, style: GoogleFonts.quicksand(fontSize: 14)),
-        const SizedBox(height: AppConstants.smallSpacing / 2),
-        GestureDetector(
-          onTap: () async {
-            String appUrl;
-            String webUrl;
-            final lat = geoPoint.latitude;
-            final lng = geoPoint.longitude;
-            appUrl = 'comgooglemaps://?q=$lat,$lng';
-            webUrl = 'http://maps.google.com/?q=$lat,$lng'; // Đã sửa URL web map
-
-            if (Platform.isIOS) { // Kiểm tra nền tảng để sử dụng scheme phù hợp
-              appUrl = 'comgooglemaps://?q=$lat,$lng';
-              webUrl = 'http://maps.apple.com/?q=$lat,$lng'; // Dùng Apple Maps trên iOS
-            } else {
-              appUrl = 'geo:$lat,$lng?q=$lat,$lng'; // Dùng Geo URI trên Android
-              webUrl = 'http://maps.google.com/?q=$lat,$lng';
-            }
-
-
-            if (await canLaunchUrl(Uri.parse(appUrl))) {
-              await launchUrl(Uri.parse(appUrl));
-            } else {
-              if (await canLaunchUrl(Uri.parse(webUrl))) {
-                await launchUrl(Uri.parse(webUrl));
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Không thể mở bản đồ')),
-                );
-              }
-            }
-          },
-          child: Text(
-            'Chỉ đường',
-            style: GoogleFonts.quicksand(
-              fontSize: 14,
-              color: Colors.blue,
-              decoration: TextDecoration.underline,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            const Icon(Icons.location_on, size: 14, color: AppColors.primary),
+            const SizedBox(width: AppConstants.spacing),
+            Text(
+              address,
+              style: GoogleFonts.quicksand(
+                fontSize: 12,
+                fontWeight: AppTextStyle.regular,
+                color: AppColors.elementSecondary,
+              ),
             ),
-          ),
+          ],
+        ),
+        const SizedBox(height: AppConstants.spacing),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            const Icon(Icons.directions, size: 14, color: AppColors.primary),
+            const SizedBox(width: AppConstants.spacing),
+            GestureDetector(
+              onTap: () async {
+                String appUrl;
+                String webUrl;
+                final lat = geoPoint.latitude;
+                final lng = geoPoint.longitude;
+                appUrl = 'comgooglemaps://?q=$lat,$lng';
+                webUrl =
+                    'http://maps.google.com/?q=$lat,$lng'; // Đã sửa URL web map
+
+                if (Platform.isIOS) {
+                  // Kiểm tra nền tảng để sử dụng scheme phù hợp
+                  appUrl = 'comgooglemaps://?q=$lat,$lng';
+                  webUrl =
+                      'http://maps.apple.com/?q=$lat,$lng'; // Dùng Apple Maps trên iOS
+                } else {
+                  appUrl =
+                      'geo:$lat,$lng?q=$lat,$lng'; // Dùng Geo URI trên Android
+                  webUrl = 'http://maps.google.com/?q=$lat,$lng';
+                }
+
+                if (await canLaunchUrl(Uri.parse(appUrl))) {
+                  await launchUrl(Uri.parse(appUrl));
+                } else {
+                  if (await canLaunchUrl(Uri.parse(webUrl))) {
+                    await launchUrl(Uri.parse(webUrl));
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Không thể mở bản đồ')),
+                    );
+                  }
+                }
+              },
+              child: Text(
+                'Chỉ đường',
+                style: GoogleFonts.quicksand(
+                  fontSize: 12,
+                  fontWeight: AppTextStyle.regular,
+                  color: AppColors.elementHighlight,
+                  decoration: TextDecoration.underline,
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -405,35 +476,38 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
           "Tiện ích:",
           style: GoogleFonts.quicksand(
             fontWeight: FontWeight.bold,
-            fontSize: 16,
+            fontSize: 14,
+            color: AppColors.primary,
           ),
         ),
-        const SizedBox(height: AppConstants.smallSpacing),
+        const SizedBox(height: AppConstants.spacing),
         extensions.isEmpty
             ? const Text('Không có tiện ích', style: TextStyle(fontSize: 14))
             : Wrap(
-                spacing: AppConstants.smallSpacing,
-                runSpacing: AppConstants.smallSpacing,
+                spacing: AppConstants.spacing,
+                runSpacing: AppConstants.spacing,
                 children: AppDataManager().allAmenities
-                    .where(
-                      (extension) => extensions.contains(extension),
-                    )
+                    .where((extension) => extensions.contains(extension))
                     .map(
                       (e) => Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
+                          horizontal: 6,
+                          vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(44),
+                          color: AppColors.onSurface1,
+                          borderRadius: BorderRadius.circular(8.0),
+                          border: Border.all(
+                            color: AppColors.strokeLight,
+                            width: 1,
+                          ),
                         ),
                         child: Text(
                           e,
                           style: GoogleFonts.quicksand(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 13,
+                            color: AppColors.elementSecondary,
+                            fontWeight: AppTextStyle.regular,
+                            fontSize: 12,
                           ),
                         ),
                       ),
@@ -452,17 +526,18 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
           "Chi phí khác:",
           style: GoogleFonts.quicksand(
             fontWeight: FontWeight.bold,
-            fontSize: 16,
-            color: AppConstants.primaryColor,
+            fontSize: 14,
+            color: AppColors.primary,
           ),
         ),
-        const SizedBox(height: AppConstants.smallSpacing),
+        const SizedBox(height: AppConstants.spacing - 4.0),
         fees.isEmpty
             ? const Text(
                 'Không có chi phí khác',
                 style: TextStyle(fontSize: 14),
               )
             : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: fees.map((fee) {
                   return _costRow(
                     fee['name'] ?? 'Không xác định',
@@ -482,11 +557,11 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
           "Ghi chú:",
           style: GoogleFonts.quicksand(
             fontWeight: FontWeight.bold,
-            fontSize: 16,
-            color: AppConstants.primaryColor,
+            fontSize: 14,
+            color: AppColors.primary,
           ),
         ),
-        const SizedBox(height: AppConstants.smallSpacing),
+        const SizedBox(height: AppConstants.spacing - 4.0),
         notes.isEmpty
             ? const Text('Không có ghi chú', style: TextStyle(fontSize: 14))
             : Column(
@@ -494,8 +569,8 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
                     .map(
                       (note) => Padding(
                         padding: const EdgeInsets.only(
-                          top: AppConstants.smallSpacing / 4,
-                          bottom: AppConstants.smallSpacing / 4,
+                          top: AppConstants.spacing / 6,
+                          bottom: AppConstants.spacing / 6,
                         ),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -504,7 +579,11 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
                             Expanded(
                               child: Text(
                                 note,
-                                style: GoogleFonts.quicksand(fontSize: 14),
+                                style: GoogleFonts.quicksand(
+                                  fontSize: 14,
+                                  fontWeight: AppTextStyle.regular,
+                                  color: AppColors.elementSecondary,
+                                ),
                               ),
                             ),
                           ],
@@ -524,7 +603,7 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
     Color textColor = Colors.white,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(AppConstants.chipBorderRadius),
@@ -532,8 +611,8 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
       child: Text(
         label,
         style: GoogleFonts.quicksand(
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
+          fontSize: 14,
+          fontWeight: AppTextStyle.semiBold,
           color: textColor,
         ),
       ),
@@ -543,21 +622,27 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
   // Widget tạo hàng cho chi phí (giữ nguyên)
   Widget _costRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        vertical: AppConstants.smallSpacing / 4,
-      ),
+      padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
       child: Row(
+        mainAxisSize: MainAxisSize.max,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Expanded(
-            flex: 2,
-            child: Text(
-              label,
-              style: GoogleFonts.quicksand(fontWeight: FontWeight.w600),
+          Text(
+            label,
+            style: GoogleFonts.quicksand(
+              fontSize: 12,
+              fontWeight: AppTextStyle.semiBold,
+              color: AppColors.elementPrimary,
             ),
           ),
-          Expanded(
-            flex: 3,
-            child: Text(value, style: GoogleFonts.quicksand(fontSize: 14)),
+
+          Text(
+            value,
+            style: GoogleFonts.quicksand(
+              fontSize: 12,
+              fontWeight: AppTextStyle.regular,
+              color: AppColors.elementSecondary,
+            ),
           ),
         ],
       ),
@@ -565,7 +650,14 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
   }
 }
 
-class DefaultMotelDataService implements IMotelDataService { /* ... */ }
-class GeoPoint { /* ... */ }
-class MotelResult { /* ... */ }
-abstract class IMotelDataService { /* ... */ }
+class GeoPoint {
+  /* ... */
+}
+
+class MotelResult {
+  /* ... */
+}
+
+abstract class IMotelDataService {
+  /* ... */
+}

@@ -1,5 +1,4 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:find_motel/common/models/user_profile.dart';
 import 'package:find_motel/managers/app_data_manager.dart';
 import 'package:find_motel/managers/cubit/cubit.dart';
 import 'package:flutter/material.dart';
