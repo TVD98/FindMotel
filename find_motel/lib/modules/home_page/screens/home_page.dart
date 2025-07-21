@@ -3,7 +3,7 @@ import 'package:find_motel/common/models/user_profile.dart';
 import 'package:find_motel/extensions/double_extensions.dart';
 import 'package:find_motel/managers/app_data_manager.dart';
 import 'package:find_motel/managers/cubit/cubit.dart';
-import 'package:find_motel/modules/flter/quick_filter.dart';
+import 'package:find_motel/modules/filter/quickly_filter.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_bloc.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_event.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_state.dart';
@@ -86,8 +86,8 @@ class _HomePageState extends State<HomePage>
                               },
                             ),
                             const SizedBox(height: 16),
-                            const QuickFilter(),
-                            const SizedBox(height: 16),
+                            const QuicklyFilter(),
+                            const SizedBox(height: 8),
                           ]),
                         ),
                       ),

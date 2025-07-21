@@ -2,7 +2,7 @@ import 'package:find_motel/common/models/motel.dart';
 import 'package:find_motel/extensions/double_extensions.dart';
 import 'package:find_motel/managers/cubit/cubit.dart';
 import 'package:find_motel/modules/detail/detail_screen.dart';
-import 'package:find_motel/modules/flter/quick_filter.dart';
+import 'package:find_motel/modules/filter/quickly_filter.dart';
 import 'package:find_motel/modules/map_page/bloc/map_page_bloc.dart';
 import 'package:find_motel/modules/map_page/bloc/map_page_state.dart';
 import 'package:find_motel/modules/map_page/bloc/map_page_event.dart';
@@ -126,7 +126,12 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
                     ),
                   ),
                 ),
-              Positioned(top: 50, left: 16, right: 16, child: const QuickFilter()),
+              Positioned(
+                top: 50,
+                left: 16,
+                right: 16,
+                child: const QuicklyFilter(),
+              ),
               if (state.isLoading) Center(child: CircularProgressIndicator()),
             ],
           );

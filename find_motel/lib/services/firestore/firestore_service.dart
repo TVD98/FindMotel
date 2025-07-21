@@ -65,7 +65,7 @@ class FirestoreService
 
       List<String> keywords = [];
       if (filter?.keywords != null && filter!.keywords!.isNotEmpty) {
-        keywords.add(filter.keywords!);
+        keywords.add(filter.keywords!.normalizeString());
       }
       if (filter?.address != null) {
         keywords = filter!.address!.makeKeywords(keywords);
