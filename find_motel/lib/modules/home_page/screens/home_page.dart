@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:find_motel/common/models/user_profile.dart';
+import 'package:find_motel/common/widgets/common_container.dart';
 import 'package:find_motel/common/widgets/common_search.dart';
 import 'package:find_motel/extensions/double_extensions.dart';
 import 'package:find_motel/managers/app_data_manager.dart';
@@ -11,6 +12,7 @@ import 'package:find_motel/modules/detail/detail_screen.dart';
 import 'package:find_motel/modules/map_page/screens/filter_page.dart';
 import 'package:find_motel/services/motel/models/motels_filter.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:find_motel/common/models/motel.dart';
@@ -96,61 +98,7 @@ class _HomePageState extends State<HomePage>
                             ),
                             const SizedBox(height: 16),
                             // Filter section - Make it always visible
-                            SizedBox(
-                              height: 38,
-                              child: ListView(
-                                scrollDirection: Axis.horizontal,
-                                children: [
-                                  GestureDetector(
-                                    onTap: () {
-                                      Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (_) => BlocProvider.value(
-                                            value: context
-                                                .read<MotelsFilterCubit>(),
-                                            child: const FilterPage(),
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                    child: Container(
-                                      width: 38,
-                                      height: 38,
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        border: Border.all(
-                                          color: const Color(0xFFE0E0E0),
-                                        ),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Icon(
-                                        Icons.tune,
-                                        color: const Color(0xFF3B7268),
-                                        size: 22,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  _FilterChip(
-                                    label: 'Giá phòng',
-                                    selected: true,
-                                    onTap: () {},
-                                  ),
-                                  const SizedBox(width: 10),
-                                  _FilterChip(
-                                    label: 'Khu vực',
-                                    selected: false,
-                                    onTap: () {},
-                                  ),
-                                  const SizedBox(width: 10),
-                                  _FilterChip(
-                                    label: 'Loại phòng',
-                                    selected: false,
-                                    onTap: () {},
-                                  ),
-                                ],
-                              ),
-                            ),
+                            const QuickFilter(),
                             const SizedBox(height: 16),
                           ]),
                         ),
@@ -219,6 +167,51 @@ class _HomePageState extends State<HomePage>
             },
           ),
         ),
+      ),
+    );
+  }
+}
+
+class QuickFilter extends StatelessWidget {
+  const QuickFilter({super.key});
+
+  Widget _iconFilter(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => BlocProvider.value(
+              value: context.read<MotelsFilterCubit>(),
+              child: const FilterPage(),
+            ),
+          ),
+        );
+      },
+      child: CommonContainer(
+        child: SvgPicture.asset(
+          'assets/images/ic_filter.svg',
+          width: 20,
+          height: 20,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 38,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          _iconFilter(context),
+          const SizedBox(width: 10),
+          _FilterChip(label: 'Giá phòng', selected: true, onTap: () {}),
+          const SizedBox(width: 10),
+          _FilterChip(label: 'Khu vực', selected: false, onTap: () {}),
+          const SizedBox(width: 10),
+          _FilterChip(label: 'Loại phòng', selected: false, onTap: () {}),
+        ],
       ),
     );
   }
