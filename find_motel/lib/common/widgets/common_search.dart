@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class SearchBarWithCallback extends StatefulWidget {
+  final String initialText;
   final String hintText;
   final ValueChanged<String>? onSearchPressed;
 
   const SearchBarWithCallback({
     super.key,
-    required this.hintText,
+    required this.initialText,
+    this.hintText = '',
     this.onSearchPressed,
   });
 
@@ -25,6 +27,21 @@ class _SearchBarWithCallbackState extends State<SearchBarWithCallback> {
     super.initState();
     // Lắng nghe sự thay đổi của text để hiển thị/ẩn nút xóa
     _textController.addListener(_onTextChanged);
+    _textController.text = widget.initialText;
+  }
+
+  @override
+  void didUpdateWidget(covariant SearchBarWithCallback oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialText != oldWidget.initialText) {
+      if (_textController.text != widget.initialText) {
+        _textController.text = widget.initialText;
+        _textController.selection = TextSelection.fromPosition(
+          TextPosition(offset: _textController.text.length),
+        );
+      }
+      _onTextChanged();
+    }
   }
 
   void _onTextChanged() {
