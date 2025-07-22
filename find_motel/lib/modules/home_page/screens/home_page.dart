@@ -1,14 +1,13 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:find_motel/common/models/user_profile.dart';
-import 'package:find_motel/common/widgets/common_search.dart';
 import 'package:find_motel/extensions/double_extensions.dart';
 import 'package:find_motel/managers/app_data_manager.dart';
 import 'package:find_motel/managers/cubit/cubit.dart';
+import 'package:find_motel/modules/filter/quickly_filter.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_bloc.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_event.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_state.dart';
 import 'package:find_motel/modules/detail/detail_screen.dart';
-import 'package:find_motel/modules/map_page/screens/filter_page.dart';
 import 'package:find_motel/services/motel/models/motels_filter.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -87,71 +86,8 @@ class _HomePageState extends State<HomePage>
                               },
                             ),
                             const SizedBox(height: 16),
-                            // Search bar section
-                            SearchBarWithCallback(
-                              hintText: 'Nhập vào tên hoặc địa chỉ…',
-                              onSearchPressed: (value) {
-                                context.read<MotelsFilterCubit>().search(value);
-                              },
-                            ),
-                            const SizedBox(height: 16),
-                            // Filter section - Make it always visible
-                            SizedBox(
-                              height: 38,
-                              child: ListView(
-                                scrollDirection: Axis.horizontal,
-                                children: [
-                                  GestureDetector(
-                                    onTap: () {
-                                      Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (_) => BlocProvider.value(
-                                            value: context
-                                                .read<MotelsFilterCubit>(),
-                                            child: const FilterPage(),
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                    child: Container(
-                                      width: 38,
-                                      height: 38,
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        border: Border.all(
-                                          color: const Color(0xFFE0E0E0),
-                                        ),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Icon(
-                                        Icons.tune,
-                                        color: const Color(0xFF3B7268),
-                                        size: 22,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  _FilterChip(
-                                    label: 'Giá phòng',
-                                    selected: true,
-                                    onTap: () {},
-                                  ),
-                                  const SizedBox(width: 10),
-                                  _FilterChip(
-                                    label: 'Khu vực',
-                                    selected: false,
-                                    onTap: () {},
-                                  ),
-                                  const SizedBox(width: 10),
-                                  _FilterChip(
-                                    label: 'Loại phòng',
-                                    selected: false,
-                                    onTap: () {},
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 16),
+                            const QuicklyFilter(),
+                            const SizedBox(height: 8),
                           ]),
                         ),
                       ),
@@ -217,56 +153,6 @@ class _HomePageState extends State<HomePage>
                 ),
               );
             },
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _FilterChip extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _FilterChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: selected ? const Color(0xFF3B7268) : Colors.white,
-      borderRadius: BorderRadius.circular(44),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(44),
-        onTap: onTap,
-        child: Container(
-          height: 38,
-          padding: const EdgeInsets.symmetric(horizontal: 18),
-          decoration: BoxDecoration(
-            border: Border.all(color: const Color(0xFFE0E0E0)),
-            borderRadius: BorderRadius.circular(44),
-          ),
-          child: Row(
-            children: [
-              Text(
-                label,
-                style: GoogleFonts.quicksand(
-                  color: selected ? Colors.white : const Color(0xFF3B7268),
-                  fontWeight: FontWeight.w600,
-                  fontSize: 15,
-                ),
-              ),
-              const SizedBox(width: 4),
-              Icon(
-                Icons.keyboard_arrow_down_rounded,
-                color: selected ? Colors.white : const Color(0xFF3B7268),
-                size: 22,
-              ),
-            ],
           ),
         ),
       ),
