@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:find_motel/common/models/user_profile.dart';
+import 'package:find_motel/common/widgets/common_list_view.dart';
 import 'package:find_motel/extensions/double_extensions.dart';
 import 'package:find_motel/managers/app_data_manager.dart';
 import 'package:find_motel/managers/cubit/cubit.dart';
@@ -31,8 +32,20 @@ class _HomePageState extends State<HomePage>
     super.initState();
 
     context.read<HomePageBloc>().add(
-      LoadMotels(filter: AppDataManager().filterMotels),
+      LoadMotels(filter: AppDataManager().filterMotels, isRefresh: true),
     );
+  }
+
+  Future<void> _fetchMotels({bool isRefresh = false}) async {
+    if (isRefresh) {
+      context.read<HomePageBloc>().add(
+        LoadMotels(filter: AppDataManager().filterMotels, isRefresh: true),
+      );
+    } else {
+      context.read<HomePageBloc>().add(
+        LoadMotels(filter: AppDataManager().filterMotels, isRefresh: false),
+      );
+    }
   }
 
   @override
@@ -40,7 +53,7 @@ class _HomePageState extends State<HomePage>
     super.build(context);
     return BlocListener<MotelsFilterCubit, MotelsFilter>(
       listener: (context, filter) => {
-        context.read<HomePageBloc>().add(LoadMotels(filter: filter)),
+        context.read<HomePageBloc>().add(LoadMotels(filter: filter, isRefresh: true)),
       },
       child: Scaffold(
         backgroundColor: const Color(0xFFF5F5F5),
@@ -59,96 +72,112 @@ class _HomePageState extends State<HomePage>
                     horizontal: isDesktop ? 16 : 0,
                   ),
                   color: Colors.white,
-                  child: CustomScrollView(
-                    slivers: [
-                      SliverPadding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: padding,
-                          vertical: padding,
+                  child: BlocBuilder<HomePageBloc, HomePageState>(
+                    builder: (context, state) => CommonListView(
+                      onLoadData:
+                          _fetchMotels,
+                      isLoading: state.isLoadingMore,
+                      hasMoreData: false,
+                      emptyWidget: const Center(
+                        child: Text('Không có dữ liệu phòng trọ nào.'),
+                      ),
+                      noMoreDataWidget: const Text(
+                        'Bạn đã xem hết danh sách phòng trọ!',
+                        style: TextStyle(fontSize: 15, color: Colors.grey),
+                      ),
+                      slivers: [
+                        SliverPadding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: padding,
+                            vertical: padding,
+                          ),
+                          sliver: SliverList(
+                            delegate: SliverChildListDelegate([
+                              // Header section
+                              BlocBuilder<UserProfileCubit, UserProfile>(
+                                builder: (context, userProfile) {
+                                  String greeting = "Xin chào";
+                                  if (userProfile.name != null) {
+                                    greeting = "Xin chào ${userProfile.name!}";
+                                  }
+                                  return Text(
+                                    greeting,
+                                    style: GoogleFonts.quicksand(
+                                      color: const Color(0xFF3B7268),
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: isDesktop ? 24 : 20,
+                                    ),
+                                  );
+                                },
+                              ),
+                              const SizedBox(height: 16),
+                              const QuicklyFilter(),
+                              const SizedBox(height: 8),
+                            ]),
+                          ),
                         ),
-                        sliver: SliverList(
-                          delegate: SliverChildListDelegate([
-                            // Header section
-                            BlocBuilder<UserProfileCubit, UserProfile>(
-                              builder: (context, userProfile) {
-                                String greeting = "Xin chào";
-                                if (userProfile.name != null) {
-                                  greeting = "Xin chào ${userProfile.name!}";
-                                }
-                                return Text(
-                                  greeting,
-                                  style: GoogleFonts.quicksand(
-                                    color: const Color(0xFF3B7268),
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: isDesktop ? 24 : 20,
+                        SliverPadding(
+                          padding: EdgeInsets.symmetric(horizontal: padding),
+                          sliver: BlocBuilder<HomePageBloc, HomePageState>(
+                            builder: (context, state) {
+                              if (state.isLoading) {
+                                return const SliverFillRemaining(
+                                  child: Center(
+                                    child: CircularProgressIndicator(),
                                   ),
                                 );
-                              },
-                            ),
-                            const SizedBox(height: 16),
-                            const QuicklyFilter(),
-                            const SizedBox(height: 8),
-                          ]),
-                        ),
-                      ),
-                      SliverPadding(
-                        padding: EdgeInsets.symmetric(horizontal: padding),
-                        sliver: BlocBuilder<HomePageBloc, HomePageState>(
-                          builder: (context, state) {
-                            if (state.isLoading) {
-                              return const SliverFillRemaining(
-                                child: Center(
-                                  child: CircularProgressIndicator(),
-                                ),
-                              );
-                            }
+                              }
 
-                            if (state.hasError) {
-                              return SliverFillRemaining(
-                                child: Center(
-                                  child: Text(
-                                    'Error: ${state.errorMessage}',
-                                    style: GoogleFonts.quicksand(
-                                      color: Colors.red,
+                              if (state.hasError) {
+                                return SliverFillRemaining(
+                                  child: Center(
+                                    child: Text(
+                                      'Error: ${state.errorMessage}',
+                                      style: GoogleFonts.quicksand(
+                                        color: Colors.red,
+                                      ),
                                     ),
                                   ),
-                                ),
-                              );
-                            }
+                                );
+                              }
 
-                            if (state.hasMotels) {
-                              return SliverGrid(
-                                delegate: SliverChildBuilderDelegate((
-                                  context,
-                                  idx,
-                                ) {
-                                  final motel = state.motels![idx];
-                                  return _MotelCard(
-                                    imageUrl: motel.thumbnail,
-                                    title: motel.name,
-                                    address: motel.address,
-                                    price: motel.price.toVND(),
-                                    motel: motel, // Pass the full motel object
-                                  );
-                                }, childCount: state.motels!.length),
-                                gridDelegate:
-                                    SliverGridDelegateWithFixedCrossAxisCount(
-                                      crossAxisCount: crossAxisCount,
-                                      mainAxisSpacing: 16,
-                                      crossAxisSpacing: 16,
-                                      mainAxisExtent: 185,
-                                    ),
-                              );
-                            }
+                              if (state.hasMotels) {
+                                return SliverGrid(
+                                  delegate: SliverChildBuilderDelegate((
+                                    context,
+                                    idx,
+                                  ) {
+                                    final motel = state.motels![idx];
+                                    return _MotelCard(
+                                      imageUrl: motel.thumbnail,
+                                      title: motel.name,
+                                      address: motel.address,
+                                      price: motel.price.toVND(),
+                                      motel:
+                                          motel, // Pass the full motel object
+                                    );
+                                  }, childCount: state.motels!.length),
+                                  gridDelegate:
+                                      SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: crossAxisCount,
+                                        mainAxisSpacing: 16,
+                                        crossAxisSpacing: 16,
+                                        mainAxisExtent: 185,
+                                      ),
+                                );
+                              }
 
-                            return const SliverToBoxAdapter(
-                              child: SizedBox.shrink(),
-                            );
-                          },
+                              return const SliverToBoxAdapter(
+                                child: SizedBox.shrink(),
+                              );
+                            },
+                          ),
                         ),
-                      ),
-                      const SliverPadding(padding: EdgeInsets.only(bottom: 16)),
-                    ],
+                        const SliverPadding(
+                          padding: EdgeInsets.only(bottom: 16),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );

@@ -90,7 +90,7 @@ extension StringExtensions on String {
     normalized = normalized.replaceAll(RegExp(r'[áàảạãăằẳặẵâầẩậẫ]'), 'a');
     normalized = normalized.replaceAll(RegExp(r'[éèẻẹẽêềểệễ]'), 'e');
     normalized = normalized.replaceAll(RegExp(r'[íìỉịĩ]'), 'i');
-    normalized = normalized.replaceAll(RegExp(r'[óòỏọõôồổộỗơờởợỡ]'), 'o');
+    normalized = normalized.replaceAll(RegExp(r'[óòỏọõôốồổộỗơờởợỡ]'), 'o');
     normalized = normalized.replaceAll(RegExp(r'[úùủụũưừửựữ]'), 'u');
     normalized = normalized.replaceAll(RegExp(r'[ýỳỷỵỹ]'), 'y');
 

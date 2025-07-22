@@ -21,24 +21,26 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
     Emitter<HomePageState> emit,
   ) async {
     try {
-      emit(state.copyWith(isLoading: true));
+      emit(
+        state.copyWith(
+          isLoading: event.isRefresh,
+          isLoadingMore: !event.isRefresh,
+        ),
+      );
       final result = await _motelsService.getMotels(
         filter: event.filter,
         limit: 100,
       );
-      if (result.motels != null) {
-        emit(
-          state.copyWith(
-            isLoading: false,
-            motels: result.motels,
-            errorMessage: null,
-          ),
-        );
-      } else {
-        emit(state.copyWith(isLoading: false, motels: null));
-      }
+      emit(
+        state.copyWith(
+          isLoading: false,
+          isLoadingMore: false,
+          motels: result.motels,
+          errorMessage: null,
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(isLoading: false, errorMessage: e.toString()));
+      emit(state.copyWith(isLoading: false, isLoadingMore: false, errorMessage: e.toString()));
     }
   }
 }
