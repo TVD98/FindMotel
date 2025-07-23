@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:find_motel/common/models/user_profile.dart';
+import 'package:find_motel/common/widgets/common_list_view.dart';
 import 'package:find_motel/extensions/double_extensions.dart';
 import 'package:find_motel/managers/app_data_manager.dart';
 import 'package:find_motel/managers/cubit/cubit.dart';
@@ -9,6 +10,7 @@ import 'package:find_motel/modules/home_page/bloc/home_page_event.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_state.dart';
 import 'package:find_motel/modules/detail/detail_screen.dart';
 import 'package:find_motel/services/motel/models/motels_filter.dart';
+import 'package:find_motel/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -31,8 +33,24 @@ class _HomePageState extends State<HomePage>
     super.initState();
 
     context.read<HomePageBloc>().add(
-      LoadMotels(filter: AppDataManager().filterMotels),
+      LoadMotels(filter: AppDataManager().filterMotels, isRefresh: true),
     );
+  }
+
+  Future<void> _fetchMotels({bool isRefresh = false}) async {
+    // Disable load more
+    context.read<HomePageBloc>().add(
+      LoadMotels(filter: AppDataManager().filterMotels, isRefresh: true),
+    );
+    // if (isRefresh) {
+    //   context.read<HomePageBloc>().add(
+    //     LoadMotels(filter: AppDataManager().filterMotels, isRefresh: true),
+    //   );
+    // } else {
+    //   context.read<HomePageBloc>().add(
+    //     LoadMotels(filter: AppDataManager().filterMotels, isRefresh: false),
+    //   );
+    // }
   }
 
   @override
@@ -40,114 +58,46 @@ class _HomePageState extends State<HomePage>
     super.build(context);
     return BlocListener<MotelsFilterCubit, MotelsFilter>(
       listener: (context, filter) => {
-        context.read<HomePageBloc>().add(LoadMotels(filter: filter)),
+        context.read<HomePageBloc>().add(
+          LoadMotels(filter: filter, isRefresh: true),
+        ),
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFFF5F5F5),
         body: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final isDesktop = constraints.maxWidth > 600;
-              final crossAxisCount = isDesktop ? 4 : 2;
-              final padding = isDesktop ? 24.0 : 18.0;
-
               return Center(
                 child: Container(
-                  constraints: BoxConstraints(maxWidth: isDesktop ? 1200 : 430),
-                  margin: EdgeInsets.symmetric(
-                    vertical: 8,
-                    horizontal: isDesktop ? 16 : 0,
-                  ),
-                  color: Colors.white,
-                  child: CustomScrollView(
-                    slivers: [
-                      SliverPadding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: padding,
-                          vertical: padding,
-                        ),
-                        sliver: SliverList(
-                          delegate: SliverChildListDelegate([
-                            // Header section
-                            BlocBuilder<UserProfileCubit, UserProfile>(
-                              builder: (context, userProfile) {
-                                String greeting = "Xin chào";
-                                if (userProfile.name != null) {
-                                  greeting = "Xin chào ${userProfile.name!}";
-                                }
-                                return Text(
-                                  greeting,
-                                  style: GoogleFonts.quicksand(
-                                    color: const Color(0xFF3B7268),
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: isDesktop ? 24 : 20,
-                                  ),
-                                );
-                              },
+                  margin: EdgeInsets.symmetric(vertical: 8),
+                  color: Theme.of(context).scaffoldBackgroundColor,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      BlocBuilder<UserProfileCubit, UserProfile>(
+                        builder: (context, userProfile) {
+                          String greeting = "Xin chào";
+                          if (userProfile.name != null) {
+                            greeting = "Xin chào ${userProfile.name!}";
+                          }
+                          return Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Text(
+                              greeting,
+                              style: GoogleFonts.quicksand(
+                                color: const Color(0xFF3B7268),
+                                fontWeight: FontWeight.w600,
+                                fontSize: 20,
+                              ),
                             ),
-                            const SizedBox(height: 16),
-                            const QuicklyFilter(),
-                            const SizedBox(height: 8),
-                          ]),
-                        ),
+                          );
+                        },
                       ),
-                      SliverPadding(
-                        padding: EdgeInsets.symmetric(horizontal: padding),
-                        sliver: BlocBuilder<HomePageBloc, HomePageState>(
-                          builder: (context, state) {
-                            if (state.isLoading) {
-                              return const SliverFillRemaining(
-                                child: Center(
-                                  child: CircularProgressIndicator(),
-                                ),
-                              );
-                            }
-
-                            if (state.hasError) {
-                              return SliverFillRemaining(
-                                child: Center(
-                                  child: Text(
-                                    'Error: ${state.errorMessage}',
-                                    style: GoogleFonts.quicksand(
-                                      color: Colors.red,
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }
-
-                            if (state.hasMotels) {
-                              return SliverGrid(
-                                delegate: SliverChildBuilderDelegate((
-                                  context,
-                                  idx,
-                                ) {
-                                  final motel = state.motels![idx];
-                                  return _MotelCard(
-                                    imageUrl: motel.thumbnail,
-                                    title: motel.name,
-                                    address: motel.address,
-                                    price: motel.price.toVND(),
-                                    motel: motel, // Pass the full motel object
-                                  );
-                                }, childCount: state.motels!.length),
-                                gridDelegate:
-                                    SliverGridDelegateWithFixedCrossAxisCount(
-                                      crossAxisCount: crossAxisCount,
-                                      mainAxisSpacing: 16,
-                                      crossAxisSpacing: 16,
-                                      mainAxisExtent: 185,
-                                    ),
-                              );
-                            }
-
-                            return const SliverToBoxAdapter(
-                              child: SizedBox.shrink(),
-                            );
-                          },
-                        ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: const QuicklyFilter(),
                       ),
-                      const SliverPadding(padding: EdgeInsets.only(bottom: 16)),
+                      const SizedBox(height: 8),
+                      _listView,
                     ],
                   ),
                 ),
@@ -158,6 +108,53 @@ class _HomePageState extends State<HomePage>
       ),
     );
   }
+
+  Widget get _listView => BlocBuilder<HomePageBloc, HomePageState>(
+    builder: (context, state) => Expanded(
+      child: Stack(
+        children: [
+          CommonListView(
+            onLoadData: _fetchMotels,
+            isLoading: state.isLoadingMore,
+            isHaveData: state.hasMotels || state.isLoading,
+            hasMoreData: state.hasMoreData,
+            emptyWidget: const Center(
+              child: Text('Không có dữ liệu phòng trọ nào.'),
+            ),
+            slivers: [
+              SliverPadding(
+                padding: EdgeInsets.all(16),
+                sliver: state.hasMotels
+                    ? SliverGrid(
+                        delegate: SliverChildBuilderDelegate((context, idx) {
+                          final motel = state.motels![idx];
+                          return _MotelCard(
+                            imageUrl: motel.thumbnail,
+                            title: motel.name,
+                            address: motel.address,
+                            price: motel.price.toVND(),
+                            motel: motel, // Pass the full motel object
+                          );
+                        }, childCount: state.motels!.length),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16,
+                          mainAxisExtent: 185,
+                        ),
+                      )
+                    : const SliverToBoxAdapter(child: SizedBox.shrink()),
+              ),
+            ],
+          ),
+          if (state.isLoading)
+            const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            ),
+        ],
+      ),
+    ),
+  );
 }
 
 // Điều chỉnh _MotelCard
@@ -268,7 +265,7 @@ class _MotelCard extends StatelessWidget {
                     const SizedBox(height: 2), // Reduced from 4
                     SizedBox(
                       child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Icon(
                             Icons.location_on,
@@ -292,7 +289,7 @@ class _MotelCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 2), // Reduced from 8
+                    const SizedBox(height: 4), // Reduced from 8
                     SizedBox(
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
