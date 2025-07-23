@@ -64,7 +64,9 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
           return BlocConsumer<MotelDetailBloc, MotelDetailState>(
             listener: (context, state) {
               if (state is MotelDetailLoaded && state.needsReloadHome) {
-                blocContext.read<HomePageBloc>().add(LoadMotels());
+                blocContext.read<HomePageBloc>().add(
+                  LoadMotels(filter: AppDataManager().filterMotels, isRefresh: true)
+                  );
                 Navigator.pop(blocContext, true);
               } else if (state is MotelDetailError) {
                 ScaffoldMessenger.of(blocContext).showSnackBar(
