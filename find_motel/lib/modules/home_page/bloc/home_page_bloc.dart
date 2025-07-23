@@ -10,7 +10,7 @@ import 'home_page_state.dart';
 
 class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
   final IMotelsService _motelsService;
-  final int _pageSize = 6;
+  final int _pageSize = 100;
   int? _lastCreatedAt;
 
   HomePageBloc({IMotelsService? motelsService})
@@ -35,7 +35,7 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
         lastCreatedAt: event.isRefresh ? null : _lastCreatedAt,
         limit: _pageSize,
       );
-      _lastCreatedAt = result.motels?.last.createdAt;
+      _lastCreatedAt = result.motels?.lastOrNull?.createdAt;
       List<Motel> motels = [];
       if (event.isRefresh) {
         motels = result.motels ?? [];
@@ -48,7 +48,8 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
           isLoading: false,
           isLoadingMore: false,
           motels: motels,
-          hasMoreData: (result.motels?.length ?? 0) == _pageSize,
+          //hasMoreData: (result.motels?.length ?? 0) == _pageSize,
+          hasMoreData: false,
           errorMessage: null,
         ),
       );

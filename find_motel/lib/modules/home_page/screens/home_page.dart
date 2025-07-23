@@ -38,15 +38,19 @@ class _HomePageState extends State<HomePage>
   }
 
   Future<void> _fetchMotels({bool isRefresh = false}) async {
-    if (isRefresh) {
-      context.read<HomePageBloc>().add(
-        LoadMotels(filter: AppDataManager().filterMotels, isRefresh: true),
-      );
-    } else {
-      context.read<HomePageBloc>().add(
-        LoadMotels(filter: AppDataManager().filterMotels, isRefresh: false),
-      );
-    }
+    // Disable load more
+    context.read<HomePageBloc>().add(
+      LoadMotels(filter: AppDataManager().filterMotels, isRefresh: true),
+    );
+    // if (isRefresh) {
+    //   context.read<HomePageBloc>().add(
+    //     LoadMotels(filter: AppDataManager().filterMotels, isRefresh: true),
+    //   );
+    // } else {
+    //   context.read<HomePageBloc>().add(
+    //     LoadMotels(filter: AppDataManager().filterMotels, isRefresh: false),
+    //   );
+    // }
   }
 
   @override

@@ -60,6 +60,7 @@ class _CommonListViewState extends State<CommonListView> {
       color: AppColors.primary,
       child: CustomScrollView(
         controller: _scrollController,
+        physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
           // Hiển thị widget trống nếu không có dữ liệu và không đang tải
           if (!widget.isHaveData &&
