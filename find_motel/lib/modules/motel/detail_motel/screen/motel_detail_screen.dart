@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:find_motel/common/models/deal.dart';
 import 'package:find_motel/common/models/motel.dart';
@@ -88,96 +87,63 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
                   ),
                   body: Center(child: Text(state.message)),
                 );
-                //Code trên chuyển qua xử lý trong motelddetailbloc--?  Xử lý sau
               } else if (state is MotelDetailLoaded) {
                 final Motel currentMotelDetail = state.motelDetail;
                 final String currentMainImage = state.currentMainImage;
                 final bool isCanEdit = state.isCanEdit;
 
-                final content = SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(16, 34, 16, 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: AppConstants.spacing),
-                      _buildRoomInfo(
-                        currentMotelDetail.roomCode,
-                        currentMotelDetail.type,
+                final content = Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      currentMotelDetail.name,
+                      style: AppTextStyle.heading4.copyWith(
+                        color: AppColors.primary,
                       ),
-                      const SizedBox(height: 16),
-                      _buildMainImage(currentMainImage),
-                      const SizedBox(height: AppConstants.spacing),
-                      _buildImageGallery(
-                        currentMotelDetail.images,
-                        currentMainImage,
-                        (newImage) {
-                          blocContext.read<MotelDetailBloc>().add(
-                            MotelDetailUpdateMainImage(newImage),
-                          );
-                        },
-                      ),
-
-                      //   ],
-                      // ),
-                      const SizedBox(height: AppConstants.spacing),
-                      _buildTags(
-                        currentMotelDetail.commission,
-                        currentMotelDetail.price,
-                      ),
-                      _divider(),
-                      _buildAddress(
-                        blocContext,
-                        currentMotelDetail.address,
-                        currentMotelDetail.geoPoint,
-                      ),
-                      _divider(),
-                      _buildExtensions(currentMotelDetail.extensions),
-                      _divider(),
-                      _buildFees(currentMotelDetail.fees),
-                      _divider(),
-                      _buildNotes(currentMotelDetail.note),
-                    ],
-                  ),
-                );
-
-                if (widget.isBottomSheet) {
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.5),
                     ),
-                    child: DraggableScrollableSheet(
-                      initialChildSize: 0.5,
-                      minChildSize: 0.5,
-                      maxChildSize: 0.9,
-                      snap: true,
-                      snapSizes: const [0.5, 0.75, 0.9],
-                      builder: (context, scrollController) {
-                        return Container(
-                          decoration: const BoxDecoration(
-                            color: AppColors.surface,
-                            borderRadius: BorderRadius.vertical(
-                              top: Radius.circular(AppConstants.borderRadius),
-                            ),
-                          ),
-                          child: SafeArea(
-                            bottom: true,
-                            child: SingleChildScrollView(
-                              controller: scrollController,
-                              padding: const EdgeInsets.all(
-                                AppConstants.padding,
-                              ),
-                              child: content,
-                            ),
-                          ),
+                    const SizedBox(height: AppConstants.spacing),
+                    _buildRoomInfo(
+                      currentMotelDetail.roomCode,
+                      currentMotelDetail.type,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildMainImage(currentMainImage),
+                    const SizedBox(height: AppConstants.spacing),
+                    _buildImageGallery(
+                      currentMotelDetail.images,
+                      currentMainImage,
+                      (newImage) {
+                        blocContext.read<MotelDetailBloc>().add(
+                          MotelDetailUpdateMainImage(newImage),
                         );
                       },
                     ),
-                  );
-                }
+
+                    //   ],
+                    // ),
+                    const SizedBox(height: AppConstants.spacing),
+                    _buildTags(
+                      currentMotelDetail.commission,
+                      currentMotelDetail.price,
+                    ),
+                    _divider(),
+                    _buildAddress(
+                      blocContext,
+                      currentMotelDetail.address,
+                      currentMotelDetail.geoPoint,
+                    ),
+                    _divider(),
+                    _buildExtensions(currentMotelDetail.extensions),
+                    _divider(),
+                    _buildFees(currentMotelDetail.fees),
+                    _divider(),
+                    _buildNotes(currentMotelDetail.note),
+                  ],
+                );
 
                 return Scaffold(
                   appBar: CommonAppBar(
-                    title: currentMotelDetail.name,
+                    title: "Chi Tiết Phòng Trọ",
                     leadingAsset: 'assets/images/ic_back.svg',
                     leadingIconColor: Colors.white,
                     onLeadingPressed: () =>
@@ -241,7 +207,7 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
                   body: SafeArea(
                     bottom: true,
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(AppConstants.padding),
+                      padding: const EdgeInsets.fromLTRB(16, 32, 16, 24),
                       child: content,
                     ),
                   ),
@@ -356,13 +322,29 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: _tagChip(
-            "HH $commission",
+            Row(
+              children: [
+                Text(
+                  "HH",
+                  style: AppTextStyle.smallLabel.copyWith(
+                    color: AppColors.onPrimaryContainer,
+                  ),
+                ),
+                const SizedBox(width: AppConstants.spacing / 2),
+                Text(
+                  commission,
+                  style: AppTextStyle.smallLabel.copyWith(
+                    color: AppColors.onPrimaryContainer,
+                  ),
+                ),
+              ],
+            ),
             AppColors.primaryContainer,
             textColor: AppColors.onPrimaryContainer,
           ),
         ),
         _tagChip(
-          "Giá thuê: ${formatVND(price)}đ/tháng",
+          _buildSubAndBodyText("Giá thuê:", "${formatVND(price)}đ"),
           AppColors.onSurface2,
           textColor: AppColors.elementSecondary,
         ),
@@ -374,21 +356,23 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
+        _buildSubAndBodyText("Mã phòng:", roomCode),
+        _buildSubAndBodyText("Kiểu phòng:", type),
+      ],
+    );
+  }
+
+  Widget _buildSubAndBodyText(String subtitle, String body) {
+    return Row(
+      children: [
         Text(
-          'Mã phòng: $roomCode',
-          style: GoogleFonts.quicksand(
-            fontSize: 14,
-            color: AppColors.primary,
-            fontWeight: AppTextStyle.semiBold,
-          ),
+          subtitle,
+          style: AppTextStyle.subtitle.copyWith(color: AppColors.primary),
         ),
+        const SizedBox(width: AppConstants.spacing / 2),
         Text(
-          'Kiểu phòng: $type',
-          style: GoogleFonts.quicksand(
-            fontSize: 14,
-            color: AppColors.primary,
-            fontWeight: AppTextStyle.semiBold,
-          ),
+          body,
+          style: AppTextStyle.body.copyWith(color: AppColors.elementSecondary),
         ),
       ],
     );
@@ -401,13 +385,11 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            const Icon(Icons.location_on, size: 14, color: AppColors.primary),
+            const Icon(Icons.location_on, size: 18, color: AppColors.primary),
             const SizedBox(width: AppConstants.spacing),
             Text(
               address,
-              style: GoogleFonts.quicksand(
-                fontSize: 12,
-                fontWeight: AppTextStyle.regular,
+              style: AppTextStyle.smallBody.copyWith(
                 color: AppColors.elementSecondary,
               ),
             ),
@@ -417,7 +399,7 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            const Icon(Icons.directions, size: 14, color: AppColors.primary),
+            const Icon(Icons.directions, size: 18, color: AppColors.primary),
             const SizedBox(width: AppConstants.spacing),
             GestureDetector(
               onTap: () async {
@@ -454,11 +436,10 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
               },
               child: Text(
                 'Chỉ đường',
-                style: GoogleFonts.quicksand(
-                  fontSize: 12,
-                  fontWeight: AppTextStyle.regular,
+                style: AppTextStyle.smallBody.copyWith(
                   color: AppColors.elementHighlight,
                   decoration: TextDecoration.underline,
+                  decorationColor: AppColors.elementHighlight,
                 ),
               ),
             ),
@@ -474,11 +455,7 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
       children: [
         Text(
           "Tiện ích:",
-          style: GoogleFonts.quicksand(
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
-            color: AppColors.primary,
-          ),
+          style: AppTextStyle.subtitle.copyWith(color: AppColors.primary),
         ),
         const SizedBox(height: AppConstants.spacing),
         extensions.isEmpty
@@ -492,7 +469,7 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
                       (e) => Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 6,
-                          vertical: 4,
+                          vertical: 6,
                         ),
                         decoration: BoxDecoration(
                           color: AppColors.onSurface1,
@@ -504,10 +481,8 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
                         ),
                         child: Text(
                           e,
-                          style: GoogleFonts.quicksand(
+                          style: AppTextStyle.smallBody.copyWith(
                             color: AppColors.elementSecondary,
-                            fontWeight: AppTextStyle.regular,
-                            fontSize: 12,
                           ),
                         ),
                       ),
@@ -524,17 +499,15 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
       children: [
         Text(
           "Chi phí khác:",
-          style: GoogleFonts.quicksand(
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
-            color: AppColors.primary,
-          ),
+          style: AppTextStyle.subtitle.copyWith(color: AppColors.primary),
         ),
         const SizedBox(height: AppConstants.spacing - 4.0),
         fees.isEmpty
-            ? const Text(
-                'Không có chi phí khác',
-                style: TextStyle(fontSize: 14),
+            ? Text(
+                "Không có chi phí khác",
+                style: AppTextStyle.body.copyWith(
+                  color: AppColors.elementSecondary,
+                ),
               )
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -555,15 +528,16 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
       children: [
         Text(
           "Ghi chú:",
-          style: GoogleFonts.quicksand(
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
-            color: AppColors.primary,
-          ),
+          style: AppTextStyle.subtitle.copyWith(color: AppColors.primary),
         ),
         const SizedBox(height: AppConstants.spacing - 4.0),
         notes.isEmpty
-            ? const Text('Không có ghi chú', style: TextStyle(fontSize: 14))
+            ? Text(
+                "Không có ghi chú",
+                style: AppTextStyle.body.copyWith(
+                  color: AppColors.elementSecondary,
+                ),
+              )
             : Column(
                 children: notes
                     .map(
@@ -574,14 +548,19 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
                         ),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Text("• "),
+                            const SizedBox(width: 8),
+                            Text(
+                              "• ",
+                              style: AppTextStyle.body.copyWith(
+                                color: AppColors.elementSecondary,
+                              ),
+                            ),
                             Expanded(
                               child: Text(
                                 note,
-                                style: GoogleFonts.quicksand(
-                                  fontSize: 14,
-                                  fontWeight: AppTextStyle.regular,
+                                style: AppTextStyle.body.copyWith(
                                   color: AppColors.elementSecondary,
                                 ),
                               ),
@@ -598,24 +577,17 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
 
   // Widget tạo chip cho tiện ích và hoa hồng (giữ nguyên)
   Widget _tagChip(
-    String label,
+    Widget label,
     Color bgColor, {
     Color textColor = Colors.white,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(AppConstants.chipBorderRadius),
       ),
-      child: Text(
-        label,
-        style: GoogleFonts.quicksand(
-          fontSize: 14,
-          fontWeight: AppTextStyle.semiBold,
-          color: textColor,
-        ),
-      ),
+      child: label,
     );
   }
 
@@ -629,18 +601,14 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
         children: [
           Text(
             label,
-            style: GoogleFonts.quicksand(
-              fontSize: 12,
-              fontWeight: AppTextStyle.semiBold,
+            style: AppTextStyle.smallLabel.copyWith(
               color: AppColors.elementPrimary,
             ),
           ),
 
           Text(
             value,
-            style: GoogleFonts.quicksand(
-              fontSize: 12,
-              fontWeight: AppTextStyle.regular,
+            style: AppTextStyle.body.copyWith(
               color: AppColors.elementSecondary,
             ),
           ),

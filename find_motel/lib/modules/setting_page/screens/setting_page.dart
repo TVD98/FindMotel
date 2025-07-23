@@ -106,8 +106,10 @@ class _SettingPageState extends State<SettingPage> {
                       right: 0,
                       bottom: 0,
                       child: Container(
+                        width: 28,
+                        height: 28,
                         decoration: BoxDecoration(
-                          color: Theme.of(context).primaryColor,
+                          color: AppColors.primary,
                           shape: BoxShape.circle,
                           border: Border.all(
                             color: AppColors.strokeLight,
@@ -117,16 +119,16 @@ class _SettingPageState extends State<SettingPage> {
                         ),
                         child: IconButton(
                           icon: const Icon(
-                            Icons.add,
+                            Icons.add_a_photo_outlined,
                             color: AppColors.onPrimary,
-                            size: 24,
+                            size: 16.0,
                           ),
                           onPressed: () =>
                               _imagePickerService.showAddImageOptions(),
-                          padding: EdgeInsets.zero,
+                          padding: EdgeInsets.all(0.0),
                           constraints: const BoxConstraints.tightFor(
-                            width: 24.0,
-                            height: 24.0,
+                            width: 16.0,
+                            height: 16.0,
                           ),
                           visualDensity: VisualDensity.compact,
                         ),
@@ -159,7 +161,7 @@ class _SettingPageState extends State<SettingPage> {
                     filled: true,
                     fillColor: AppColors.onSurface1,
                     contentPadding: const EdgeInsets.symmetric(
-                      vertical: 12.0,
+                      vertical: 8.0,
                       horizontal: 16.0,
                     ),
                   ),
