@@ -1,7 +1,7 @@
 import 'package:find_motel/common/models/motel.dart';
 import 'package:find_motel/extensions/double_extensions.dart';
 import 'package:find_motel/managers/cubit/cubit.dart';
-import 'package:find_motel/modules/detail/detail_screen.dart';
+import 'package:find_motel/modules/motel/detail_motel/screen/motel_detail_screen.dart';
 import 'package:find_motel/modules/filter/quickly_filter.dart';
 import 'package:find_motel/modules/map_page/bloc/map_page_bloc.dart';
 import 'package:find_motel/modules/map_page/bloc/map_page_state.dart';
@@ -114,7 +114,7 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => RoomDetailScreen(
+                                builder: (context) => MotelDetailScreen(
                                   detail: motelCard,
                                   isBottomSheet: false,
                                 ),
