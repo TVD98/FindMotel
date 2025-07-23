@@ -4,6 +4,7 @@ import 'package:find_motel/services/motel/models/motels_filter.dart';
 abstract class IMotelsService {
   Future<({List<Motel>? motels, String? error})> getMotels({
     MotelsFilter? filter,
+    int? lastCreatedAt,
     int limit,
   });
 

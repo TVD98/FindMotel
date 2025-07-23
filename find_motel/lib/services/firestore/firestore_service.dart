@@ -37,6 +37,7 @@ class FirestoreService
           motel.name.generateKeywords() + motel.address.generateKeywords();
       final json = motel.toMap();
       json['keywords'] = keywords;
+      json['created_at'] = DateTime.now().millisecondsSinceEpoch;
       final docRef = await _firestore
           .collection(FirestorePaths.motelsCollection)
           .add(json);
@@ -55,13 +56,19 @@ class FirestoreService
   @override
   Future<({List<Motel>? motels, String? error})> getMotels({
     MotelsFilter? filter,
+    int? lastCreatedAt,
     int limit = 100,
   }) async {
     try {
       // 1. Build the base query.
       Query<Map<String, dynamic>> query = _firestore
           .collection(FirestorePaths.motelsCollection)
+          .orderBy('created_at', descending: true)
           .limit(limit);
+
+      if (lastCreatedAt != null) {
+        query = query.startAfter([lastCreatedAt]);
+      }
 
       List<String> keywords = [];
       if (filter?.keywords != null && filter!.keywords!.isNotEmpty) {
@@ -158,6 +165,7 @@ class FirestoreService
       marker: data['marker'] as String? ?? '',
       thumbnail: data['thumbnail'] as String? ?? '',
       texture: data['texture'] as String? ?? '',
+      createdAt: data['created_at'] as int? ?? 0,
     );
   }
 

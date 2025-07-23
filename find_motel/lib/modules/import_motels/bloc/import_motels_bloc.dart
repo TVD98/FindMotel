@@ -13,7 +13,9 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
     : _motelsService = motelsService ?? FirestoreService(),
       super(const ImportMotelsState()) {
     on<HandleFileEvent>((event, emit) {
-      final motels = _parseMotels(event.data);
+      List<List<String>> data = event.data;
+      data = data.map((e) => e.map((e) => e.removeTrailingZero()).toList()).toList();
+      final motels = _parseMotels(data);
       emit(state.copyWith(motels: motels));
     });
 

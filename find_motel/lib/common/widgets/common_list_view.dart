@@ -3,19 +3,20 @@ import 'package:flutter/material.dart';
 
 // Đây là một widget chung để quản lý cuộn, tải thêm và làm mới
 class CommonListView extends StatefulWidget {
-  final List<Widget>
-  slivers; // Các slivers mà bạn muốn hiển thị (ví dụ: SliverGrid, SliverList)
-  final Future<void> Function({bool isRefresh}) onLoadData; // Hàm tải dữ liệu
-  final bool isLoading; // Trạng thái loading từ bên ngoài
-  final bool hasMoreData; // Trạng thái còn dữ liệu để tải từ bên ngoài
-  final Widget? emptyWidget; // Widget hiển thị khi không có dữ liệu
-  final Widget? noMoreDataWidget; // Widget hiển thị khi hết dữ liệu
+  final List<Widget> slivers;
+  final Future<void> Function({bool isRefresh}) onLoadData;
+  final bool isLoading;
+  final bool isHaveData;
+  final bool hasMoreData;
+  final Widget? emptyWidget;
+  final Widget? noMoreDataWidget;
 
   const CommonListView({
     super.key,
     required this.slivers,
     required this.onLoadData,
     required this.isLoading,
+    required this.isHaveData,
     required this.hasMoreData,
     this.emptyWidget,
     this.noMoreDataWidget,
@@ -44,14 +45,12 @@ class _CommonListViewState extends State<CommonListView> {
     if (_scrollController.position.extentAfter < 50 &&
         !widget.isLoading &&
         widget.hasMoreData) {
-      widget.onLoadData(); // Gọi hàm tải dữ liệu được truyền vào
+      widget.onLoadData();
     }
   }
 
   Future<void> _onRefresh() async {
-    await widget.onLoadData(
-      isRefresh: true,
-    ); // Gọi hàm tải dữ liệu với cờ làm mới
+    await widget.onLoadData(isRefresh: true);
   }
 
   @override
@@ -63,7 +62,8 @@ class _CommonListViewState extends State<CommonListView> {
         controller: _scrollController,
         slivers: [
           // Hiển thị widget trống nếu không có dữ liệu và không đang tải
-          if (!widget.isLoading &&
+          if (!widget.isHaveData &&
+              !widget.isLoading &&
               widget.emptyWidget != null)
             SliverFillRemaining(child: widget.emptyWidget!),
           ...widget.slivers, // Các sliver chính được truyền vào
@@ -72,7 +72,9 @@ class _CommonListViewState extends State<CommonListView> {
             const SliverToBoxAdapter(
               child: Padding(
                 padding: EdgeInsets.all(16.0),
-                child: Center(child: CircularProgressIndicator(color: AppColors.primary,)),
+                child: Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                ),
               ),
             ),
           // Widget "hết dữ liệu"

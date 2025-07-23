@@ -7,6 +7,7 @@ class HomePageState extends Equatable {
   final bool isLoadingMore;
   final String? errorMessage;
   final List<Motel>? motels;
+  final bool hasMoreData;
   final UserProfile? userProfile;
 
   const HomePageState({
@@ -14,6 +15,7 @@ class HomePageState extends Equatable {
     this.isLoadingMore = false,
     this.errorMessage,
     this.motels,
+    this.hasMoreData = false,
     this.userProfile,
   });
 
@@ -31,17 +33,21 @@ class HomePageState extends Equatable {
     bool? isLoadingMore,
     String? errorMessage,
     List<Motel>? motels,
+    bool? hasMoreData,
+    UserProfile? userProfile,
   }) {
     return HomePageState(
       isLoading: isLoading ?? this.isLoading,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       errorMessage: errorMessage ?? this.errorMessage,
       motels: motels ?? this.motels,
+      hasMoreData: hasMoreData ?? this.hasMoreData,
+      userProfile: userProfile ?? this.userProfile,
     );
   }
 
   @override
-  List<Object?> get props => [isLoading, isLoadingMore, errorMessage, motels];
+  List<Object?> get props => [isLoading, isLoadingMore, errorMessage, motels, hasMoreData, userProfile];
 
   // Helper getters
   bool get hasError => errorMessage != null;

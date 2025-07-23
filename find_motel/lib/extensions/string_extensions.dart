@@ -20,6 +20,8 @@ extension StringExtensions on String {
   }
 
   double toPrice() {
+    final price = double.tryParse(this);
+    if (price != null) return price;
     final filter = replaceAll(RegExp(r'[^0-9]'), '');
     if (filter.isEmpty) return 0;
     return double.parse(filter);
@@ -153,5 +155,12 @@ extension StringExtensions on String {
     result = result.replaceAll(RegExp(r'\s+'), ' ').trim();
 
     return result.normalizeString();
+  }
+
+  String removeTrailingZero() {
+    if (endsWith('.0') || endsWith(',0')) {
+      return substring(0, length - 2); // Xóa 2 ký tự ".0" hoặc ",0"
+    }
+    return this; // Trả về chuỗi gốc nếu không có ".0" hoặc ",0" ở cuối
   }
 }
