@@ -1,5 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'package:find_motel/common/widgets/common_app_bar.dart';
 import 'package:find_motel/extensions/double_extensions.dart';
 import 'package:find_motel/modules/deal_manager/screens/deal_detail_screen.dart';
 import 'package:find_motel/theme/app_colors.dart';
@@ -24,7 +25,7 @@ class _DealManagerScreenState extends State<DealManagerScreen> {
     return BlocProvider(
       create: (context) => DealManagerBloc()..add(LoadDealsEvent()),
       child: Scaffold(
-        appBar: AppBar(title: const Text('Quản lý deal')),
+        appBar: const CommonAppBar(title: 'Quản lý lịch hẹn'),
         body: BlocBuilder<DealManagerBloc, DealManagerState>(
           builder: (context, state) {
             if (state.status == DealManagerStatus.loading) {
@@ -36,7 +37,7 @@ class _DealManagerScreenState extends State<DealManagerScreen> {
               );
             }
             if (state.deals.isEmpty) {
-              return const Center(child: Text('Chưa có deal nào'));
+              return const Center(child: Text('Chưa có lịch hẹn nào'));
             }
             return ListView.builder(
               itemCount: state.deals.length,

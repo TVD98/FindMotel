@@ -8,9 +8,10 @@ abstract class HomePageEvent extends Equatable {
 
 class LoadMotels extends HomePageEvent {
   final MotelsFilter? filter;
+  final bool isRefresh;
 
-  LoadMotels({this.filter});
+  LoadMotels({this.filter, required this.isRefresh});
 
   @override
-  List<Object?> get props => [filter];
+  List<Object?> get props => [filter, isRefresh];
 }

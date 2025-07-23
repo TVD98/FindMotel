@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:find_motel/common/models/motel.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:find_motel/services/motel/motels_service.dart';
 import 'package:find_motel/services/firestore/firestore_service.dart';
@@ -9,6 +10,8 @@ import 'home_page_state.dart';
 
 class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
   final IMotelsService _motelsService;
+  final int _pageSize = 100;
+  int? _lastCreatedAt;
 
   HomePageBloc({IMotelsService? motelsService})
     : _motelsService = motelsService ?? FirestoreService(),
@@ -21,24 +24,43 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
     Emitter<HomePageState> emit,
   ) async {
     try {
-      emit(state.copyWith(isLoading: true));
+      emit(
+        state.copyWith(
+          isLoading: event.isRefresh,
+          isLoadingMore: !event.isRefresh,
+        ),
+      );
       final result = await _motelsService.getMotels(
         filter: event.filter,
-        limit: 100,
+        lastCreatedAt: event.isRefresh ? null : _lastCreatedAt,
+        limit: _pageSize,
       );
-      if (result.motels != null) {
-        emit(
-          state.copyWith(
-            isLoading: false,
-            motels: result.motels,
-            errorMessage: null,
-          ),
-        );
+      _lastCreatedAt = result.motels?.lastOrNull?.createdAt;
+      List<Motel> motels = [];
+      if (event.isRefresh) {
+        motels = result.motels ?? [];
       } else {
-        emit(state.copyWith(isLoading: false, motels: null));
+        motels = state.motels ?? [];
+        motels.addAll(result.motels ?? []);
       }
+      emit(
+        state.copyWith(
+          isLoading: false,
+          isLoadingMore: false,
+          motels: motels,
+          //hasMoreData: (result.motels?.length ?? 0) == _pageSize,
+          hasMoreData: false,
+          errorMessage: null,
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(isLoading: false, errorMessage: e.toString()));
+      emit(
+        state.copyWith(
+          isLoading: false,
+          isLoadingMore: false,
+          errorMessage: e.toString(),
+        ),
+      );
     }
   }
 }

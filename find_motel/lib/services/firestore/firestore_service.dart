@@ -37,10 +37,12 @@ class FirestoreService
           motel.name.generateKeywords() + motel.address.generateKeywords();
       final json = motel.toMap();
       json['keywords'] = keywords;
-      final docRef = await _firestore
+      json['created_at'] = DateTime.now().millisecondsSinceEpoch;
+      await _firestore
           .collection(FirestorePaths.motelsCollection)
-          .add(json);
-      return (id: docRef.id, error: null);
+          .doc(motel.roomCode)
+          .set(json, SetOptions(merge: true));
+      return (id: motel.roomCode, error: null);
     } catch (e) {
       return (id: null, error: e.toString());
     }
@@ -55,17 +57,23 @@ class FirestoreService
   @override
   Future<({List<Motel>? motels, String? error})> getMotels({
     MotelsFilter? filter,
+    int? lastCreatedAt,
     int limit = 100,
   }) async {
     try {
       // 1. Build the base query.
       Query<Map<String, dynamic>> query = _firestore
           .collection(FirestorePaths.motelsCollection)
+          .orderBy('created_at', descending: true)
           .limit(limit);
+
+      if (lastCreatedAt != null) {
+        query = query.startAfter([lastCreatedAt]);
+      }
 
       List<String> keywords = [];
       if (filter?.keywords != null && filter!.keywords!.isNotEmpty) {
-        keywords.add(filter.keywords!);
+        keywords.add(filter.keywords!.normalizeString());
       }
       if (filter?.address != null) {
         keywords = filter!.address!.makeKeywords(keywords);
@@ -142,7 +150,7 @@ class FirestoreService
     final geoPoint = data['geo_point'] as GeoPoint? ?? const GeoPoint(0, 0);
 
     return Motel(
-      id: doc.id,
+      id: data['room_code'] as String? ?? '',
       address: data['address'] as String? ?? '',
       commission: data['commission']?.toString() ?? '',
       extensions: List<String>.from(data['extensions'] ?? const []),
@@ -158,6 +166,7 @@ class FirestoreService
       marker: data['marker'] as String? ?? '',
       thumbnail: data['thumbnail'] as String? ?? '',
       texture: data['texture'] as String? ?? '',
+      createdAt: data['created_at'] as int? ?? 0,
     );
   }
 

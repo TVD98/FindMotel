@@ -19,6 +19,7 @@ enum RentalStatus {
 }
 
 class Motel {
+  final int? createdAt;
   final String id;
   final String address;
   final String commission;
@@ -37,6 +38,7 @@ class Motel {
   final String texture;
 
   Motel({
+    this.createdAt,
     required this.id,
     required this.address,
     required this.commission,
@@ -73,6 +75,34 @@ class Motel {
       'marker': marker,
       'thumbnail': thumbnail,
       'texture': texture,
+      if (createdAt != null) 'created_at': createdAt,
     };
+  }
+
+  factory Motel.fromMap(Map<String, dynamic> map, {String? id}) {
+    return Motel(
+      id: id ?? map['id'] ?? '',
+      address: map['address'] ?? '',
+      commission: map['commission'] ?? '',
+      extensions: List<String>.from(map['extensions'] ?? []),
+      fees: List<Map<String, dynamic>>.from(map['fees'] ?? []),
+      geoPoint: map['geo_point'] is GeoPoint
+          ? LatLng(map['geo_point'].latitude, map['geo_point'].longitude)
+          : const LatLng(0, 0),
+      name: map['name'] ?? '',
+      note: List<String>.from(map['note'] ?? []),
+      price: (map['price'] as num?)?.toDouble() ?? 0.0,
+      roomCode: map['room_code'] ?? '',
+      type: map['type'] ?? '',
+      status: RentalStatus.values.firstWhere(
+        (e) => e.name == map['status'],
+        orElse: () => RentalStatus.empty,
+      ),
+      images: List<String>.from(map['images'] ?? []),
+      marker: map['marker'] ?? '',
+      thumbnail: map['thumbnail'] ?? '',
+      texture: map['texture'] ?? '',
+      createdAt: map['created_at'] is int ? map['created_at'] as int : null,
+    );
   }
 }

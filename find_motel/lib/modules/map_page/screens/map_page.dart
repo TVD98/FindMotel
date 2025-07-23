@@ -2,10 +2,11 @@ import 'package:find_motel/common/models/motel.dart';
 import 'package:find_motel/extensions/double_extensions.dart';
 import 'package:find_motel/managers/cubit/cubit.dart';
 import 'package:find_motel/modules/motel/detail_motel/screen/motel_detail_screen.dart';
+import 'package:find_motel/modules/detail/detail_screen.dart';
+import 'package:find_motel/modules/filter/quickly_filter.dart';
 import 'package:find_motel/modules/map_page/bloc/map_page_bloc.dart';
 import 'package:find_motel/modules/map_page/bloc/map_page_state.dart';
 import 'package:find_motel/modules/map_page/bloc/map_page_event.dart';
-import 'package:find_motel/modules/map_page/screens/filter_page.dart';
 import 'package:find_motel/services/motel/models/motels_filter.dart';
 import 'package:find_motel/theme/app_colors.dart';
 import 'package:flutter/material.dart';
@@ -94,45 +95,6 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
                 myLocationEnabled: true,
                 buildingsEnabled: false,
               ),
-              Positioned(
-                top: 50,
-                right: 16,
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => BlocProvider.value(
-                          value: context.read<MotelsFilterCubit>(),
-                          child: const FilterPage(),
-                        ),
-                      ),
-                    );
-                  },
-                  child: Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle, // Bo tròn nút
-                      color: Colors.white, // Nền trắng
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 4,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: ClipOval(
-                      child: Image.asset(
-                        'assets/images/ic_filter.png',
-                        width: 32,
-                        height: 32,
-                        fit: BoxFit.scaleDown,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
               if (state.cards.isNotEmpty)
                 Positioned(
                   bottom: 20,
@@ -165,6 +127,12 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
                     ),
                   ),
                 ),
+              Positioned(
+                top: 50,
+                left: 16,
+                right: 16,
+                child: const QuicklyFilter(),
+              ),
               if (state.isLoading) Center(child: CircularProgressIndicator()),
             ],
           );
