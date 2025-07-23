@@ -63,7 +63,7 @@ class _ProfilePageState extends State<ProfilePage>
                       MaterialPageRoute(
                         builder: (_) => MultiBlocProvider(
                           providers: [
-                            BlocProvider(create: (_) => SettingBloc()),
+                            BlocProvider(create: (_) => SettingBloc()), 
                             BlocProvider.value(
                               value: context.read<UserProfileCubit>(),
                             ),
@@ -177,7 +177,12 @@ class _ProfilePageState extends State<ProfilePage>
       radius: 50,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(50),
-        child: CachedNetworkImage(imageUrl: avatar, width: 100, height: 100, fit: BoxFit.cover,),
+        child: CachedNetworkImage(
+          imageUrl: avatar,
+          width: 100,
+          height: 100,
+          fit: BoxFit.cover,
+        ),
       ),
     );
   }
