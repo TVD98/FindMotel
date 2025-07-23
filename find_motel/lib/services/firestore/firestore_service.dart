@@ -38,10 +38,11 @@ class FirestoreService
       final json = motel.toMap();
       json['keywords'] = keywords;
       json['created_at'] = DateTime.now().millisecondsSinceEpoch;
-      final docRef = await _firestore
+      await _firestore
           .collection(FirestorePaths.motelsCollection)
-          .add(json);
-      return (id: docRef.id, error: null);
+          .doc(motel.roomCode)
+          .set(json, SetOptions(merge: true));
+      return (id: motel.roomCode, error: null);
     } catch (e) {
       return (id: null, error: e.toString());
     }
@@ -149,7 +150,7 @@ class FirestoreService
     final geoPoint = data['geo_point'] as GeoPoint? ?? const GeoPoint(0, 0);
 
     return Motel(
-      id: doc.id,
+      id: data['room_code'] as String? ?? '',
       address: data['address'] as String? ?? '',
       commission: data['commission']?.toString() ?? '',
       extensions: List<String>.from(data['extensions'] ?? const []),
