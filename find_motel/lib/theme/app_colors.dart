@@ -14,9 +14,10 @@ class AppColors {
   static const Color onPrimaryContainer = Color(0xFF03221A);
 
   // Secondary accent
-  static const Color secondary = Color(0xFF4CAF50);
-  static const Color onSecondary = Colors.white;
+  static const Color secondary = Color(0xD3F7B832); // #D3F7B832
+  static const Color onSecondary = Color(0xFFFFFFFF);
   static const Color secondaryContainer = Color(0xFFFFEABD); // #FFEABD
+  static const Color onSecondaryContainer = Color(0xFF043127);  //043127
 
   // Neutral / grayscale
   static const Color strokeLight = Color(0xFFD1D1D1); // #D1D1D1

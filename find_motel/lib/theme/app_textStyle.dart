@@ -13,7 +13,7 @@ class AppFontWeight {
   static const FontWeight bold = FontWeight.w800;
 }
 
-class AppTextStyle {
+class AppTextStyle extends TextStyle {
 
   static TextStyle title = AppFontStyle.quicksand.copyWith(
     color: AppColors.elementSecondary,
@@ -37,6 +37,11 @@ class AppTextStyle {
     color: AppColors.elementPrimary,
     fontWeight: AppFontWeight.semiBold,
     fontSize: 20,
+  );
+  static TextStyle heading5 = AppFontStyle.quicksand.copyWith(
+    color: AppColors.elementPrimary,
+    fontWeight: AppFontWeight.semiBold,
+    fontSize: 18,
   );
   static TextStyle subtitle = AppFontStyle.quicksand.copyWith(
     color: AppColors.elementSecondary,

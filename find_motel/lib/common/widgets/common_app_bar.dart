@@ -27,6 +27,9 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
   /// Color for the leading icon. Defaults to Colors.white.
   final Color? leadingIconColor;
 
+  /// Color for background. Defaults to AppColors.headerLinePrimary.
+  final Color? backgroundColor;
+
   const CommonAppBar({
     super.key,
     required this.title,
@@ -34,6 +37,7 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.onLeadingPressed,
     this.actions,
     this.leadingIconColor = Colors.white,
+    this.backgroundColor = AppColors.headerLinePrimary,
   });
 
   @override
@@ -74,7 +78,7 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       centerTitle: false,
       titleSpacing: leadingAsset == null ? 16 : 0,
-      backgroundColor: AppColors.headerLinePrimary,
+      backgroundColor: backgroundColor,
       elevation: 0,
       actions: actions,
     );
