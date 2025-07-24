@@ -9,8 +9,6 @@ import 'package:find_motel/modules/home_page/bloc/home_page_bloc.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_event.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_state.dart';
 import 'package:find_motel/modules/motel/detail_motel/screen/motel_detail_screen.dart';
-import 'package:find_motel/modules/map_page/screens/filter_page.dart';
-import 'package:find_motel/modules/detail/detail_screen.dart';
 import 'package:find_motel/services/motel/models/motels_filter.dart';
 import 'package:find_motel/theme/app_colors.dart';
 import 'package:flutter/material.dart';

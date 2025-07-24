@@ -6,7 +6,6 @@ import 'package:find_motel/managers/app_data_manager.dart';
 import 'package:find_motel/modules/deal_manager/screens/deal_detail_screen.dart';
 import 'package:find_motel/services/firestore/firestore_service.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
 import 'package:find_motel/theme/app_colors.dart';
@@ -65,7 +64,9 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
           return BlocConsumer<MotelDetailBloc, MotelDetailState>(
             listener: (context, state) {
               if (state is MotelDetailLoaded && state.needsReloadHome) {
-                blocContext.read<HomePageBloc>().add(LoadMotels());
+                blocContext.read<HomePageBloc>().add(
+                  LoadMotels(isRefresh: true),
+                );
                 Navigator.pop(blocContext, true);
               } else if (state is MotelDetailError) {
                 ScaffoldMessenger.of(blocContext).showSnackBar(
