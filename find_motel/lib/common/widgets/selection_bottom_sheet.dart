@@ -1,9 +1,7 @@
-import 'dart:math';
 
 import 'package:find_motel/common/models/filter_option.dart';
 import 'package:find_motel/theme/app_colors.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 
 class CommonBottomSheet extends StatefulWidget {
   final String title;

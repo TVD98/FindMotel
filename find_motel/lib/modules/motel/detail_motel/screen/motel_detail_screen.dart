@@ -4,6 +4,8 @@ import 'package:find_motel/common/models/deal.dart';
 import 'package:find_motel/common/models/motel.dart';
 import 'package:find_motel/managers/app_data_manager.dart';
 import 'package:find_motel/modules/deal_manager/screens/deal_detail_screen.dart';
+import 'package:find_motel/modules/motel/edit_motel/bloc/edit_motel_bloc.dart';
+import 'package:find_motel/modules/motel/edit_motel/screen/edit_motel_screen.dart';
 import 'package:find_motel/services/firestore/firestore_service.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -11,7 +13,6 @@ import 'package:intl/intl.dart';
 import 'package:find_motel/theme/app_colors.dart';
 import 'package:find_motel/theme/app_textStyle.dart';
 import 'package:find_motel/common/widgets/common_app_bar.dart';
-import 'package:find_motel/modules/motel/edit_motel/edit_motel_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_bloc.dart';
 import 'package:find_motel/modules/home_page/bloc/home_page_event.dart';
@@ -184,19 +185,16 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
                             if (isCanEdit)
                               IconButton(
                                 onPressed: () async {
-                                  final bool? result = await Navigator.push(
+                                  Navigator.push(
                                     blocContext,
                                     MaterialPageRoute(
-                                      builder: (_) => EditMotelScreen(
-                                        motel: currentMotelDetail,
-                                      ),
-                                    ),
+                                    builder: (context) => BlocProvider(
+                                     create: (context) => EditMotelBloc(),
+                                     child : EditMotelScreen(
+                                      motel: state.motelDetail,
+                                    )),
+                                  )
                                   );
-                                  if (result == true) {
-                                    blocContext.read<MotelDetailBloc>().add(
-                                      MotelDetailMotelUpdated(),
-                                    );
-                                  }
                                 },
                                 icon: const Icon(
                                   Icons.edit,
