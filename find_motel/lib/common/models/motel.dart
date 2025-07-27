@@ -18,13 +18,33 @@ enum RentalStatus {
   }
 }
 
+class Fee {
+  final String name;
+  final double price;
+  final String unit;
+
+  const Fee({required this.name, required this.price, required this.unit});
+
+  factory Fee.fromMap(Map<String, dynamic> map) {
+    return Fee(
+      name: map['name'] ?? '',
+      price: (map['price'] as num?)?.toDouble() ?? 0.0,
+      unit: map['unit'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {'name': name, 'price': price, 'unit': unit};
+  }
+}
+
 class Motel {
   final int? createdAt;
   final String id;
   final String address;
   final String commission;
   final List<String> extensions;
-  final List<Map<String, dynamic>> fees;
+  final List<Fee> fees;
   final LatLng geoPoint;
   final String name;
   final List<String> note;
@@ -63,7 +83,7 @@ class Motel {
       'address': address,
       'commission': commission,
       'extensions': extensions,
-      'fees': fees,
+      'fees': fees.map((fee) => fee.toMap()).toList(),
       'geo_point': GeoPoint(geoPoint.latitude, geoPoint.longitude),
       'name': name,
       'note': note,
@@ -85,7 +105,7 @@ class Motel {
       address: map['address'] ?? '',
       commission: map['commission'] ?? '',
       extensions: List<String>.from(map['extensions'] ?? []),
-      fees: List<Map<String, dynamic>>.from(map['fees'] ?? []),
+      fees: List<Fee>.from(map['fees'] ?? []),
       geoPoint: map['geo_point'] is GeoPoint
           ? LatLng(map['geo_point'].latitude, map['geo_point'].longitude)
           : const LatLng(0, 0),

@@ -154,7 +154,7 @@ class FirestoreService
       address: data['address'] as String? ?? '',
       commission: data['commission']?.toString() ?? '',
       extensions: List<String>.from(data['extensions'] ?? const []),
-      fees: List<Map<String, dynamic>>.from(data['fees'] ?? const []),
+      fees: List<Map<String, dynamic>>.from(data['fees']).map((fee) => Fee.fromMap(fee)).toList(),
       geoPoint: LatLng(geoPoint.latitude, geoPoint.longitude),
       name: data['name'] as String? ?? '',
       note: List<String>.from(data['note'] ?? const []),

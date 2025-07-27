@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:find_motel/common/models/motel.dart';
 import 'package:find_motel/extensions/double_extensions.dart';
+import 'package:find_motel/managers/app_data_manager.dart';
 import 'package:find_motel/managers/cubit/cubit.dart';
 import 'package:find_motel/modules/motel/detail_motel/screen/motel_detail_screen.dart';
 import 'package:find_motel/modules/filter/quickly_filter.dart';
@@ -7,6 +10,7 @@ import 'package:find_motel/modules/map_page/bloc/map_page_bloc.dart';
 import 'package:find_motel/modules/map_page/bloc/map_page_state.dart';
 import 'package:find_motel/modules/map_page/bloc/map_page_event.dart';
 import 'package:find_motel/services/motel/models/motels_filter.dart';
+import 'package:find_motel/services/reload_service.dart';
 import 'package:find_motel/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -22,6 +26,7 @@ class MapPage extends StatefulWidget {
 
 class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
   late GoogleMapController mapController;
+  late final StreamSubscription<bool> _reloadSubscription;
   final ScrollController _scrollController = ScrollController();
   final LatLng _defaultCenter = const LatLng(
     10.762622,
@@ -36,8 +41,23 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
   bool get wantKeepAlive => true;
 
   @override
+  void initState() {
+    super.initState();
+    _reloadSubscription = ReloadService.reloadStream.listen((needsReload) {
+      if (needsReload) {
+        _fetchMotels();
+      }
+    });
+  }
+
+  Future<void> _fetchMotels() async {
+    context.read<MapBloc>().add(FilterMotelsEvent(filter: AppDataManager().filterMotels, isRefresh: true));
+  }
+
+  @override
   void dispose() {
     _scrollController.dispose();
+    _reloadSubscription.cancel();
     super.dispose();
   }
 
@@ -57,7 +77,7 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
     super.build(context);
     return BlocListener<MotelsFilterCubit, MotelsFilter>(
       listener: (context, filter) {
-        context.read<MapBloc>().add(FilterMotelsEvent(filter: filter));
+        context.read<MapBloc>().add(FilterMotelsEvent(filter: filter, isRefresh: false));
       },
       child: BlocConsumer<MapBloc, MapState>(
         listener: (context, state) {
@@ -116,7 +136,6 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
                               MaterialPageRoute(
                                 builder: (context) => MotelDetailScreen(
                                   detail: motelCard,
-                                  isBottomSheet: false,
                                 ),
                               ),
                             );

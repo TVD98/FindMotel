@@ -111,16 +111,16 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
     final waterPrice = (json['water'] as String).toPrice();
     final otherPrice = (json['other'] as String).toPrice();
     final List<String> extensions = [];
-    final List<Map<String, dynamic>> fees = [
-      {'name': 'Điện', 'price': electricityPrice * 1000, 'unit': 'số'},
-      {'name': 'Nước', 'price': waterPrice * 1000, 'unit': 'người'},
-      {'name': 'Phí dịch vụ', 'price': otherPrice * 1000, 'unit': 'người'},
+    final List<Fee> fees = [
+      Fee(name: 'Điện', price: electricityPrice * 1000, unit: 'số'),
+      Fee(name: 'Nước', price: waterPrice * 1000, unit: 'người'),
+      Fee(name: 'Phí dịch vụ', price: otherPrice * 1000, unit: 'người'),
     ];
     if ((json['elevator'] as String).toBoolean()) extensions.add('Thang máy');
     if (carDeposit == 0) {
       extensions.add('Xe');
     } else {
-      fees.add({'name': 'Xe', 'price': carDeposit, 'unit': 'người'});
+      fees.add(Fee(name: 'Xe', price: carDeposit, unit: 'người'));
     }
 
     return Motel(

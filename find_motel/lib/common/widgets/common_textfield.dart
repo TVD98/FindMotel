@@ -16,6 +16,7 @@ class CommonTextfield extends StatefulWidget {
   final List<TextInputFormatter>? inputFormatters;
   final TextFieldStyle style;
   final Color? titleBackground;
+  final int maxLines;
 
   const CommonTextfield({
     super.key,
@@ -27,6 +28,7 @@ class CommonTextfield extends StatefulWidget {
     this.inputFormatters,
     this.style = TextFieldStyle.large,
     this.titleBackground,
+    this.maxLines = 1,
   });
 
   @override
@@ -133,6 +135,7 @@ class _CommonTextfieldState extends State<CommonTextfield> {
             fontSize: textFieldFontSize,
             fontWeight: textFieldFontWeight,
           ),
+          maxLines: widget.maxLines,
           decoration: InputDecoration(
             hintText: widget.hintText ?? '',
             contentPadding: contentPadding,

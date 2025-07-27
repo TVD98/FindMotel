@@ -110,81 +110,87 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                       ),
                     ],
                   ),
-                  body: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 25),
-                        Row(
+                  body: GestureDetector(
+                    behavior: HitTestBehavior.translucent,
+                    onTap: () => FocusScope.of(context).unfocus(),
+                    child: SingleChildScrollView(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            const SizedBox(height: 25),
+                            Row(
+                              children: [
+                                Text(
+                                  widget.deal.motelName,
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                                SvgPicture.asset(
+                                  'assets/images/ic_arrow_right.svg',
+                                  width: 32,
+                                  height: 32,
+                                  colorFilter: ColorFilter.mode(
+                                    AppColors.primary,
+                                    BlendMode.srcIn,
+                                  ),
+                                ),
+                              ],
+                            ),
                             Text(
-                              widget.deal.motelName,
+                              state.motelAddress,
                               style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.primary,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w400,
+                                color: AppColors.tertiary,
                               ),
                             ),
-                            SvgPicture.asset(
-                              'assets/images/ic_arrow_right.svg',
-                              width: 32,
-                              height: 32,
-                              colorFilter: ColorFilter.mode(
-                                AppColors.primary,
-                                BlendMode.srcIn,
+                            _divider(),
+                            Center(
+                              child: Text(
+                                'Thông Tin Khách Hàng',
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.primary,
+                                ),
                               ),
                             ),
+                            const SizedBox(height: 25),
+                            CommonTextfield(
+                              controller: nameController,
+                              title: 'Họ và tên',
+                              enabled: !state.isViewMode,
+                            ),
+                            const SizedBox(height: 16),
+                            CommonTextfield(
+                              controller: phoneController,
+                              title: 'Số điện thoại',
+                              keyboardType: TextInputType.phone,
+                              enabled: !state.isViewMode,
+                            ),
+                            const SizedBox(height: 16),
+                            CommonTextfield(
+                              controller: priceController,
+                              title: 'Mức giá thỏa thuận',
+                              keyboardType: TextInputType.number,
+                              enabled: !state.isViewMode,
+                            ),
+                            const SizedBox(height: 16),
+                            CommonTextfield(
+                              controller: scheduleController,
+                              title: 'Lịch hẹn',
+                              enabled: !state.isViewMode,
+                              inputFormatters: [dateMaskFormatter],
+                            ),
+                            const SizedBox(height: 16),
                           ],
                         ),
-                        Text(
-                          state.motelAddress,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w400,
-                            color: AppColors.tertiary,
-                          ),
-                        ),
-                        _divider(),
-                        Center(
-                          child: Text(
-                            'Thông Tin Khách Hàng',
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 25),
-                        CommonTextfield(
-                          controller: nameController,
-                          title: 'Họ và tên',
-                          enabled: !state.isViewMode,
-                        ),
-                        const SizedBox(height: 16),
-                        CommonTextfield(
-                          controller: phoneController,
-                          title: 'Số điện thoại',
-                          keyboardType: TextInputType.phone,
-                          enabled: !state.isViewMode,
-                        ),
-                        const SizedBox(height: 16),
-                        CommonTextfield(
-                          controller: priceController,
-                          title: 'Mức giá thỏa thuận',
-                          keyboardType: TextInputType.number,
-                          enabled: !state.isViewMode,
-                        ),
-                        const SizedBox(height: 16),
-                        CommonTextfield(
-                          controller: scheduleController,
-                          title: 'Lịch hẹn',
-                          enabled: !state.isViewMode,
-                          inputFormatters: [dateMaskFormatter],
-                        ),
-                        const SizedBox(height: 16),
-                      ],
+                      ),
                     ),
                   ),
                 ),
@@ -204,7 +210,11 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
   Widget _divider() =>
       const Divider(height: 50.0, thickness: 1.0, color: AppColors.strokeLight);
 
-  void _showErrorDialog(BuildContext context, String errorMessage, VoidCallback? onRetry) {
+  void _showErrorDialog(
+    BuildContext context,
+    String errorMessage,
+    VoidCallback? onRetry,
+  ) {
     showDialog(
       context: context,
       builder: (BuildContext context) {

@@ -108,6 +108,9 @@ class MapBloc extends Bloc<MapEvent, MapState> {
         emit(state.copyWith(isLoading: false, error: result.error));
         return;
       }
+      if (event.isRefresh) {
+        _markerCache.clear();
+      }
       await _loadMarkers(result.motels!, emit);
     } catch (e) {
       emit(

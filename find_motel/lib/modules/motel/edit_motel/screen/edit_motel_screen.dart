@@ -1,13 +1,15 @@
-import 'dart:ui';
-
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:find_motel/common/widgets/edit_images_screen.dart';
+import 'package:find_motel/common/models/filter_option.dart';
+import 'package:find_motel/common/widgets/common_selection_view.dart';
+import 'package:find_motel/common/widgets/common_textfield.dart';
+import 'package:find_motel/common/widgets/motel_images_view.dart';
+import 'package:find_motel/common/widgets/selection_bottom_sheet.dart';
+import 'package:find_motel/extensions/double_extensions.dart';
 import 'package:find_motel/managers/app_data_manager.dart';
+import 'package:find_motel/modules/motel/edit_motel/screen/motel_fees_form.dart';
 import 'package:find_motel/theme/app_textStyle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
 import 'package:find_motel/common/models/motel.dart';
 import 'package:find_motel/theme/app_colors.dart';
 import 'package:find_motel/services/reload_service.dart';
@@ -17,6 +19,7 @@ import 'package:find_motel/modules/motel/edit_motel/bloc/edit_motel_bloc.dart';
 import 'package:find_motel/modules/motel/edit_motel/bloc/edit_motel_event.dart';
 import 'package:find_motel/modules/motel/edit_motel/bloc/edit_motel_state.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class EditMotelScreen extends StatefulWidget {
   final Motel motel;
@@ -29,50 +32,25 @@ class EditMotelScreen extends StatefulWidget {
 class _EditMotelScreenState extends State<EditMotelScreen> {
   // Thay thế TextEditingController bằng Bloc
   late TextEditingController nameController;
-  late TextEditingController roomCodeController;
-  late TextEditingController typeController;
-  late TextEditingController textureController;
   late TextEditingController commissionController;
   late TextEditingController priceController;
   late TextEditingController addressController;
-  late TextEditingController electricityController;
-  late TextEditingController waterController;
   late TextEditingController noteController;
 
   @override
   void initState() {
     super.initState();
     // Khởi tạo các controller và lắng nghe thay đổi để dispatch events
-    nameController = TextEditingController();
-    roomCodeController = TextEditingController();
-    typeController = TextEditingController();
-    textureController = TextEditingController();
-    commissionController = TextEditingController();
-    priceController = TextEditingController();
-    addressController = TextEditingController();
-    electricityController = TextEditingController();
-    waterController = TextEditingController();
-    noteController = TextEditingController();
+    nameController = TextEditingController(text: widget.motel.name);
+    commissionController = TextEditingController(text: widget.motel.commission);
+    priceController = TextEditingController(text: widget.motel.price.toVND());
+    addressController = TextEditingController(text: widget.motel.address);
+    noteController = TextEditingController(text: widget.motel.note.join('\n'));
 
     // Lắng nghe thay đổi trên controller và dispatch event
     nameController.addListener(() {
       context.read<EditMotelBloc>().add(
         EditMotelNameChanged(nameController.text),
-      );
-    });
-    roomCodeController.addListener(() {
-      context.read<EditMotelBloc>().add(
-        EditMotelRoomCodeChanged(roomCodeController.text),
-      );
-    });
-    typeController.addListener(() {
-      context.read<EditMotelBloc>().add(
-        EditMotelTypeChanged(typeController.text),
-      );
-    });
-    textureController.addListener(() {
-      context.read<EditMotelBloc>().add(
-        EditMotelTextureChanged(textureController.text),
       );
     });
     commissionController.addListener(() {
@@ -90,16 +68,6 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
         EditMotelAddressChanged(addressController.text),
       );
     });
-    electricityController.addListener(() {
-      context.read<EditMotelBloc>().add(
-        EditMotelElectricityChanged(electricityController.text),
-      );
-    });
-    waterController.addListener(() {
-      context.read<EditMotelBloc>().add(
-        EditMotelWaterChanged(waterController.text),
-      );
-    });
     noteController.addListener(() {
       context.read<EditMotelBloc>().add(
         EditMotelNoteChanged(noteController.text),
@@ -114,27 +82,16 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
   void dispose() {
     // Đảm bảo dispose các controller
     nameController.dispose();
-    roomCodeController.dispose();
-    typeController.dispose();
-    textureController.dispose();
     commissionController.dispose();
     priceController.dispose();
     addressController.dispose();
-    electricityController.dispose();
-    waterController.dispose();
     noteController.dispose();
     super.dispose();
   }
 
-  // Loại bỏ _setMainImage vì logic này sẽ được xử lý trong BLoC qua event
-  // void _setMainImage(String img) {
-  //   setState(() {
-  //     mainImage = img;
-  //   });
-  // }
-
   Future<void> _showSelectExtensionsDialog(
     List<String> currentExtensions,
+    Function(List<String>) onDone,
   ) async {
     final allExtensions = AppDataManager().allAmenities;
     List<String> tempSelected = List<String>.from(currentExtensions);
@@ -179,11 +136,12 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
                           return ChoiceChip(
                             label: Text(e),
                             selected: isSelected,
-                            selectedColor: AppColors.primaryContainer,
+                            selectedColor: AppColors.secondaryContainer,
                             backgroundColor: AppColors.surface,
+                            showCheckmark: false,
                             labelStyle: AppTextStyle.body.copyWith(
                               color: isSelected
-                                  ? AppColors.onPrimary
+                                  ? AppColors.onSecondaryContainer
                                   : AppColors.elementSecondary,
                             ),
                             onSelected: (selected) {
@@ -228,170 +186,11 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
                     ),
                   ),
                   onPressed: () {
-                    context.read<EditMotelBloc>().add(
-                      EditMotelExtensionsUpdated(tempSelected),
-                    );
+                    onDone(tempSelected);
                     Navigator.pop(context);
                   },
                   child: Text(
-                    'Thêm',
-                    style: AppTextStyle.smallLabel.copyWith(
-                      color: AppColors.onPrimary,
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Future<void> _showAddFeeDialog() async {
-    final nameControllerDialog = TextEditingController();
-    final priceControllerDialog = TextEditingController();
-    String selectedUnit = 'người';
-    final units = ['người', 'phòng', 'tháng', 'lần'];
-
-    await showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setStateDialog) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              title: Text(
-                'Thêm Phí Dịch Vụ',
-                style: AppTextStyle.heading5.copyWith(color: AppColors.primary),
-              ),
-              content: ConstrainedBox(
-                constraints: BoxConstraints(minWidth: 326, maxWidth: 326),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextField(
-                      controller: nameControllerDialog,
-                      style: GoogleFonts.quicksand(fontSize: 15),
-                      decoration: InputDecoration(
-                        labelText: 'Tên phí',
-                        labelStyle: AppTextStyle.label.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: AppFontWeight.medium,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide(color: AppColors.primary),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: priceControllerDialog,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      style: GoogleFonts.quicksand(fontSize: 15),
-                      decoration: InputDecoration(
-                        labelText: 'Số tiền',
-                        labelStyle: AppTextStyle.label.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: AppFontWeight.medium,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide(color: AppColors.primary),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    DropdownButtonFormField<String>(
-                      value: selectedUnit,
-                      elevation: 32,
-                      style: AppTextStyle.body.copyWith(
-                        color: AppColors.elementPrimary,
-                      ),
-                      dropdownColor: AppColors.onSurface1,
-                      decoration: InputDecoration(
-                        labelText: 'Đơn vị',
-                        labelStyle: AppTextStyle.label.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: AppFontWeight.medium,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide(color: AppColors.primary),
-                        ),
-                      ),
-                      items: units.map((unit) {
-                        return DropdownMenuItem(
-                          value: unit,
-                          child: Text(unit),
-                          enabled: unit != selectedUnit,
-                          alignment: Alignment.topLeft,
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setStateDialog(() {
-                          selectedUnit = value!;
-                        });
-                      },
-                      icon: SvgPicture.asset(
-                        'assets/images/ic_arrow_down.svg',
-                        width: 32,
-                        height: 32,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(
-                    'Hủy',
-                    style: AppTextStyle.smallLabel.copyWith(
-                      color: AppColors.tertiary,
-                    ),
-                  ),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  onPressed: () {
-                    final name = nameControllerDialog.text.trim();
-                    final price = priceControllerDialog.text.trim();
-
-                    if (name.isNotEmpty && price.isNotEmpty) {
-                      context.read<EditMotelBloc>().add(
-                        EditMotelCustomFeeAdded(
-                          name: name,
-                          price: price,
-                          unit: selectedUnit,
-                        ),
-                      );
-                      Navigator.pop(context);
-                    }
-                  },
-                  child: Text(
-                    'Thêm',
+                    'Lưu',
                     style: AppTextStyle.smallLabel.copyWith(
                       color: AppColors.onPrimary,
                     ),
@@ -510,27 +309,13 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
             padding: const EdgeInsets.all(16),
             child: BlocBuilder<EditMotelBloc, EditMotelState>(
               builder: (context, state) {
-                // Cập nhật giá trị cho các controller khi trạng thái thay đổi
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  nameController.text = state.name;
-                  roomCodeController.text = state.roomCode;
-                  typeController.text = state.type;
-                  textureController.text = state.texture;
-                  commissionController.text = state.commission;
-                  priceController.text = state.price;
-                  addressController.text = state.address;
-                  electricityController.text = state.electricity;
-                  waterController.text = state.water;
-                  noteController.text = state.note;
-                });
-
-                final _isLoading = state.status == EditMotelStatus.loading;
-                final _isDeleting = state.status == EditMotelStatus.deleting;
+                final isLoading = state.status == EditMotelStatus.loading;
+                final isDeleting = state.status == EditMotelStatus.deleting;
 
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildImageSection(context, state.mainImage, state.images),
+                    _buildImageSection(state.images),
                     const SizedBox(height: 16),
                     _divider(),
                     const SizedBox(height: 8),
@@ -541,7 +326,7 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    _buildBasicInfoSection(),
+                    _buildBasicInfoSection(state),
                     const SizedBox(height: 16),
                     _divider(),
                     const SizedBox(height: 8),
@@ -562,9 +347,18 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
                         color: AppColors.primary,
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    _buildFeesSection(context, state.customFees),
                     const SizedBox(height: 16),
+                    _buildFeesSection(state.customFees),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Toạ độ:',
+                      style: AppTextStyle.subtitle.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildLocationSection(state.location),
+                    const SizedBox(height: 8),
                     _divider(),
                     const SizedBox(height: 8),
                     Text(
@@ -582,7 +376,7 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               minimumSize: const Size.fromHeight(48),
-                              backgroundColor: (_isLoading || _isDeleting)
+                              backgroundColor: (isLoading || isDeleting)
                                   ? Colors.grey
                                   : AppColors.onPrimary,
                               foregroundColor: Colors.white,
@@ -590,7 +384,7 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
                                 borderRadius: BorderRadius.circular(10),
                               ),
                             ),
-                            onPressed: (_isLoading || _isDeleting)
+                            onPressed: (isLoading || isDeleting)
                                 ? null
                                 : () async {
                                     final shouldDelete = await showDialog<bool>(
@@ -677,7 +471,7 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
                                       );
                                     }
                                   },
-                            child: _isDeleting
+                            child: isDeleting
                                 ? Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
@@ -709,7 +503,7 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               minimumSize: const Size.fromHeight(48),
-                              backgroundColor: (_isLoading || _isDeleting)
+                              backgroundColor: (isLoading || isDeleting)
                                   ? Colors.grey
                                   : AppColors.primary,
                               textStyle: const TextStyle(
@@ -721,14 +515,14 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
                                 borderRadius: BorderRadius.circular(10),
                               ),
                             ),
-                            onPressed: (_isLoading || _isDeleting)
+                            onPressed: (isLoading || isDeleting)
                                 ? null
                                 : () {
                                     context.read<EditMotelBloc>().add(
                                       const EditMotelSubmitted(),
                                     );
                                   },
-                            child: _isLoading
+                            child: isLoading
                                 ? Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
@@ -767,130 +561,48 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
     );
   }
 
-  // Chuyển các hàm xây dựng Widget thành phương thức của class
-  Widget _buildImageSection(
-    BuildContext context,
-    String mainImage,
-    List<String> images,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Ảnh lớn
-        ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: mainImage.isNotEmpty
-              ? CachedNetworkImage(
-                  imageUrl: mainImage,
-                  height: 140,
-                  width: 246,
-                  fit: BoxFit.cover,
-                )
-              : Container(
-                  height: 140,
-                  color: Colors.grey[200],
-                  child: const Icon(Icons.image, size: 40, color: Colors.grey),
-                ),
-        ),
-        const SizedBox(height: 12),
-        // Gallery ảnh nhỏ
-        SizedBox(
-          height: 56,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            children: [
-              ...images.map((img) {
-                final isSelected = img == mainImage;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(8),
-                      onTap: () => context.read<EditMotelBloc>().add(
-                        EditMotelMainImageChanged(img),
-                      ),
-                      child: Container(
-                        width: 60,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          border: isSelected
-                              ? Border.all(color: AppColors.primary, width: 1)
-                              : null,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: CachedNetworkImage(
-                            imageUrl: img,
-                            width: 60,
-                            height: 48,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
-              // Nút thêm ảnh
-              Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(8),
-                  onTap: () async {
-                    final result = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            ImageDisplayScreen(initialImages: images),
-                      ),
-                    );
-                    if (result is List<String> && result.isNotEmpty) {
-                      context.read<EditMotelBloc>().add(
-                        EditMotelImagesUpdated(result),
-                      );
-                    }
-                  },
-                  child: Container(
-                    width: 60,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey[400]!),
-                    ),
-                    child: const Icon(
-                      Icons.add_a_photo,
-                      color: Colors.grey,
-                      size: 20,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+  Widget _buildImageSection(List<String> images) {
+    return MotelImagesView(
+      imageUrls: images,
+      isCanEdit: true,
+      onImagesChanged: (images) {
+        context.read<EditMotelBloc>().add(EditMotelImagesUpdated(images));
+      },
     );
   }
 
-  Widget _buildBasicInfoSection() {
+  Widget _buildBasicInfoSection(EditMotelState state) {
     return Column(
       children: [
-        Row(
-          children: [
-            Expanded(child: _buildTextField('Tên căn hộ', nameController)),
-            const SizedBox(width: 24),
-            Expanded(child: _buildTextField('Mã phòng', roomCodeController)),
-          ],
-        ),
+        _buildTextField('Tên căn hộ', nameController),
         const SizedBox(height: 24),
         Row(
           children: [
-            Expanded(child: _buildTextField('Kiểu phòng', typeController)),
+            Expanded(
+              child: _buildSelectionView(
+                'Kiểu phòng',
+                state.type,
+                ['Không cửa sổ, ban công', ...AppDataManager().allRoomTypies],
+                (options) {
+                  context.read<EditMotelBloc>().add(
+                    EditMotelTypeChanged(options.first.name),
+                  );
+                },
+              ),
+            ),
             const SizedBox(width: 24),
-            Expanded(child: _buildTextField('Kết cấu', textureController)),
+            Expanded(
+              child: _buildSelectionView(
+                'Kết cấu',
+                state.texture,
+                AppDataManager().allTexturies,
+                (options) {
+                  context.read<EditMotelBloc>().add(
+                    EditMotelTextureChanged(options.first.name),
+                  );
+                },
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 24),
@@ -903,7 +615,6 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
                 'Giá thuê',
                 priceController,
                 keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               ),
             ),
           ],
@@ -921,34 +632,46 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
     TextInputType keyboardType = TextInputType.text,
     List<TextInputFormatter>? inputFormatters,
   }) {
-    return TextField(
+    return CommonTextfield(
       controller: controller,
+      title: label,
       maxLines: maxLines,
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
-      style: AppTextStyle.body.copyWith(color: AppColors.elementSecondary),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: AppTextStyle.label.copyWith(color: AppColors.primary),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(6),
-          borderSide: const BorderSide(
-            color: AppColors.strokeLight,
-            width: 1.0,
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(6),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.0),
-        ),
-      ),
+      titleBackground: Theme.of(context).scaffoldBackgroundColor,
     );
   }
 
-  /*************  ✨ Windsurf Command ⭐  *************/
-  /// Creates a divider widget with a light stroke color, thickness of 1, and height of 17.
+  Widget _buildSelectionView(
+    String label,
+    String value,
+    List<String> items,
+    ValueChanged<List<FilterOption>> onApply,
+  ) {
+    final allOptions = items.map((e) => FilterOption(id: e, name: e)).toList();
+    final selectedOptions = [FilterOption(id: value, name: value)];
 
-  /*******  d9b4fabf-c17d-4dbd-8c86-73b958f7f6db  *******/
+    return CommonSelectionView(
+      title: label,
+      value: value,
+      titleBackground: Theme.of(context).scaffoldBackgroundColor,
+      onTap: () {
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          builder: (_) {
+            return CommonBottomSheet(
+              title: label,
+              options: allOptions,
+              initialSelectedOptions: selectedOptions,
+              onApply: onApply,
+            );
+          },
+        );
+      },
+    );
+  }
+
   Widget _divider() {
     return const Divider(
       color: AppColors.strokeLight,
@@ -969,16 +692,19 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
           runSpacing: 8,
           children: selectedExtensions.map((e) {
             return Chip(
-              padding: const EdgeInsets.symmetric(horizontal: 12.0,vertical: 6.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12.0,
+                vertical: 6.0,
+              ),
               label: Text(e),
               labelStyle: AppTextStyle.body.copyWith(
                 color: AppColors.elementHighlight,
               ),
               side: const BorderSide(color: AppColors.strokeLight, width: 1.0),
-              deleteIcon: const Icon(
-                Icons.delete_outline,
-                size: 20,
-                color: AppColors.error,
+              deleteIcon: SvgPicture.asset(
+                'assets/images/ic_trash.svg',
+                width: 16,
+                height: 16,
               ),
               onDeleted: () {
                 final updatedExtensions = List<String>.from(selectedExtensions)
@@ -994,7 +720,12 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
         Align(
           alignment: Alignment.centerRight,
           child: OutlinedButton.icon(
-            onPressed: () => _showSelectExtensionsDialog(selectedExtensions),
+            onPressed: () =>
+                _showSelectExtensionsDialog(selectedExtensions, (extensions) {
+                  context.read<EditMotelBloc>().add(
+                    EditMotelExtensionsUpdated(extensions),
+                  );
+                }),
             icon: const Icon(
               Icons.add_circle_outline,
               color: AppColors.onSecondary,
@@ -1020,153 +751,137 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
     );
   }
 
-  Widget _buildFeesSection(
-    BuildContext context,
-    List<Map<String, dynamic>> customFees,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Phí điện
-        _buildFeeItem(
-          'Điện',
-          electricityController,
-          'số',
-          keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-        ),
-        const SizedBox(height: 12),
-        // Phí nước
-        _buildFeeItem(
-          'Nước',
-          waterController,
-          'người',
-          keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-        ),
-        const SizedBox(height: 12),
-        // Các phí tùy chỉnh
-        ...customFees.asMap().entries.map((entry) {
-          final index = entry.key;
-          final fee = entry.value;
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12.0),
-            child: _buildCustomFeeItem(
-              fee['name'],
-              fee['price'].toString(),
-              fee['unit'],
-              () {
-                context.read<EditMotelBloc>().add(
-                  EditMotelCustomFeeRemoved(index),
-                );
-              },
-            ),
-          );
-        }).toList(),
-        Align(
-          alignment: Alignment.centerRight,
-          child: OutlinedButton.icon(
-            onPressed: _showAddFeeDialog,
-            icon: const Icon(
-              Icons.add_circle_outline,
-              color: AppColors.onSecondary,
-            ),
-            label: Text(
-              'Thêm phí khác',
-              style: AppTextStyle.smallLabel.copyWith(
-                color: AppColors.onPrimary,
-                fontSize: 13,
-              ),
-            ),
-            style: OutlinedButton.styleFrom(
-              backgroundColor: AppColors.secondary,
-              foregroundColor: AppColors.tertiary,
-              side: const BorderSide(color: AppColors.strokeLight, width: 1.0),
+  Widget _buildFeesSection(List<Fee> customFees) {
+    return MotelFeesForm(
+      fees: customFees,
+      onFeeAdded: (fee) {
+        context.read<EditMotelBloc>().add(
+          EditMotelFeeAdded(
+            Fee(name: fee.name, price: fee.price, unit: fee.unit),
+          ),
+        );
+      },
+      onFeeDeleted: (fee) {
+        context.read<EditMotelBloc>().add(
+          EditMotelFeeDeleted(
+            Fee(name: fee.name, price: fee.price, unit: fee.unit),
+          ),
+        );
+      },
+      onFeeUpdated: (fee) {
+        context.read<EditMotelBloc>().add(
+          EditMotelFeeUpdated(
+            Fee(name: fee.name, price: fee.price, unit: fee.unit),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildLocationSection(LatLng? location) {
+    return CommonSelectionView(
+      title: '',
+      value:
+          '${location?.latitude.toStringAsFixed(6)} - ${location?.longitude.toStringAsFixed(6)}',
+      titleBackground: Theme.of(context).scaffoldBackgroundColor,
+      suffixIcon: const Icon(Icons.map, color: AppColors.primary),
+      onTap: () async {
+        final result = await _showEditLocationDialog(location);
+        if (result != null && mounted) {
+          context.read<EditMotelBloc>().add(EditMotelLocationUpdated(result));
+        }
+      },
+    );
+  }
+
+  Future<LatLng?> _showEditLocationDialog(LatLng? location) async {
+    final latitudeControllerDialog = TextEditingController(
+      text: location?.latitude.toString(),
+    );
+    final longitudeControllerDialog = TextEditingController(
+      text: location?.longitude.toString(),
+    );
+    final result = await showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(16),
               ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFeeItem(
-    String name,
-    TextEditingController controller,
-    String unit, {
-    TextInputType keyboardType = TextInputType.text,
-    List<TextInputFormatter>? inputFormatters,
-  }) {
-    return Stack(
-      alignment: Alignment.centerRight,
-      children: [
-        Expanded(
-          flex: 3,
-          child: _buildTextField(
-            name,
-            controller,
-            keyboardType: keyboardType,
-            inputFormatters: inputFormatters,
-          ),
-        ),
-        Expanded(
-          flex: 1,
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(10)),
-            child: Text(
-              '/$unit',
-              style: AppTextStyle.body.copyWith(
-                color: AppColors.elementSecondary,
+              title: Text(
+                'Chỉnh sửa tọa độ',
+                style: AppTextStyle.heading5.copyWith(color: AppColors.primary),
               ),
-              textAlign: TextAlign.left,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+              content: ConstrainedBox(
+                constraints: BoxConstraints(minWidth: 326, maxWidth: 326),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CommonTextfield(
+                      controller: latitudeControllerDialog,
+                      title: 'Latitude',
+                      titleBackground: Theme.of(
+                        context,
+                      ).scaffoldBackgroundColor,
+                    ),
+                    const SizedBox(height: 16),
+                    CommonTextfield(
+                      controller: longitudeControllerDialog,
+                      title: 'Longitude',
+                      titleBackground: Theme.of(
+                        context,
+                      ).scaffoldBackgroundColor,
+                    ),
+                  ],
+                ),
+              ),
 
-  Widget _buildCustomFeeItem(
-    String name,
-    String price,
-    String unit,
-    VoidCallback onDelete,
-  ) {
-    final formatter = NumberFormat('#,##0', 'vi_VN');
-    final formattedPrice = formatter.format(int.tryParse(price) ?? 0);
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(
+                    'Hủy',
+                    style: AppTextStyle.smallLabel.copyWith(
+                      color: AppColors.tertiary,
+                    ),
+                  ),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onPressed: () {
+                    final latitude = latitudeControllerDialog.text.trim();
+                    final longitude = longitudeControllerDialog.text.trim();
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      height: 60,
-      decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.primary.withOpacity(0.2)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            child: Text(
-              '$name: $formattedPrice đ/$unit',
-              style: AppTextStyle.body.copyWith(color: AppColors.elementSecondary),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          IconButton(
-            icon: const Icon(
-              Icons.delete_outline,
-              color: AppColors.error,
-              size: 24,
-            ),
-            onPressed: onDelete,
-          ),
-        ],
-      ),
+                    if (latitude.isNotEmpty && longitude.isNotEmpty) {
+                      Navigator.pop(
+                        context,
+                        LatLng(double.parse(latitude), double.parse(longitude)),
+                      );
+                    }
+                  },
+                  child: Text(
+                    'Cập nhật',
+                    style: AppTextStyle.smallLabel.copyWith(
+                      color: AppColors.onPrimary,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
+    if (result is LatLng) return result;
+    return null;
   }
 
   Widget _buildNotesSection() {

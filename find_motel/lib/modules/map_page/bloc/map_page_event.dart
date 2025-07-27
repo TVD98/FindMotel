@@ -19,8 +19,9 @@ class FirstLoadMotelsEvent extends MapEvent {
 
 class FilterMotelsEvent extends MapEvent {
   final MotelsFilter filter;
+  final bool isRefresh;
 
-  const FilterMotelsEvent({required this.filter});
+  const FilterMotelsEvent({required this.filter, required this.isRefresh});
 
   @override
   List<Object> get props => [filter];

@@ -1,6 +1,7 @@
 import 'package:find_motel/common/widgets/common_alert_dialog.dart';
 import 'package:find_motel/modules/import_motels/bloc/import_motels_bloc.dart';
 import 'package:find_motel/modules/import_motels/bloc/import_motels_event.dart';
+import 'package:find_motel/services/reload_service.dart';
 import 'package:find_motel/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -149,8 +150,8 @@ class _ImportMotelsScreenState extends State<ImportMotelsScreen> {
               children: motel.fees
                   .map(
                     (fee) => _buildField(
-                      '${fee['name']}:',
-                      '${(fee['price'] as double).toVND()}/${fee['unit']}',
+                      '${fee.name}:',
+                      '${fee.price.toVND()}/${fee.unit}',
                       isTitle: false,
                       isExpand: true,
                     ),
@@ -245,6 +246,7 @@ class _ImportMotelsScreenState extends State<ImportMotelsScreen> {
           leadingActionTitle: 'Đóng',
           onLeadingPressed: () {
             Navigator.of(context).pop();
+            ReloadService.setHomeNeedsReload();
             Navigator.pop(context);
           },
         );

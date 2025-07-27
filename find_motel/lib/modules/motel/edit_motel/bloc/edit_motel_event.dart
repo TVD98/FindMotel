@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:find_motel/common/models/motel.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 abstract class EditMotelEvent extends Equatable {
   const EditMotelEvent();
@@ -13,13 +14,6 @@ class EditMotelNameChanged extends EditMotelEvent {
   const EditMotelNameChanged(this.name);
   @override
   List<Object> get props => [name];
-}
-
-class EditMotelRoomCodeChanged extends EditMotelEvent {
-  final String roomCode;
-  const EditMotelRoomCodeChanged(this.roomCode);
-  @override
-  List<Object> get props => [roomCode];
 }
 
 class EditMotelTypeChanged extends EditMotelEvent {
@@ -57,20 +51,6 @@ class EditMotelAddressChanged extends EditMotelEvent {
   List<Object> get props => [address];
 }
 
-class EditMotelElectricityChanged extends EditMotelEvent {
-  final String electricity;
-  const EditMotelElectricityChanged(this.electricity);
-  @override
-  List<Object> get props => [electricity];
-}
-
-class EditMotelWaterChanged extends EditMotelEvent {
-  final String water;
-  const EditMotelWaterChanged(this.water);
-  @override
-  List<Object> get props => [water];
-}
-
 class EditMotelNoteChanged extends EditMotelEvent {
   final String note;
   const EditMotelNoteChanged(this.note);
@@ -85,20 +65,25 @@ class EditMotelExtensionsUpdated extends EditMotelEvent {
   List<Object> get props => [extensions];
 }
 
-class EditMotelCustomFeeAdded extends EditMotelEvent {
-  final String name;
-  final String price;
-  final String unit;
-  const EditMotelCustomFeeAdded({required this.name, required this.price, required this.unit});
+class EditMotelFeeUpdated extends EditMotelEvent {
+  final Fee fee;
+  const EditMotelFeeUpdated(this.fee);
   @override
-  List<Object> get props => [name, price, unit];
+  List<Object> get props => [fee];
 }
 
-class EditMotelCustomFeeRemoved extends EditMotelEvent {
-  final int index;
-  const EditMotelCustomFeeRemoved(this.index);
+class EditMotelFeeAdded extends EditMotelEvent {
+  final Fee fee;
+  const EditMotelFeeAdded(this.fee);
   @override
-  List<Object> get props => [index];
+  List<Object> get props => [fee];
+}
+
+class EditMotelFeeDeleted extends EditMotelEvent {
+  final Fee fee;
+  const EditMotelFeeDeleted(this.fee);
+  @override
+  List<Object> get props => [fee];
 }
 
 class EditMotelImagesUpdated extends EditMotelEvent {
@@ -108,11 +93,11 @@ class EditMotelImagesUpdated extends EditMotelEvent {
   List<Object> get props => [images];
 }
 
-class EditMotelMainImageChanged extends EditMotelEvent {
-  final String mainImage;
-  const EditMotelMainImageChanged(this.mainImage);
+class EditMotelLocationUpdated extends EditMotelEvent {
+  final LatLng location;
+  const EditMotelLocationUpdated(this.location);
   @override
-  List<Object> get props => [mainImage];
+  List<Object> get props => [location];
 }
 
 class EditMotelSubmitted extends EditMotelEvent {
