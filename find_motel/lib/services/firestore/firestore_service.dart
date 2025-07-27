@@ -200,7 +200,7 @@ class FirestoreService
   }
 
   @override
-  Future<String?> updateMotelWithImages(Motel motel) async {
+  Future<({String? error, Motel? motel})> updateMotelWithImages(Motel motel) async {
     try {
       final json = motel.toMap();
       final List<String> keywords =
@@ -214,9 +214,9 @@ class FirestoreService
           .collection(FirestorePaths.motelsCollection)
           .doc(motel.id)
           .update(json);
-      return null;
+      return (error: null, motel: Motel.fromMap(json));
     } catch (e) {
-      return e.toString();
+      return (error: e.toString(), motel: null);
     }
   }
 

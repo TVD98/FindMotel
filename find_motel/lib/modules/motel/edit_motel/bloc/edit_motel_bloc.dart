@@ -2,7 +2,6 @@ import 'package:bloc/bloc.dart';
 import 'package:find_motel/common/models/motel.dart';
 import 'package:find_motel/services/firestore/firestore_service.dart';
 import 'package:find_motel/services/motel/motels_service.dart';
-import 'package:find_motel/services/reload_service.dart';
 
 import 'edit_motel_event.dart';
 import 'edit_motel_state.dart';
@@ -184,17 +183,15 @@ class EditMotelBloc extends Bloc<EditMotelEvent, EditMotelState> {
         marker: state.images.isNotEmpty
             ? state.images.first
             : '', // marker should be thumbnail URL
-        createdAt: state.initialMotel!.createdAt,
       );
 
-      final error = await _motelsService.updateMotelWithImages(updatedMotel);
+      final result = await _motelsService.updateMotelWithImages(updatedMotel);
 
-      if (error == null) {
-        ReloadService.setHomeNeedsReload();
-        emit(state.copyWith(status: EditMotelStatus.success));
+      if (result.error == null) {
+        emit(state.copyWith(status: EditMotelStatus.success, updatedMotel: result.motel));
       } else {
         emit(
-          state.copyWith(status: EditMotelStatus.failure, errorMessage: error),
+          state.copyWith(status: EditMotelStatus.failure, errorMessage: result.error),
         );
       }
     } catch (e) {
@@ -225,9 +222,8 @@ class EditMotelBloc extends Bloc<EditMotelEvent, EditMotelState> {
     try {
       final error = await _motelsService.deleteMotel(state.initialMotel!.id);
       if (error == null) {
-        ReloadService.setHomeNeedsReload();
         emit(
-          state.copyWith(status: EditMotelStatus.success),
+          state.copyWith(status: EditMotelStatus.success, updatedMotel: null),
         ); // Dùng success để biểu thị xóa thành công và quay về
       } else {
         emit(

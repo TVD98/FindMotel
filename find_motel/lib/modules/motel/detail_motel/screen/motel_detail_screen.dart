@@ -5,6 +5,7 @@ import 'package:find_motel/common/widgets/motel_images_view.dart';
 import 'package:find_motel/extensions/double_extensions.dart';
 import 'package:find_motel/managers/app_data_manager.dart';
 import 'package:find_motel/modules/deal_manager/screens/deal_detail_screen.dart';
+import 'package:find_motel/modules/motel/detail_motel/bloc/motel_detail_event.dart';
 import 'package:find_motel/modules/motel/edit_motel/bloc/edit_motel_bloc.dart';
 import 'package:find_motel/modules/motel/edit_motel/screen/edit_motel_screen.dart';
 import 'package:flutter/material.dart';
@@ -76,7 +77,10 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
                   currentMotelDetail.texture,
                 ),
                 const SizedBox(height: 16),
-                MotelImagesView(imageUrls: currentMotelDetail.images, isCanEdit: false),
+                MotelImagesView(
+                  imageUrls: currentMotelDetail.images,
+                  isCanEdit: false,
+                ),
                 const SizedBox(height: AppConstants.spacing),
                 _buildTags(
                   currentMotelDetail.commission,
@@ -117,7 +121,7 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
                   if (isCanEdit)
                     IconButton(
                       onPressed: () async {
-                        Navigator.push(
+                        final motel = await Navigator.push(
                           blocContext,
                           MaterialPageRoute(
                             builder: (context) => BlocProvider(
@@ -126,6 +130,11 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
                             ),
                           ),
                         );
+                        if (motel != null && blocContext.mounted) {
+                          blocContext.read<MotelDetailBloc>().add(
+                            MotelDetailMotelUpdated(motel: motel),
+                          );
+                        }
                       },
                       icon: const Icon(Icons.edit, color: Colors.white),
                     ),

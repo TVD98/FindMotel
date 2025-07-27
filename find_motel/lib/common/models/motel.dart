@@ -105,7 +105,7 @@ class Motel {
       address: map['address'] ?? '',
       commission: map['commission'] ?? '',
       extensions: List<String>.from(map['extensions'] ?? []),
-      fees: List<Fee>.from(map['fees'] ?? []),
+      fees: List<Map<String, dynamic>>.from(map['fees']).map((fee) => Fee.fromMap(fee)).toList(),
       geoPoint: map['geo_point'] is GeoPoint
           ? LatLng(map['geo_point'].latitude, map['geo_point'].longitude)
           : const LatLng(0, 0),

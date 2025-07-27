@@ -48,14 +48,9 @@ class _MotelImagesViewState extends State<MotelImagesView> {
     if (widget.imageUrls != oldWidget.imageUrls) {
       setState(() {
         _currentImages = widget.imageUrls;
-        // Đảm bảo ảnh chính cũng được cập nhật nếu danh sách mới không rỗng
-        // hoặc nếu ảnh chính cũ không còn tồn tại trong danh sách mới
-        if (!_currentImages.contains(_currentMainImage) ||
-            _currentMainImage.isEmpty) {
-          _currentMainImage = _currentImages.isNotEmpty
-              ? _currentImages.first
-              : '';
-        }
+        _currentMainImage = _currentImages.isNotEmpty
+            ? _currentImages.first
+            : '';
       });
     }
   }

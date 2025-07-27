@@ -20,5 +20,10 @@ class MotelDetailBloc extends Bloc<MotelDetailEvent, MotelDetailState> {
   Future<void> _onMotelDetailMotelUpdated(
     MotelDetailMotelUpdated event,
     Emitter<MotelDetailState> emit,
-  ) async {}
+  ) async {
+    emit(MotelDetailLoaded(
+      motelDetail: event.motel,
+      isCanEdit: AppDataManager().currentUserProfile?.role == UserRole.admin,
+    ));
+  }
 }

@@ -239,7 +239,10 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
     );
   }
 
-  void _showSuccessDialog(BuildContext dialogContext, String message) {
+  void _showSuccessDialog(BuildContext dialogContext, Motel? motel) {
+    final message = motel != null
+        ? 'Cập nhật thông tin căn hộ thành công!'
+        : 'Xóa thông tin căn hộ thành công!';
     showDialog(
       context: dialogContext,
       barrierDismissible: false,
@@ -271,7 +274,11 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
             onPressed: () {
               Navigator.pop(context); // Đóng dialog
               ReloadService.setHomeNeedsReload();
-              Navigator.popUntil(context, (route) => route.isFirst);
+              if (motel != null) {
+                Navigator.pop(context, motel);
+              } else {
+                Navigator.popUntil(context, (route) => route.isFirst);
+              }
             },
             child: Text(
               'OK',
@@ -289,7 +296,7 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
       listenWhen: (previous, current) => previous.status != current.status,
       listener: (context, state) {
         if (state.status == EditMotelStatus.success) {
-          _showSuccessDialog(context, 'Cập nhật thông tin căn hộ thành công!');
+          _showSuccessDialog(context, state.updatedMotel);
         } else if (state.status == EditMotelStatus.failure) {
           _showErrorDialog(
             context,

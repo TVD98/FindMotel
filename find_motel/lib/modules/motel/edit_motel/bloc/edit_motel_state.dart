@@ -20,6 +20,7 @@ class EditMotelState extends Equatable {
   final LatLng? location;
   final String? errorMessage;
   final Motel? initialMotel;
+  final Motel? updatedMotel;
 
   const EditMotelState({
     this.status = EditMotelStatus.initial,
@@ -37,6 +38,7 @@ class EditMotelState extends Equatable {
     this.location,
     this.errorMessage,
     this.initialMotel,
+    this.updatedMotel,
   });
 
   EditMotelState copyWith({
@@ -55,6 +57,7 @@ class EditMotelState extends Equatable {
     LatLng? location,
     String? errorMessage,
     Motel? initialMotel,
+    Motel? updatedMotel,
   }) {
     return EditMotelState(
       status: status ?? this.status,
@@ -72,25 +75,27 @@ class EditMotelState extends Equatable {
       location: location ?? this.location,
       errorMessage: errorMessage,
       initialMotel: initialMotel ?? this.initialMotel,
+      updatedMotel: updatedMotel,
     );
   }
 
   @override
   List<Object?> get props => [
-        status,
-        name,
-        roomCode,
-        type,
-        texture,
-        commission,
-        price,
-        address,
-        note,
-        extensions,
-        customFees,
-        images,
-        location,
-        errorMessage,
-        initialMotel,
-      ];
+    status,
+    name,
+    roomCode,
+    type,
+    texture,
+    commission,
+    price,
+    address,
+    note,
+    extensions,
+    customFees,
+    images,
+    location,
+    errorMessage,
+    initialMotel,
+    updatedMotel,
+  ];
 }
