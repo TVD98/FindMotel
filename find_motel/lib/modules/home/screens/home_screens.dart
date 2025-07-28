@@ -35,7 +35,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<HomeBloc, HomeState>(
-      listenWhen: (previous, current) => previous.userProfile != current.userProfile,
+      listenWhen: (previous, current) =>
+          previous.userProfile != current.userProfile,
       listener: (context, state) {
         if (state.userProfile != null) {
           context.read<UserProfileCubit>().updateUserProfile(
@@ -56,79 +57,83 @@ class _HomeScreenState extends State<HomeScreen> {
               splashColor: Colors.transparent,
               hoverColor: Colors.transparent,
             ),
-            child: BottomNavigationBar(
-              type: BottomNavigationBarType.fixed,
-              selectedItemColor: AppColors.primary,
-              showSelectedLabels: false,
-              showUnselectedLabels: false,
-              currentIndex: state.selectedIndex,
-              onTap: (index) {
-                context.read<HomeBloc>().add(TabSelected(index));
-              },
-              backgroundColor: Colors.white,
-              items: [
-                BottomNavigationBarItem(
-                  icon: SvgPicture.asset(
-                    'assets/images/ic_home.svg',
-                    width: 42,
-                    height: 42,
-                    colorFilter: ColorFilter.mode(
-                      AppColors.tertiary,
-                      BlendMode.srcIn,
+            child: MediaQuery.removePadding(
+              context: context,
+              removeBottom: true,
+              child: BottomNavigationBar(
+                type: BottomNavigationBarType.fixed,
+                selectedItemColor: AppColors.primary,
+                showSelectedLabels: false,
+                showUnselectedLabels: false,
+                currentIndex: state.selectedIndex,
+                onTap: (index) {
+                  context.read<HomeBloc>().add(TabSelected(index));
+                },
+                backgroundColor: Colors.white,
+                items: [
+                  BottomNavigationBarItem(
+                    icon: SvgPicture.asset(
+                      'assets/images/ic_home.svg',
+                      width: 42,
+                      height: 42,
+                      colorFilter: ColorFilter.mode(
+                        AppColors.tertiary,
+                        BlendMode.srcIn,
+                      ),
                     ),
-                  ),
-                  activeIcon: SvgPicture.asset(
-                    'assets/images/ic_home.svg',
-                    width: 42,
-                    height: 42,
-                    colorFilter: ColorFilter.mode(
-                      AppColors.primary,
-                      BlendMode.srcIn,
+                    activeIcon: SvgPicture.asset(
+                      'assets/images/ic_home.svg',
+                      width: 42,
+                      height: 42,
+                      colorFilter: ColorFilter.mode(
+                        AppColors.primary,
+                        BlendMode.srcIn,
+                      ),
                     ),
+                    label: '',
                   ),
-                  label: '',
-                ),
-                BottomNavigationBarItem(
-                  icon: Transform.translate(
-                    offset: Offset(0, -40), // shift icon upward
-                    child: SvgPicture.asset(
-                      'assets/images/ic_map.svg',
-                      width: 52,
-                      height: 52,
+                  BottomNavigationBarItem(
+                    icon: Transform.translate(
+                      offset: Offset(0, -40), // shift icon upward
+                      child: SvgPicture.asset(
+                        'assets/images/ic_map.svg',
+                        width: 52,
+                        height: 52,
+                      ),
                     ),
-                  ),
-                  activeIcon: Transform.translate(
-                    offset: Offset(0, -40), // shift icon upward
-                    child: SvgPicture.asset(
-                      'assets/images/ic_map_highlight.svg',
-                      width: 52,
-                      height: 52,
+                    activeIcon: Transform.translate(
+                      offset: Offset(0, -40), // shift icon upward
+                      child: SvgPicture.asset(
+                        'assets/images/ic_map_highlight.svg',
+                        width: 52,
+                        height: 52,
+                      ),
                     ),
+                    label: '',
                   ),
-                  label: '',
-                ),
-                BottomNavigationBarItem(
-                  icon: SvgPicture.asset(
-                    'assets/images/ic_profile.svg',
-                    width: 42,
-                    height: 42,
-                    colorFilter: ColorFilter.mode(
-                      AppColors.tertiary,
-                      BlendMode.srcIn,
+                  BottomNavigationBarItem(
+                    icon: SvgPicture.asset(
+                      'assets/images/ic_profile.svg',
+                      width: 42,
+                      height: 42,
+                      colorFilter: ColorFilter.mode(
+                        AppColors.tertiary,
+                        BlendMode.srcIn,
+                      ),
                     ),
-                  ),
-                  activeIcon: SvgPicture.asset(
-                    'assets/images/ic_profile.svg',
-                    width: 42,
-                    height: 42,
-                    colorFilter: ColorFilter.mode(
-                      AppColors.primary,
-                      BlendMode.srcIn,
+                    activeIcon: SvgPicture.asset(
+                      'assets/images/ic_profile.svg',
+                      width: 42,
+                      height: 42,
+                      colorFilter: ColorFilter.mode(
+                        AppColors.primary,
+                        BlendMode.srcIn,
+                      ),
                     ),
+                    label: '',
                   ),
-                  label: '',
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );

@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:find_motel/common/models/motel.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 enum EditMotelStatus { initial, loading, success, failure, deleting }
 
@@ -12,15 +13,14 @@ class EditMotelState extends Equatable {
   final String commission;
   final String price;
   final String address;
-  final String electricity;
-  final String water;
   final String note;
   final List<String> extensions;
-  final List<Map<String, dynamic>> customFees;
+  final List<Fee> customFees;
   final List<String> images;
-  final String mainImage;
+  final LatLng? location;
   final String? errorMessage;
   final Motel? initialMotel;
+  final Motel? updatedMotel;
 
   const EditMotelState({
     this.status = EditMotelStatus.initial,
@@ -31,15 +31,14 @@ class EditMotelState extends Equatable {
     this.commission = '',
     this.price = '',
     this.address = '',
-    this.electricity = '',
-    this.water = '',
     this.note = '',
     this.extensions = const [],
     this.customFees = const [],
     this.images = const [],
-    this.mainImage = '',
+    this.location,
     this.errorMessage,
     this.initialMotel,
+    this.updatedMotel,
   });
 
   EditMotelState copyWith({
@@ -51,15 +50,14 @@ class EditMotelState extends Equatable {
     String? commission,
     String? price,
     String? address,
-    String? electricity,
-    String? water,
     String? note,
     List<String>? extensions,
-    List<Map<String, dynamic>>? customFees,
+    List<Fee>? customFees,
     List<String>? images,
-    String? mainImage,
+    LatLng? location,
     String? errorMessage,
     Motel? initialMotel,
+    Motel? updatedMotel,
   }) {
     return EditMotelState(
       status: status ?? this.status,
@@ -70,36 +68,34 @@ class EditMotelState extends Equatable {
       commission: commission ?? this.commission,
       price: price ?? this.price,
       address: address ?? this.address,
-      electricity: electricity ?? this.electricity,
-      water: water ?? this.water,
       note: note ?? this.note,
       extensions: extensions ?? this.extensions,
       customFees: customFees ?? this.customFees,
       images: images ?? this.images,
-      mainImage: mainImage ?? this.mainImage,
+      location: location ?? this.location,
       errorMessage: errorMessage,
       initialMotel: initialMotel ?? this.initialMotel,
+      updatedMotel: updatedMotel,
     );
   }
 
   @override
   List<Object?> get props => [
-        status,
-        name,
-        roomCode,
-        type,
-        texture,
-        commission,
-        price,
-        address,
-        electricity,
-        water,
-        note,
-        extensions,
-        customFees,
-        images,
-        mainImage,
-        errorMessage,
-        initialMotel,
-      ];
+    status,
+    name,
+    roomCode,
+    type,
+    texture,
+    commission,
+    price,
+    address,
+    note,
+    extensions,
+    customFees,
+    images,
+    location,
+    errorMessage,
+    initialMotel,
+    updatedMotel,
+  ];
 }

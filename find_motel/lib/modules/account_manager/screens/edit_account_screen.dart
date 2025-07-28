@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:find_motel/common/models/user_profile.dart';
 import 'package:find_motel/common/widgets/common_app_bar.dart';
 import 'package:find_motel/common/widgets/custom_button.dart';
@@ -5,7 +6,6 @@ import 'package:find_motel/common/widgets/fixed_dropdown_button.dart';
 import 'package:find_motel/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_svg/svg.dart';
 
 import '../bloc/account_manager_bloc.dart';
 import '../bloc/account_manager_event.dart';
@@ -100,7 +100,8 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
                               backgroundColor: AppColors.onPrimary,
                               strokeColor: AppColors.strokeLight,
                               radius: 4.0,
-                              isDisabled: widget.userProfile.role == _selectedRole,
+                              isDisabled:
+                                  widget.userProfile.role == _selectedRole,
                               onPressed: () {
                                 setState(() {
                                   _selectedRole = widget.userProfile.role;
@@ -119,7 +120,8 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
                               backgroundColor: AppColors.primary,
                               strokeColor: AppColors.strokeLight,
                               radius: 4.0,
-                              isDisabled: widget.userProfile.role == _selectedRole,
+                              isDisabled:
+                                  widget.userProfile.role == _selectedRole,
                               onPressed: () {
                                 _saveChanges();
                               },
@@ -139,34 +141,47 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
   }
 
   Widget _buildAvatar(String? avatar) {
-    if (avatar == null) {
-      return SvgPicture.asset(
-        'assets/images/ic_logo.svg',
+    if (avatar == null || avatar.isEmpty) {
+      return Image.asset(
+        'assets/images/image_avatar_default.png',
         width: 100,
         height: 100,
         fit: BoxFit.contain,
       );
     }
-    return CircleAvatar(radius: 50, backgroundImage: NetworkImage(avatar));
+    return CircleAvatar(
+      radius: 50,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(50),
+        child: CachedNetworkImage(
+          imageUrl: avatar,
+          width: 100,
+          height: 100,
+          fit: BoxFit.cover,
+        ),
+      ),
+    );
   }
 
   Widget _buildRoleSelection() {
     return Stack(
       clipBehavior: Clip.none, // Cho phép title vượt ra ngoài border
       children: [
-        FixedDropdownButton(
-          value: _selectedRole.name,
-          items: UserRole.values.map((e) => e.name).toList(),
-          width: 310.0,
-          height: 44,
-          onChanged: (value) {
-            setState(() {
-              _selectedRole = UserRole.values.firstWhere(
-                (e) => e.name == value,
-                orElse: () => UserRole.sale,
-              );
-            });
-          },
+        SizedBox(
+          width: double.infinity,
+          child: FixedDropdownButton(
+            value: _selectedRole.name,
+            items: UserRole.values.map((e) => e.name).toList(),
+            height: 44,
+            onChanged: (value) {
+              setState(() {
+                _selectedRole = UserRole.values.firstWhere(
+                  (e) => e.name == value,
+                  orElse: () => UserRole.sale,
+                );
+              });
+            },
+          ),
         ),
         // Title đè lên border
         Positioned(

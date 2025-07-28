@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:find_motel/common/widgets/common_alert_dialog.dart';
 import 'package:find_motel/modules/account_manager/bloc/account_manager_event.dart';
 import 'package:find_motel/modules/account_manager/screens/edit_account_screen.dart';
@@ -67,15 +68,26 @@ class _AccountItem extends StatelessWidget {
   });
 
   Widget _buildAvatar(String? avatar) {
-    if (avatar == null) {
-      return SvgPicture.asset(
-        'assets/images/ic_logo.svg',
+    if (avatar == null || avatar.isEmpty) {
+      return Image.asset(
+        'assets/images/image_avatar_default.png',
         width: 64,
         height: 64,
         fit: BoxFit.contain,
       );
     }
-    return CircleAvatar(radius: 32, backgroundImage: NetworkImage(avatar));
+    return CircleAvatar(
+      radius: 32,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(32),
+        child: CachedNetworkImage(
+          imageUrl: avatar,
+          width: 64,
+          height: 64,
+          fit: BoxFit.cover,
+        ),
+      ),
+    );
   }
 
   @override

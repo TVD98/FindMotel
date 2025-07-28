@@ -15,6 +15,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:find_motel/common/models/motel.dart';
+import 'package:find_motel/services/reload_service.dart';
+import 'dart:async';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -25,6 +27,8 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage>
     with AutomaticKeepAliveClientMixin {
+  late final StreamSubscription<bool> _reloadSubscription;
+
   @override
   bool get wantKeepAlive => true;
 
@@ -35,6 +39,18 @@ class _HomePageState extends State<HomePage>
     context.read<HomePageBloc>().add(
       LoadMotels(filter: AppDataManager().filterMotels, isRefresh: true),
     );
+
+    _reloadSubscription = ReloadService.reloadStream.listen((needsReload) {
+      if (needsReload) {
+        _fetchMotels(isRefresh: true);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _reloadSubscription.cancel();
+    super.dispose();
   }
 
   Future<void> _fetchMotels({bool isRefresh = false}) async {
@@ -183,17 +199,8 @@ class _MotelCard extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-              // builder: (_) => MultiBlocProvider(
-              //             providers: [
-              //               BlocProvider(create: (_) => MotelDetailBloc()),
-              //               BlocProvider.value(
-              //                 value: context.read<UserProfileCubit>(),
-              //               ),
-              //             ],
-              //             child: MotelDetailScreen(detail: motel, isBottomSheet: false),
-              //             )
               builder: (context) =>
-                  MotelDetailScreen(detail: motel, isBottomSheet: false),
+                  MotelDetailScreen(detail: motel),
             ),
           );
         },

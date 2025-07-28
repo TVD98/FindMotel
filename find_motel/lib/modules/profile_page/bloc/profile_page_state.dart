@@ -25,7 +25,7 @@ enum Future {
         );
       case Future.import:
         return FutureInfo(
-          title: 'Nhập dữ liệu',
+          title: 'Nhập xuất dữ liệu',
           description: 'Thêm danh sách nhà trọ từ file excel',
           icon: 'assets/images/ic_import.png',
         );

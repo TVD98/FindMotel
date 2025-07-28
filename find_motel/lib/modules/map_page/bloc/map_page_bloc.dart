@@ -105,8 +105,17 @@ class MapBloc extends Bloc<MapEvent, MapState> {
         limit: maxSize,
       );
       if (result.error != null) {
-        emit(state.copyWith(isLoading: false, error: result.error));
+        emit(
+          state.copyWith(
+            selectedMotel: null,
+            isLoading: false,
+            error: result.error,
+          ),
+        );
         return;
+      }
+      if (event.isRefresh) {
+        _markerCache.clear();
       }
       await _loadMarkers(result.motels!, emit);
     } catch (e) {
@@ -120,11 +129,52 @@ class MapBloc extends Bloc<MapEvent, MapState> {
   }
 
   void _onMarkerTapped(MarkerTapped event, Emitter<MapState> emit) async {
+    final currentSelectedMotelId = state.selectedMotel?.id;
     emit(state.copyWith(selectedMotel: event.motel));
 
-    await Future.delayed(Duration(milliseconds: 100), () {
-      emit(state.copyWith(selectedMotel: null));
-    });
+    // 3. Nếu có marker đã được chọn trước đó và khác marker hiện tại, cập nhật lại màu của nó
+    if (currentSelectedMotelId != null &&
+        currentSelectedMotelId != event.motel.id) {
+      await _updateMarkerColor(
+        currentSelectedMotelId,
+        AppColors.secondaryContainer,
+        emit,
+      );
+    }
+
+    // 4. Lưu ID của marker mới được chọn và cập nhật màu
+    await _updateMarkerColor(event.motel.id, AppColors.primary, emit);
+  }
+
+  Future<void> _updateMarkerColor(
+    String motelId,
+    Color newColor,
+    Emitter<MapState> emit,
+  ) async {
+    final Marker? oldMarker = _markerCache[motelId];
+    if (oldMarker == null) return; // Marker không có trong cache
+
+    final Motel motel = state.cards.firstWhere(
+      (m) => m.id == motelId,
+      orElse: () => throw Exception('Motel not found'),
+    );
+
+    final BitmapDescriptor updatedIcon = await _createCustomMarker(
+      motel.marker,
+      motel.price.toInt(),
+      100,
+      backgroundColor: newColor,
+    );
+
+    final updatedMarker = oldMarker.copyWith(iconParam: updatedIcon);
+
+    final updatedMarkersSet = Set<Marker>.from(state.markers);
+    updatedMarkersSet.removeWhere((m) => m.markerId == MarkerId(motelId));
+    updatedMarkersSet.add(updatedMarker);
+
+    _markerCache[motelId] = updatedMarker; // Cập nhật cache
+
+    emit(state.copyWith(markers: updatedMarkersSet, selectedMotel: state.selectedMotel));
   }
 
   Future<void> _loadMarkers(List<Motel> motels, Emitter<MapState> emit) async {
@@ -159,7 +209,12 @@ class MapBloc extends Bloc<MapEvent, MapState> {
 
       if (imageUrl.isNotEmpty) {
         imageLoadingTasks.add(
-          _createCustomMarker(imageUrl, price, 100)
+          _createCustomMarker(
+                imageUrl,
+                price,
+                100,
+                backgroundColor: AppColors.secondaryContainer,
+              )
               .then((markerIcon) {
                 final updatedMarker = Marker(
                   markerId: MarkerId(motel.id),
@@ -211,8 +266,9 @@ class MapBloc extends Bloc<MapEvent, MapState> {
   Future<BitmapDescriptor> _createCustomMarker(
     String imageUrl,
     int? price,
-    int width,
-  ) async {
+    int width, {
+    required Color backgroundColor,
+  }) async {
     if (imageUrl.isEmpty) return BitmapDescriptor.defaultMarker;
 
     try {
@@ -222,7 +278,13 @@ class MapBloc extends Bloc<MapEvent, MapState> {
       );
       if (imageBytes == null) return BitmapDescriptor.defaultMarker;
 
-      return await _buildMarkerDescriptor(imageBytes, price, width);
+      return await _buildMarkerDescriptor(
+        imageBytes,
+        price,
+        width,
+        backgroundColor: backgroundColor,
+        hasImage: true,
+      );
     } catch (e) {
       // Ignore errors and fall back to the default marker
       print('Create custom marker error: $e');
@@ -252,8 +314,10 @@ class MapBloc extends Bloc<MapEvent, MapState> {
   Future<BitmapDescriptor> _buildMarkerDescriptor(
     Uint8List imageData,
     int? price,
-    int width,
-  ) async {
+    int width, {
+    required Color backgroundColor,
+    bool hasImage = true,
+  }) async {
     const double padding = 10;
     const double textHeight = 50;
     final double imageSize = width.toDouble();
@@ -264,7 +328,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     final Canvas canvas = Canvas(recorder);
 
     // Draw background
-    final ui.Paint bgPaint = ui.Paint()..color = AppColors.secondaryContainer;
+    final ui.Paint bgPaint = ui.Paint()..color = backgroundColor;
     canvas.drawRRect(
       ui.RRect.fromRectAndRadius(
         ui.Rect.fromLTWH(0, 0, canvasWidth, canvasHeight),
