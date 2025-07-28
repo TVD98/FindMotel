@@ -1,9 +1,11 @@
 import 'package:find_motel/theme/app_colors.dart';
+import 'package:find_motel/theme/app_textStyle.dart';
 import 'package:flutter/material.dart';
 
 class CustomButton extends StatelessWidget {
-  final String title;
+  final String label;
   final IconData? icon;
+  final TextStyle? textStyle;
   final Color textColor;
   final Color backgroundColor;
   final Color strokeColor; // Màu viền
@@ -14,8 +16,9 @@ class CustomButton extends StatelessWidget {
 
   const CustomButton({
     super.key,
-    required this.title,
+    required this.label,
     this.icon,
+    this.textStyle,
     this.textColor = AppColors.onPrimary, // Mặc định màu chữ trắng
     this.backgroundColor = AppColors.primary, // Mặc định màu nền xanh
     this.strokeColor = AppColors.strokeLight, // Mặc định không có viền
@@ -59,12 +62,16 @@ class CustomButton extends StatelessWidget {
                     size: 20.0,
                   ),
                 ),
-              Text(
-                title,
-                style: TextStyle(
-                  color: isDisabled ? textColor.withOpacity(0.9) : textColor,
-                  fontSize: 16.0,
-                  fontWeight: FontWeight.w600,
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12.0,
+                  vertical: 6.0,
+                ),
+                child: Text(
+                  label,
+                  style: textStyle?.copyWith(
+                    color: isDisabled ? textColor.withOpacity(0.9) : textColor,
+                  ),
                 ),
               ),
             ],

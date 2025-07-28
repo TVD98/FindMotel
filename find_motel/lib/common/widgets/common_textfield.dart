@@ -9,24 +9,24 @@ enum TextFieldStyle { large, medium }
 
 class CommonTextfield extends StatefulWidget {
   final TextEditingController controller;
-  final String? title;
+  final String? label;
   final String? hintText;
   final TextInputType? keyboardType;
   final bool enabled;
   final List<TextInputFormatter>? inputFormatters;
   final TextFieldStyle style;
-  final Color? titleBackground;
+  final Color? backgroundColor;
 
   const CommonTextfield({
     super.key,
     required this.controller,
-    this.title,
+    this.label,
     this.hintText,
     this.keyboardType,
     this.enabled = true,
     this.inputFormatters,
     this.style = TextFieldStyle.large,
-    this.titleBackground,
+    this.backgroundColor,
   });
 
   @override
@@ -94,8 +94,8 @@ class _CommonTextfieldState extends State<CommonTextfield> {
     EdgeInsets contentPadding;
     FontWeight textFieldFontWeight;
 
-    double titleFontSize;
-    FontWeight titleFontWeight;
+    double lableFontSize;
+    FontWeight lableFontWeight;
 
     switch (widget.style) {
       case TextFieldStyle.large:
@@ -107,8 +107,8 @@ class _CommonTextfieldState extends State<CommonTextfield> {
         textFieldFontWeight =
             FontWeight.w400; // Default font weight for medium TextField input
 
-        titleFontSize = 12; // Default title font size
-        titleFontWeight = FontWeight.w600; // Default title font weight
+        lableFontSize = 12; // Default label font size
+        lableFontWeight = FontWeight.w600; // Default label font weight
         break;
       case TextFieldStyle.medium:
         textFieldFontSize = 14;
@@ -116,8 +116,8 @@ class _CommonTextfieldState extends State<CommonTextfield> {
         textFieldFontWeight =
             FontWeight.w400; // Default font weight for medium TextField input
 
-        titleFontSize = 10; // Default title font size
-        titleFontWeight = FontWeight.w600; // Default title font weight
+        lableFontSize = 10; // Default label font size
+        lableFontWeight = FontWeight.w600; // Default label font weight
         break;
     }
 
@@ -132,6 +132,7 @@ class _CommonTextfieldState extends State<CommonTextfield> {
           style: GoogleFonts.quicksand(
             fontSize: textFieldFontSize,
             fontWeight: textFieldFontWeight,
+            color: AppColors.elementPrimary
           ),
           decoration: InputDecoration(
             hintText: widget.hintText ?? '',
@@ -140,21 +141,27 @@ class _CommonTextfieldState extends State<CommonTextfield> {
               borderRadius: BorderRadius.circular(4),
               borderSide: const BorderSide(color: AppColors.strokeLight),
             ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(4),
+              borderSide: const BorderSide(color: AppColors.strokeLight),
+            ),
+            filled: true,
+            fillColor: widget.backgroundColor ?? AppColors.onSurface1,
             isDense: true,
           ),
         ),
-        if (widget.title != null && widget.title!.isNotEmpty)
+        if (widget.label != null && widget.label!.isNotEmpty)
           Positioned(
             top: -8.0,
             left: 16.0,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
-              decoration: BoxDecoration(color: widget.titleBackground ?? Colors.white),
+              decoration: BoxDecoration(color: widget.backgroundColor ?? Colors.white),
               child: Text(
-                widget.title!,
+                widget.label!,
                 style: TextStyle(
-                  fontSize: titleFontSize,
-                  fontWeight: titleFontWeight,
+                  fontSize: lableFontSize,
+                  fontWeight: lableFontWeight,
                   color: AppColors.primary,
                 ),
               ),

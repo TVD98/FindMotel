@@ -43,7 +43,7 @@ class _FixedDropdownButtonState extends State<FixedDropdownButton> {
       onChanged: widget.onChanged,
       borderColor: AppColors.strokeLight,
       borderRadius: 4.0,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.onSurface1,
       width: widget.width,
       height: widget.height,
       horizontalPadding: 8.0,
