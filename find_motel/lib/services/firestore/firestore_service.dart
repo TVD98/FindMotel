@@ -48,6 +48,25 @@ class FirestoreService
     }
   }
 
+  @override
+  Future<({String? error, Motel? motel})> addMotelWithImages(
+    Motel motel,
+  ) async {
+    try {
+      final List<String> imageUrls = await _storageService.uploadImages(
+        motel.images,
+      );
+      final updatedMotel = motel.copyWith(images: imageUrls);
+      final result = await addMotel(updatedMotel);
+      if (result.id != null) {
+        return (error: null, motel: updatedMotel);
+      }
+      return (error: result.error, motel: null);
+    } catch (e) {
+      return (error: e.toString(), motel: null);
+    }
+  }
+
   /// Fetch motels from Firestore applying both server-side and local filters.
   ///
   /// Filters that can be translated to Firestore queries (e.g. price range,
@@ -154,7 +173,9 @@ class FirestoreService
       address: data['address'] as String? ?? '',
       commission: data['commission']?.toString() ?? '',
       extensions: List<String>.from(data['extensions'] ?? const []),
-      fees: List<Map<String, dynamic>>.from(data['fees']).map((fee) => Fee.fromMap(fee)).toList(),
+      fees: List<Map<String, dynamic>>.from(
+        data['fees'],
+      ).map((fee) => Fee.fromMap(fee)).toList(),
       geoPoint: LatLng(geoPoint.latitude, geoPoint.longitude),
       name: data['name'] as String? ?? '',
       note: List<String>.from(data['note'] ?? const []),
@@ -200,7 +221,9 @@ class FirestoreService
   }
 
   @override
-  Future<({String? error, Motel? motel})> updateMotelWithImages(Motel motel) async {
+  Future<({String? error, Motel? motel})> updateMotelWithImages(
+    Motel motel,
+  ) async {
     try {
       final json = motel.toMap();
       final List<String> keywords =
@@ -497,6 +520,19 @@ class FirestoreService
       return (motel: _motelFromDoc(doc), error: null);
     } catch (e) {
       return (motel: null, error: e.toString());
+    }
+  }
+
+  @override
+  Future<bool> doesMotelExist(String motelId) async {
+    try {
+      final doc = await _firestore
+          .collection(FirestorePaths.motelsCollection)
+          .doc(motelId)
+          .get();
+      return doc.exists;
+    } catch (e) {
+      return false;
     }
   }
 }

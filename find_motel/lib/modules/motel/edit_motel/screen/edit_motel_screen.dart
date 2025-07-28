@@ -896,6 +896,7 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
       ' mỗi dòng một ghi chú ',
       noteController,
       maxLines: 5,
+      keyboardType: TextInputType.multiline
     );
   }
 }

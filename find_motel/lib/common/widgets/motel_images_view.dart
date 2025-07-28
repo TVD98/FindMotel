@@ -109,13 +109,6 @@ class _MotelImagesViewState extends State<MotelImagesView> {
 
   /// Builds the horizontal image gallery.
   Widget _buildImageGallery(double itemWidth, double itemHeight) {
-    if (widget.imageUrls.isEmpty) {
-      return const Text(
-        'Không có hình ảnh',
-        style: TextStyle(fontSize: 14, color: Colors.grey),
-      );
-    }
-
     return SizedBox(
       height:
           itemHeight + 10, // Add some padding for the border or visual space
@@ -143,36 +136,37 @@ class _MotelImagesViewState extends State<MotelImagesView> {
                 ),
               ),
             ),
-          Expanded(
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: _imagesCount,
-              itemBuilder: (_, index) {
-                final imageUrl = _currentImages[index];
-                return GestureDetector(
-                  onTap: () => _updateMainImage(
-                    imageUrl,
-                  ), // Gọi hàm cập nhật trạng thái cục bộ
-                  child: Container(
-                    margin: const EdgeInsets.only(right: 8.0),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(6.0),
-                      border: Border.all(
-                        color: _currentMainImage == imageUrl
-                            ? AppColors.primary
-                            : Colors.transparent,
-                        width: 2,
+          if (widget.imageUrls.isNotEmpty)
+            Expanded(
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: _imagesCount,
+                itemBuilder: (_, index) {
+                  final imageUrl = _currentImages[index];
+                  return GestureDetector(
+                    onTap: () => _updateMainImage(
+                      imageUrl,
+                    ), // Gọi hàm cập nhật trạng thái cục bộ
+                    child: Container(
+                      margin: const EdgeInsets.only(right: 8.0),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(6.0),
+                        border: Border.all(
+                          color: _currentMainImage == imageUrl
+                              ? AppColors.primary
+                              : Colors.transparent,
+                          width: 2,
+                        ),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(4.0),
+                        child: _getImageWidget(imageUrl, itemWidth, itemHeight),
                       ),
                     ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(4.0),
-                      child: _getImageWidget(imageUrl, itemWidth, itemHeight),
-                    ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
         ],
       ),
     );

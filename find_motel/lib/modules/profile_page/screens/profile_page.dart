@@ -4,14 +4,12 @@ import 'package:find_motel/managers/app_data_manager.dart';
 import 'package:find_motel/managers/cubit/cubit.dart';
 import 'package:find_motel/modules/account_manager/screens/account_manager_screen.dart';
 import 'package:find_motel/modules/deal_manager/screens/deal_manager_screen.dart';
-import 'package:find_motel/modules/import_motels/bloc/import_motels_bloc.dart';
-import 'package:find_motel/modules/import_motels/screens/import_motels_screen.dart';
+import 'package:find_motel/modules/import_motels/screens/motels_data_screen.dart';
 import 'package:find_motel/modules/profile_page/bloc/profile_page_event.dart';
 import 'package:find_motel/modules/setting_page/screens/setting_page.dart';
 import 'package:find_motel/modules/setting_page/bloc/setting_page_bloc.dart';
 import 'package:find_motel/theme/app_colors.dart';
 import 'package:find_motel/common/widgets/custom_button.dart';
-import 'package:find_motel/utilities/excel_reader.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:find_motel/modules/profile_page/bloc/profile_page_bloc.dart';
 import 'package:find_motel/modules/profile_page/bloc/profile_page_state.dart';
@@ -63,7 +61,7 @@ class _ProfilePageState extends State<ProfilePage>
                       MaterialPageRoute(
                         builder: (_) => MultiBlocProvider(
                           providers: [
-                            BlocProvider(create: (_) => SettingBloc()), 
+                            BlocProvider(create: (_) => SettingBloc()),
                             BlocProvider.value(
                               value: context.read<UserProfileCubit>(),
                             ),
@@ -253,19 +251,10 @@ class _ProfilePageState extends State<ProfilePage>
         );
         break;
       case Future.import:
-        final reader = ExcelReader();
-        final data = await reader.readExcelFile();
-        if (data.isNotEmpty) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => BlocProvider(
-                create: (context) => ImportMotelsBloc(),
-                child: ImportMotelsScreen(data: data),
-              ),
-            ),
-          );
-        }
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => MotelsDataScreen()),
+        );
         break;
       case Future.account:
         Navigator.push(

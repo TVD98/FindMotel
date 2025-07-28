@@ -164,8 +164,7 @@ class EditMotelBloc extends Bloc<EditMotelEvent, EditMotelState> {
     }
 
     try {
-      final updatedMotel = Motel(
-        id: state.initialMotel!.id, // Use the ID from the initial motel
+      final updatedMotel = state.initialMotel!.copyWith(
         name: state.name,
         roomCode: state.roomCode,
         type: state.type,
@@ -179,19 +178,31 @@ class EditMotelBloc extends Bloc<EditMotelEvent, EditMotelState> {
         images: state.images,
         thumbnail: state.images.isNotEmpty ? state.images.first : '',
         geoPoint: state.location ?? state.initialMotel!.geoPoint,
-        status: state.initialMotel!.status,
         marker: state.images.isNotEmpty
             ? state.images.first
             : '', // marker should be thumbnail URL
       );
 
-      final result = await _motelsService.updateMotelWithImages(updatedMotel);
+      final ({String? error, Motel? motel}) result;
+      if (updatedMotel.createdAt == null) {
+        result = await _motelsService.addMotelWithImages(updatedMotel);
+      } else {
+        result = await _motelsService.updateMotelWithImages(updatedMotel);
+      }
 
       if (result.error == null) {
-        emit(state.copyWith(status: EditMotelStatus.success, updatedMotel: result.motel));
+        emit(
+          state.copyWith(
+            status: EditMotelStatus.success,
+            updatedMotel: result.motel,
+          ),
+        );
       } else {
         emit(
-          state.copyWith(status: EditMotelStatus.failure, errorMessage: result.error),
+          state.copyWith(
+            status: EditMotelStatus.failure,
+            errorMessage: result.error,
+          ),
         );
       }
     } catch (e) {

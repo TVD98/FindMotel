@@ -105,7 +105,9 @@ class Motel {
       address: map['address'] ?? '',
       commission: map['commission'] ?? '',
       extensions: List<String>.from(map['extensions'] ?? []),
-      fees: List<Map<String, dynamic>>.from(map['fees']).map((fee) => Fee.fromMap(fee)).toList(),
+      fees: List<Map<String, dynamic>>.from(
+        map['fees'],
+      ).map((fee) => Fee.fromMap(fee)).toList(),
       geoPoint: map['geo_point'] is GeoPoint
           ? LatLng(map['geo_point'].latitude, map['geo_point'].longitude)
           : const LatLng(0, 0),
@@ -123,6 +125,67 @@ class Motel {
       thumbnail: map['thumbnail'] ?? '',
       texture: map['texture'] ?? '',
       createdAt: map['created_at'] is int ? map['created_at'] as int : null,
+    );
+  }
+
+  Motel copyWith({
+    int? createdAt,
+    String? address,
+    String? commission,
+    List<String>? extensions,
+    List<Fee>? fees,
+    LatLng? geoPoint,
+    String? name,
+    List<String>? note,
+    double? price,
+    String? roomCode,
+    String? type,
+    RentalStatus? status,
+    List<String>? images,
+    String? marker,
+    String? thumbnail,
+    String? texture,
+  }) {
+    return Motel(
+      id: id,
+      address: address ?? this.address,
+      commission: commission ?? this.commission,
+      extensions: extensions ?? this.extensions,
+      fees: fees ?? this.fees,
+      geoPoint: geoPoint ?? this.geoPoint,
+      name: name ?? this.name,
+      note: note ?? this.note,
+      price: price ?? this.price,
+      roomCode: roomCode ?? this.roomCode,
+      type: type ?? this.type,
+      status: status ?? this.status,
+      images: images ?? this.images,
+      marker: marker ?? this.marker,
+      thumbnail: thumbnail ?? this.thumbnail,
+      texture: texture ?? this.texture,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  static Motel empty(String id) {
+    return Motel(
+      id: id,
+      address: '',
+      commission: '',
+      extensions: const [],
+      fees: const [],
+      geoPoint: const LatLng(0, 0),
+      name: '',
+      note: const [],
+      price: 0,
+      roomCode: id,
+      type: '',
+      status: RentalStatus.empty,
+      images: const [],
+      marker: '',
+      thumbnail: '',
+      texture: '',
+      createdAt: null,
     );
   }
 }
