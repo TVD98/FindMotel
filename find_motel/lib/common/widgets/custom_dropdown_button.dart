@@ -1,3 +1,5 @@
+import 'package:find_motel/theme/app_colors.dart';
+import 'package:find_motel/theme/app_textStyle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
@@ -21,16 +23,16 @@ class CustomDropdownButton<T> extends StatelessWidget {
     this.value,
     required this.items, // Made required since items are essential
     this.onChanged,
-    this.borderColor = Colors.grey,
+    this.borderColor = AppColors.strokeLight,
     this.borderRadius = 8.0,
-    this.backgroundColor = Colors.white,
+    this.backgroundColor = AppColors.onSurface1,
     this.rightIconAsset = 'assets/images/ic_arrow_down.svg',
     this.width = 200.0,
     this.height = 50.0,
     this.horizontalPadding = 16.0,
     this.iconSize = 48.0,
-    this.menuItemFontSize = 16.0,
-    this.menuItemTextColor = Colors.black,
+    this.menuItemFontSize = 14.0,
+    this.menuItemTextColor = AppColors.elementPrimary,
   });
 
   @override
@@ -47,16 +49,15 @@ class CustomDropdownButton<T> extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
         child: DropdownButton<T>(
           value: value,
-          menuMaxHeight: 200.0,
+          menuMaxHeight: 320.0,
           items: items.map((T item) {
             return DropdownMenuItem<T>(
               value: item,
               child: Text(
                 item.toString(), // Convert item to string for display
-                style: TextStyle(
+                style: AppTextStyle.smallBody.copyWith(
                   fontSize: menuItemFontSize,
-                  color: menuItemTextColor,
-                ),
+                  color: menuItemTextColor),
               ),
             );
           }).toList(),

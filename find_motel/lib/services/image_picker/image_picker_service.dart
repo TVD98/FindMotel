@@ -132,7 +132,7 @@ class ImagePickerService {
                   width: 90,
                   height: 38,
                   child: CustomButton(
-                    title: 'Hủy',
+                    label: 'Hủy',
                     textColor: AppColors.primary,
                     backgroundColor: AppColors.onPrimary,
                     strokeColor: AppColors.strokeLight,
@@ -147,7 +147,7 @@ class ImagePickerService {
                   width: 90,
                   height: 38,
                   child: CustomButton(
-                    title: 'Thêm',
+                    label: 'Thêm',
                     textColor: AppColors.onPrimary,
                     backgroundColor: AppColors.primary,
                     strokeColor: AppColors.strokeLight,

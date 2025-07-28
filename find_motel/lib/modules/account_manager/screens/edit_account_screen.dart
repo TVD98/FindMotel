@@ -95,7 +95,7 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
                           child: SizedBox(
                             height: 40,
                             child: CustomButton(
-                              title: 'Đặt lại',
+                              label: 'Đặt lại',
                               textColor: AppColors.primary,
                               backgroundColor: AppColors.onPrimary,
                               strokeColor: AppColors.strokeLight,
@@ -115,7 +115,7 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
                           child: SizedBox(
                             height: 40,
                             child: CustomButton(
-                              title: 'Lưu',
+                              label: 'Lưu',
                               textColor: AppColors.onPrimary,
                               backgroundColor: AppColors.primary,
                               strokeColor: AppColors.strokeLight,

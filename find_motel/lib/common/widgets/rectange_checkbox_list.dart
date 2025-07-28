@@ -26,6 +26,7 @@ class RectangeCheckboxList extends StatefulWidget {
   final RectangeCheckboxListCallback? onChange;
   final CheckboxListDisplayMode displayMode;
   final int? gridCrossAxisCount;
+  final double? gridCrossAxisSpacing;
   final double? gridChildAspectRatio;
   final CheckboxListSelectionMode
   selectionMode; // Thêm thuộc tính selectionMode mới
@@ -37,6 +38,7 @@ class RectangeCheckboxList extends StatefulWidget {
     this.onChange,
     this.displayMode = CheckboxListDisplayMode.row,
     this.gridCrossAxisCount,
+    this.gridCrossAxisSpacing,
     this.gridChildAspectRatio = 3.0,
     this.selectionMode =
         CheckboxListSelectionMode.multiple, // Mặc định là chọn nhiều
@@ -118,7 +120,7 @@ class _RectangeCheckboxListState extends State<RectangeCheckboxList> {
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: widget.gridCrossAxisCount!,
           crossAxisSpacing: 8.0,
-          mainAxisSpacing: 8.0,
+          mainAxisSpacing: widget.gridCrossAxisSpacing ?? 8.0,
           childAspectRatio: widget.gridChildAspectRatio!,
         ),
         itemBuilder: (context, index) {

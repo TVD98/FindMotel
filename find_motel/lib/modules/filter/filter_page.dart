@@ -13,6 +13,7 @@ import 'package:find_motel/common/widgets/fixed_dropdown_button.dart';
 import 'package:find_motel/services/motel/models/motels_filter.dart';
 import 'package:flutter/material.dart';
 import 'package:find_motel/theme/app_colors.dart';
+import 'package:find_motel/theme/app_textStyle.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class FilterPage extends StatefulWidget {
@@ -42,9 +43,7 @@ class _FilterPageState extends State<FilterPage> {
   late TextEditingController _distanceController;
 
   MotelsFilter get _motelsFilter => AppDataManager().filterMotels.copyWith(
-    roomCode: _roomCodeController.text.isEmpty
-        ? ''
-        : _roomCodeController.text,
+    roomCode: _roomCodeController.text.isEmpty ? '' : _roomCodeController.text,
     address: Address(
       province: _formatStringSelection(_selectedProvince),
       ward: _formatStringSelection(_selectedWard),
@@ -59,6 +58,26 @@ class _FilterPageState extends State<FilterPage> {
     ),
     distanceRange: Range(
       value: double.tryParse(_distanceController.text) ?? Constant.maxDistance,
+      maxValue: Constant.maxDistance,
+    ),
+  );
+
+  MotelsFilter get _motelsFilterDefault => AppDataManager().filterMotels.copyWith(
+    roomCode: '',
+    address: Address(
+      province: _formatStringSelection(_selectedProvince),
+      ward: _formatStringSelection('Tất cả'),
+    ),
+    amenities: [],
+    status: [],
+    texturies: [],
+    type: 'Khác',
+    priceRange: Range2D(
+      values: const RangeValues(1_000_000, 10_000_000),
+      maxValue: Constant.maxPrice,
+    ),
+    distanceRange: Range(
+      value: Constant.defaultDistance,
       maxValue: Constant.maxDistance,
     ),
   );
@@ -90,6 +109,7 @@ class _FilterPageState extends State<FilterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.onSurface1,
       appBar: CommonAppBar(title: 'Bộ lọc'),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -129,15 +149,11 @@ class _FilterPageState extends State<FilterPage> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Padding(
+        Padding(
           padding: EdgeInsets.only(right: 12.0),
           child: Text(
             'Mã phòng:',
-            style: TextStyle(
-              fontSize: 16.0,
-              color: AppColors.primary,
-              fontWeight: FontWeight.bold,
-            ),
+            style: AppTextStyle.smallLabel.copyWith(color: AppColors.primary),
           ),
         ),
         Expanded(
@@ -156,11 +172,7 @@ class _FilterPageState extends State<FilterPage> {
       children: [
         Text(
           'Khu vực:',
-          style: TextStyle(
-            fontSize: 16.0,
-            color: AppColors.primary,
-            fontWeight: FontWeight.bold,
-          ),
+          style: AppTextStyle.smallLabel.copyWith(color: AppColors.primary),
         ),
         const SizedBox(height: 8.0),
         Padding(
@@ -172,14 +184,12 @@ class _FilterPageState extends State<FilterPage> {
               children: [
                 Row(
                   children: [
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.only(right: 12.0),
                       child: Text(
                         'Tỉnh/Tp:',
-                        style: TextStyle(
-                          fontSize: 14.0,
-                          color: AppColors.elementSecondary,
-                          fontWeight: FontWeight.w500,
+                        style: AppTextStyle.smallLabel.copyWith(
+                          color: AppColors.elementPrimary,
                         ),
                       ),
                     ),
@@ -187,8 +197,8 @@ class _FilterPageState extends State<FilterPage> {
                       child: FixedDropdownButton(
                         value: _selectedProvince,
                         items: _allProvinceOptions.map((e) => e.name).toList(),
-                        width: 162.0,
-                        style: DropdownStyle.medium,
+                        // width: 162.0,
+                        style: DropdownStyle.large,
                         onChanged: (value) {
                           setState(() {
                             _selectedProvince = value ?? 'Tất cả';
@@ -201,14 +211,12 @@ class _FilterPageState extends State<FilterPage> {
                 const SizedBox(height: 10.0),
                 Row(
                   children: [
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.only(right: 12.0),
                       child: Text(
                         'Phường/xã:',
-                        style: TextStyle(
-                          fontSize: 14.0,
-                          color: AppColors.elementSecondary,
-                          fontWeight: FontWeight.w500,
+                        style: AppTextStyle.smallLabel.copyWith(
+                          color: AppColors.elementPrimary,
                         ),
                       ),
                     ),
@@ -221,7 +229,7 @@ class _FilterPageState extends State<FilterPage> {
                                   (e) => e.name == _selectedProvince,
                                 )]
                                 .wards,
-                        style: DropdownStyle.medium,
+                        style: DropdownStyle.large,
                         onChanged: (value) {
                           setState(() {
                             _selectedWard = value ?? 'Tất cả';
@@ -245,11 +253,7 @@ class _FilterPageState extends State<FilterPage> {
       children: [
         Text(
           'Tiện ích:',
-          style: TextStyle(
-            fontSize: 16.0,
-            color: AppColors.primary,
-            fontWeight: FontWeight.bold,
-          ),
+          style: AppTextStyle.smallLabel.copyWith(color: AppColors.primary),
         ),
         Wrap(
           spacing: 8.0,
@@ -273,56 +277,29 @@ class _FilterPageState extends State<FilterPage> {
     );
   }
 
-  Widget _buildStatusSection() {
-    return Row(
-      children: [
-        const Padding(
-          padding: EdgeInsets.only(right: 12.0),
-          child: Text(
-            'Tình trạng:',
-            style: TextStyle(
-              fontSize: 16.0,
-              color: AppColors.primary,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-        Expanded(
-          child: RectangeCheckboxList(
-            items: _allStatusOptions,
-            initialSelected: _selectedStatusList,
-            onChange: (value) {
-              _selectedStatusList = value;
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildPriceRangeSection() {
-    return Row(
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(right: 8.0),
-          child: Text(
-            'Giá thuê:',
-            style: TextStyle(
-              fontSize: 16.0,
-              color: AppColors.primary,
-              fontWeight: FontWeight.bold,
+    return SizedBox(
+      width: double.infinity,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: Text(
+              'Giá thuê:',
+              style: AppTextStyle.smallLabel.copyWith(color: AppColors.primary),
             ),
           ),
-        ),
-        Expanded(
-          child: PriceRangeInputView(
-            onPriceRangeChanged: (minPrice, maxPrice) {
-              _selectedPriceRangeValues = RangeValues(minPrice, maxPrice);
-            },
-            initialValues: _selectedPriceRangeValues,
+          Expanded(
+            child: PriceRangeInputView(
+              onPriceRangeChanged: (minPrice, maxPrice) {
+                _selectedPriceRangeValues = RangeValues(minPrice, maxPrice);
+              },
+              initialValues: _selectedPriceRangeValues,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -333,63 +310,90 @@ class _FilterPageState extends State<FilterPage> {
           padding: const EdgeInsets.only(right: 8.0),
           child: Text(
             'Phạm vi:',
-            style: TextStyle(
-              fontSize: 16.0,
-              color: AppColors.primary,
-              fontWeight: FontWeight.bold,
+            style: AppTextStyle.smallLabel.copyWith(color: AppColors.primary),
+          ),
+        ),
+        Text(
+          '≤',
+          style: AppTextStyle.smallLabel.copyWith(
+            color: AppColors.elementSecondary,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Stack(
+          alignment: Alignment.centerRight,
+          children: [
+            SizedBox(
+              width: 90,
+              child: CommonTextfield(
+                controller: _distanceController,
+                style: TextFieldStyle.medium,
+                backgroundColor: AppColors.onSurface1,
+              ),
             ),
-          ),
-        ),
-        Text(
-          '<=',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w400,
-            color: AppColors.elementSecondary,
-          ),
-        ),
-        const SizedBox(width: 8),
-        SizedBox(
-          width: 90,
-          child: CommonTextfield(
-            controller: _distanceController,
-            style: TextFieldStyle.medium,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          'km',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w400,
-            color: AppColors.elementSecondary,
-          ),
+            Positioned(
+              right: 8,
+              child: Text(
+                'km',
+                style: AppTextStyle.smallLabel.copyWith(
+                  color: AppColors.elementSecondary,
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 
   Widget _buildRoomTypeSection() {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.only(right: 12.0),
+        Padding(
+          padding: EdgeInsets.only(bottom: 6.0),
           child: Text(
             'Kiểu phòng:',
-            style: TextStyle(
-              fontSize: 16.0,
-              color: AppColors.primary,
-              fontWeight: FontWeight.bold,
-            ),
+            style: AppTextStyle.smallLabel.copyWith(color: AppColors.primary),
           ),
         ),
-        Expanded(
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: RectangeCheckboxList(
             items: _allRoomTypeOptions.map((e) => (e, e)).toList(),
             initialSelected: [_selectedRoomType],
             selectionMode: CheckboxListSelectionMode.single,
+            displayMode: CheckboxListDisplayMode.grid,
+            gridCrossAxisCount: 3,
             onChange: (value) {
               _selectedRoomType = value.first;
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatusSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.only(bottom: 6.0),
+          child: Text(
+            'Tình trạng:',
+            style: AppTextStyle.smallLabel.copyWith(color: AppColors.primary),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: RectangeCheckboxList(
+            items: _allStatusOptions,
+            initialSelected: _selectedStatusList,
+            displayMode: CheckboxListDisplayMode.grid,
+            gridCrossAxisCount: 3,
+            onChange: (value) {
+              _selectedStatusList = value;
             },
           ),
         ),
@@ -403,20 +407,19 @@ class _FilterPageState extends State<FilterPage> {
       children: [
         Text(
           'Kết cấu:',
-          style: TextStyle(
-            fontSize: 16.0,
-            color: AppColors.primary,
-            fontWeight: FontWeight.bold,
-          ),
+          style: AppTextStyle.smallLabel.copyWith(color: AppColors.primary),
         ),
-        RectangeCheckboxList(
-          items: _allTextureOptions.map((e) => (e, e)).toList(),
-          initialSelected: _selectedTextureList,
-          displayMode: CheckboxListDisplayMode.grid,
-          gridCrossAxisCount: 3,
-          onChange: (value) {
-            _selectedTextureList = value;
-          },
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: RectangeCheckboxList(
+            items: _allTextureOptions.map((e) => (e, e)).toList(),
+            initialSelected: _selectedTextureList,
+            displayMode: CheckboxListDisplayMode.grid,
+            gridCrossAxisCount: 3,
+            onChange: (value) {
+              _selectedTextureList = value;
+            },
+          ),
         ),
       ],
     );
@@ -427,30 +430,40 @@ class _FilterPageState extends State<FilterPage> {
       children: [
         Expanded(
           child: SizedBox(
-            height: 38,
+            height: 44,
             child: CustomButton(
-              title: 'Xoá',
+              label: 'Đặt lại',
               textColor: AppColors.primary,
+              textStyle: AppTextStyle.smallLabel,
               backgroundColor: AppColors.onPrimary,
-              strokeColor: AppColors.strokeLight,
+              isNoBorder: false,
+              strokeColor: AppColors.strokeHighLight,
               radius: 4.0,
               onPressed: () {
-                setState(() {
-                  _setupFieldsByFilters();
-                });
+                final MotelsFilter filters = _motelsFilterDefault;
+                context.read<MotelsFilterCubit>().updateFilter(filters);
+                // setState(() {
+                //   _setupFieldsByFilters();
+                // });
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(
+                    builder: (_) => BlocProvider.value(
+                      value: context.read<MotelsFilterCubit>(),
+                      child: const FilterPage(),
+                    ),
+                  ),
+                );
               },
             ),
           ),
         ),
-        const SizedBox(width: 36),
+        const SizedBox(width: 46),
         Expanded(
           child: SizedBox(
-            height: 38,
+            height: 44,
             child: CustomButton(
-              title: 'Áp dụng',
-              textColor: AppColors.onPrimary,
-              backgroundColor: AppColors.primary,
-              strokeColor: AppColors.strokeLight,
+              label: 'Áp dụng',
+              textStyle: AppTextStyle.smallLabel,
               radius: 4.0,
               onPressed: () {
                 final MotelsFilter filters = _motelsFilter;
