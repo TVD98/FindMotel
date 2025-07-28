@@ -16,6 +16,7 @@ class CommonTextfield extends StatefulWidget {
   final List<TextInputFormatter>? inputFormatters;
   final TextFieldStyle style;
   final Color? backgroundColor;
+  final Color? bolderColor;
 
   const CommonTextfield({
     super.key,
@@ -26,7 +27,8 @@ class CommonTextfield extends StatefulWidget {
     this.enabled = true,
     this.inputFormatters,
     this.style = TextFieldStyle.large,
-    this.backgroundColor,
+    this.backgroundColor=AppColors.onSurface1,
+    this.bolderColor,
   });
 
   @override
@@ -143,7 +145,7 @@ class _CommonTextfieldState extends State<CommonTextfield> {
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(4),
-              borderSide: const BorderSide(color: AppColors.strokeLight),
+              borderSide: BorderSide(color: widget.bolderColor ?? AppColors.strokeLight),
             ),
             filled: true,
             fillColor: widget.backgroundColor ?? AppColors.onSurface1,

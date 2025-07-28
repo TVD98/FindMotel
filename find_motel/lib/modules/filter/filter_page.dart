@@ -62,6 +62,26 @@ class _FilterPageState extends State<FilterPage> {
     ),
   );
 
+  MotelsFilter get _motelsFilterDefault => AppDataManager().filterMotels.copyWith(
+    roomCode: '',
+    address: Address(
+      province: _formatStringSelection(_selectedProvince),
+      ward: _formatStringSelection('Tất cả'),
+    ),
+    amenities: [],
+    status: [],
+    texturies: [],
+    type: 'Khác',
+    priceRange: Range2D(
+      values: const RangeValues(1_000_000, 10_000_000),
+      maxValue: Constant.maxPrice,
+    ),
+    distanceRange: Range(
+      value: Constant.defaultDistance,
+      maxValue: Constant.maxDistance,
+    ),
+  );
+
   @override
   void initState() {
     super.initState();
@@ -89,6 +109,7 @@ class _FilterPageState extends State<FilterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.onSurface1,
       appBar: CommonAppBar(title: 'Bộ lọc'),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -176,8 +197,8 @@ class _FilterPageState extends State<FilterPage> {
                       child: FixedDropdownButton(
                         value: _selectedProvince,
                         items: _allProvinceOptions.map((e) => e.name).toList(),
-                        width: 162.0,
-                        style: DropdownStyle.medium,
+                        // width: 162.0,
+                        style: DropdownStyle.large,
                         onChanged: (value) {
                           setState(() {
                             _selectedProvince = value ?? 'Tất cả';
@@ -208,7 +229,7 @@ class _FilterPageState extends State<FilterPage> {
                                   (e) => e.name == _selectedProvince,
                                 )]
                                 .wards,
-                        style: DropdownStyle.medium,
+                        style: DropdownStyle.large,
                         onChanged: (value) {
                           setState(() {
                             _selectedWard = value ?? 'Tất cả';
@@ -307,7 +328,7 @@ class _FilterPageState extends State<FilterPage> {
               child: CommonTextfield(
                 controller: _distanceController,
                 style: TextFieldStyle.medium,
-                backgroundColor: AppColors.surface,
+                backgroundColor: AppColors.onSurface1,
               ),
             ),
             Positioned(
@@ -415,12 +436,23 @@ class _FilterPageState extends State<FilterPage> {
               textColor: AppColors.primary,
               textStyle: AppTextStyle.smallLabel,
               backgroundColor: AppColors.onPrimary,
-              strokeColor: AppColors.strokeLight,
+              isNoBorder: false,
+              strokeColor: AppColors.strokeHighLight,
               radius: 4.0,
               onPressed: () {
-                setState(() {
-                  _setupFieldsByFilters();
-                });
+                final MotelsFilter filters = _motelsFilterDefault;
+                context.read<MotelsFilterCubit>().updateFilter(filters);
+                // setState(() {
+                //   _setupFieldsByFilters();
+                // });
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(
+                    builder: (_) => BlocProvider.value(
+                      value: context.read<MotelsFilterCubit>(),
+                      child: const FilterPage(),
+                    ),
+                  ),
+                );
               },
             ),
           ),
@@ -431,10 +463,7 @@ class _FilterPageState extends State<FilterPage> {
             height: 44,
             child: CustomButton(
               label: 'Áp dụng',
-              textColor: AppColors.onPrimary,
               textStyle: AppTextStyle.smallLabel,
-              backgroundColor: AppColors.primary,
-              strokeColor: AppColors.strokeLight,
               radius: 4.0,
               onPressed: () {
                 final MotelsFilter filters = _motelsFilter;

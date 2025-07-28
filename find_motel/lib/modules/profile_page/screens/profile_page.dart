@@ -141,7 +141,7 @@ class _ProfilePageState extends State<ProfilePage>
                         child: SizedBox(
                           height: 44,
                           child: CustomButton(
-                            title: 'Đăng xuất',
+                            label: 'Đăng xuất',
                             icon: Icons.logout,
                             textColor: AppColors.onPrimary,
                             backgroundColor: AppColors.primary,

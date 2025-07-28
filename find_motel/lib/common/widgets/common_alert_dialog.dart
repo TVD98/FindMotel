@@ -60,7 +60,7 @@ class CommonAlertDialog extends StatelessWidget {
                 width: 90,
                 height: 38,
                 child: CustomButton(
-                  title: leadingActionTitle!,
+                  label: leadingActionTitle!,
                   textColor: AppColors.primary,
                   backgroundColor: AppColors.onPrimary,
                   strokeColor: AppColors.strokeLight,
@@ -75,7 +75,7 @@ class CommonAlertDialog extends StatelessWidget {
                 width: 90,
                 height: 38,
                 child: CustomButton(
-                  title: trailingActionTitle!,
+                  label: trailingActionTitle!,
                   textColor: AppColors.onPrimary,
                   backgroundColor: AppColors.primary,
                   strokeColor: AppColors.strokeLight,

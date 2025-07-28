@@ -16,8 +16,8 @@ class FixedDropdownButton extends StatefulWidget {
     super.key,
     required this.items,
     this.value,
-    this.width = 120.0,
-    this.height = 26,
+    this.width = double.infinity,
+    this.height = 30,
     this.style = DropdownStyle.large,
     this.onChanged,
   });
@@ -32,7 +32,7 @@ class _FixedDropdownButtonState extends State<FixedDropdownButton> {
     final double iconSize;
     switch (widget.style) {
       case DropdownStyle.large:
-        iconSize = 24;
+        iconSize = 20;
       case DropdownStyle.medium:
         iconSize = 16;
         break;
@@ -46,7 +46,7 @@ class _FixedDropdownButtonState extends State<FixedDropdownButton> {
       backgroundColor: AppColors.onSurface1,
       width: widget.width,
       height: widget.height,
-      horizontalPadding: 8.0,
+      horizontalPadding: 4.0,
       iconSize: iconSize,
       menuItemFontSize: 14.0,
       menuItemTextColor: AppColors.elementSecondary,

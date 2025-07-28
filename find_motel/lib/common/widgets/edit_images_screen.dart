@@ -197,7 +197,7 @@ class _ImageDisplayScreenState extends State<ImageDisplayScreen> {
           child: SizedBox(
             height: 38,
             child: CustomButton(
-              title: 'Hoàn tác',
+              label: 'Hoàn tác',
               textColor: AppColors.primary,
               backgroundColor: AppColors.onPrimary,
               strokeColor: AppColors.strokeLight,
@@ -213,7 +213,7 @@ class _ImageDisplayScreenState extends State<ImageDisplayScreen> {
           child: SizedBox(
             height: 38,
             child: CustomButton(
-              title: 'Lưu',
+              label: 'Lưu',
               textColor: AppColors.onPrimary,
               backgroundColor: AppColors.primary,
               strokeColor: AppColors.strokeLight,

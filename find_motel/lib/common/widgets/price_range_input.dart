@@ -63,6 +63,15 @@ class _PriceRangeInputViewState extends State<PriceRangeInputView> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isError;
+    if (_minPriceController.text.isNotEmpty &&
+        _maxPriceController.text.isNotEmpty) {
+      isError = 
+          _minPriceController.text.toPrice() >
+          _maxPriceController.text.toPrice();
+    } else {
+      isError = false;
+    }
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 0.0),
       child: Row(
@@ -75,7 +84,8 @@ class _PriceRangeInputViewState extends State<PriceRangeInputView> {
               hintText: 'Giá tối thiểu',
               keyboardType: TextInputType.number,
               style: TextFieldStyle.medium,
-              backgroundColor: AppColors.surface,
+              backgroundColor: AppColors.onSurface1,
+              bolderColor: isError ? AppColors.error : null,
             ),
           ),
           Padding(
@@ -96,7 +106,7 @@ class _PriceRangeInputViewState extends State<PriceRangeInputView> {
               hintText: 'Giá tối đa',
               keyboardType: TextInputType.number,
               style: TextFieldStyle.medium,
-              backgroundColor: AppColors.surface,
+              backgroundColor: AppColors.onSurface1,
             ),
           ),
         ],

@@ -176,7 +176,7 @@ class _SettingPageState extends State<SettingPage> {
                   width: double.infinity,
                   height: 44,
                   child: CustomButton(
-                    title: state.isSaving ? 'Đang lưu...' : 'Lưu cài đặt',
+                    label: state.isSaving ? 'Đang lưu...' : 'Lưu cài đặt',
                     radius: 10.0,
                     onPressed: state.isSaving
                         ? null
