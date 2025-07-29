@@ -120,16 +120,16 @@ class _MotelFeesFormState extends State<MotelFeesForm> {
                   children: [
                     CommonTextfield(
                       controller: nameControllerDialog,
-                      title: 'Tên phí',
-                      titleBackground: Theme.of(
+                      label: 'Tên phí',
+                      backgroundColor: Theme.of(
                         context,
                       ).scaffoldBackgroundColor,
                     ),
                     const SizedBox(height: 16),
                     CommonTextfield(
                       controller: priceControllerDialog,
-                      title: 'Số tiền',
-                      titleBackground: Theme.of(
+                      label: 'Số tiền',
+                      backgroundColor: Theme.of(
                         context,
                       ).scaffoldBackgroundColor,
                       keyboardType: TextInputType.number,

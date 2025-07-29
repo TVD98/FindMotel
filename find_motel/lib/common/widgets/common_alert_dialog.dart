@@ -2,6 +2,11 @@ import 'package:find_motel/common/widgets/custom_button.dart';
 import 'package:find_motel/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
+enum AlertType {
+  success,
+  error,
+}
+
 class CommonAlertDialog extends StatelessWidget {
   final String title;
   final String content;
@@ -13,6 +18,7 @@ class CommonAlertDialog extends StatelessWidget {
   final VoidCallback? onLeadingPressed; // Callback cho nút leading
   final VoidCallback? onTrailingPressed; // Callback cho nút trailing
   final MainAxisAlignment actionsAlignment;
+  final AlertType alertType;
 
   const CommonAlertDialog({
     super.key,
@@ -25,6 +31,7 @@ class CommonAlertDialog extends StatelessWidget {
     this.onLeadingPressed,
     this.onTrailingPressed,
     this.actionsAlignment = MainAxisAlignment.center,
+    this.alertType = AlertType.success,
   });
 
   @override
@@ -37,7 +44,7 @@ class CommonAlertDialog extends StatelessWidget {
             TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: AppColors.primary,
+              color: alertType == AlertType.error ? AppColors.error : AppColors.primary,
             ),
       ),
       content: Text(

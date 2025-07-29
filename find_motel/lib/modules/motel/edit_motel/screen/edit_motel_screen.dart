@@ -641,11 +641,11 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
   }) {
     return CommonTextfield(
       controller: controller,
-      title: label,
+      label: label,
       maxLines: maxLines,
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
-      titleBackground: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
     );
   }
 
@@ -828,16 +828,16 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
                   children: [
                     CommonTextfield(
                       controller: latitudeControllerDialog,
-                      title: 'Latitude',
-                      titleBackground: Theme.of(
+                      label: 'Latitude',
+                      backgroundColor: Theme.of(
                         context,
                       ).scaffoldBackgroundColor,
                     ),
                     const SizedBox(height: 16),
                     CommonTextfield(
                       controller: longitudeControllerDialog,
-                      title: 'Longitude',
-                      titleBackground: Theme.of(
+                      label: 'Longitude',
+                      backgroundColor: Theme.of(
                         context,
                       ).scaffoldBackgroundColor,
                     ),

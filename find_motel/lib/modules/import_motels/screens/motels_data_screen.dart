@@ -212,8 +212,8 @@ class _MotelsDataScreenState extends State<MotelsDataScreen> {
                   children: [
                     CommonTextfield(
                       controller: motelIdControllerDialog,
-                      title: 'ID',
-                      titleBackground: Theme.of(
+                      label: 'ID',
+                      backgroundColor: Theme.of(
                         context,
                       ).scaffoldBackgroundColor,
                     ),

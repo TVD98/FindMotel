@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:find_motel/common/widgets/common_app_bar.dart';
 import 'package:find_motel/modules/import_motels/bloc/import_motels_state.dart';
-import 'package:find_motel/common/models/motel.dart';
 import 'package:find_motel/extensions/double_extensions.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -56,13 +55,21 @@ class _ImportMotelsScreenState extends State<ImportMotelsScreen> {
                   ),
                 ),
               IconButton(
-                onPressed: () {
-                  if (state.motels?.isNotEmpty ?? false) {
-                    context.read<ImportMotelsBloc>().add(
-                      SaveMotelsEvent(motels: state.motels!),
-                    );
-                  }
-                },
+                onPressed: state.isCanImport
+                    ? () {
+                        if (state.motels?.isNotEmpty ?? false) {
+                          context.read<ImportMotelsBloc>().add(
+                            SaveMotelsEvent(
+                              motels: state.motels!
+                                  .map((e) => e.motel)
+                                  .toList(),
+                            ),
+                          );
+                        }
+                      }
+                    : () {
+                        _showErrorDialog();
+                      },
                 icon: SvgPicture.asset('assets/images/ic_save.svg'),
               ),
             ],
@@ -84,12 +91,31 @@ class _ImportMotelsScreenState extends State<ImportMotelsScreen> {
     );
   }
 
-  Widget _buildMotel(Motel motel) {
+  void _showErrorDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return CommonAlertDialog(
+          alertType: AlertType.error,
+          title: 'Không thể lưu',
+          content: 'Nhà trọ trùng ID',
+          trailingActionTitle: 'Đóng',
+          onTrailingPressed: () {
+            Navigator.of(context).pop();
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildMotel(ImportedMotel importedMotel) {
+    final motel = importedMotel.motel;
+    final isValid = importedMotel.isValid;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isValid ? Colors.white : AppColors.error.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(

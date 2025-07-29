@@ -14,9 +14,14 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
       super(const ImportMotelsState()) {
     on<HandleFileEvent>((event, emit) {
       List<List<String>> data = event.data;
-      data = data.map((e) => e.map((e) => e.removeTrailingZero()).toList()).toList();
+      data = data
+          .map((e) => e.map((e) => e.removeTrailingZero()).toList())
+          .toList();
       final motels = _parseMotels(data);
-      emit(state.copyWith(motels: motels));
+
+      List<ImportedMotel> importedMotels = _reorganizeMotelsById(motels);
+      bool isCanImport = importedMotels.every((e) => e.isValid);
+      emit(state.copyWith(motels: importedMotels, isCanImport: isCanImport));
     });
 
     on<SaveMotelsEvent>((event, emit) async {
@@ -141,5 +146,36 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
       thumbnail: images.first,
       texture: json['texture'] as String,
     );
+  }
+
+  List<ImportedMotel> _reorganizeMotelsById(List<Motel> motels) {
+    if (motels.isEmpty) {
+      return [];
+    }
+
+    final Map<String, int> idCounts = {};
+    for (final motel in motels) {
+      idCounts[motel.roomCode] = (idCounts[motel.roomCode] ?? 0) + 1;
+    }
+
+    final Set<String> duplicateIds = idCounts.entries
+        .where((entry) => entry.value > 1)
+        .map((entry) => entry.key)
+        .toSet();
+
+    final List<ImportedMotel> duplicates = [];
+    final List<ImportedMotel> nonDuplicates = [];
+
+    for (final motel in motels) {
+      if (duplicateIds.contains(motel.roomCode)) {
+        duplicates.add(ImportedMotel(motel: motel, isValid: false));
+      } else {
+        nonDuplicates.add(ImportedMotel(motel: motel, isValid: true));
+      }
+    }
+
+    duplicates.sort((a, b) => a.motel.roomCode.compareTo(b.motel.roomCode));
+
+    return [...duplicates, ...nonDuplicates];
   }
 }
