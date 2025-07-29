@@ -17,6 +17,13 @@ class HandleFileEvent extends ImportMotelsEvent {
   List<Object?> get props => [data];
 }
 
+class FilterDuplicateEvent extends ImportMotelsEvent {
+  const FilterDuplicateEvent();
+
+  @override
+  List<Object?> get props => [];
+}
+
 class SaveMotelsEvent extends ImportMotelsEvent {
   final List<Motel> motels;
   const SaveMotelsEvent({required this.motels});

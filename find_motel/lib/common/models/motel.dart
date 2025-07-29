@@ -77,6 +77,8 @@ class Motel {
     required this.texture,
   });
 
+  String get displayName => id;
+
   /// Convert this [Motel] instance to a Map suitable for Firestore.
   Map<String, dynamic> toMap() {
     return {

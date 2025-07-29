@@ -5,7 +5,7 @@ class MotelIndex {
   String? number;
   String? street;
   String? ward;
-  String? name;
+  String? district;
   String? price;
   String? type;
   String? roomCode;
@@ -25,8 +25,8 @@ class MotelIndex {
     this.number,
     this.street,
     this.ward,
+    this.district,
     this.price,
-    this.name,
     this.type,
     this.roomCode,
     this.elevator,
@@ -46,7 +46,7 @@ class MotelIndex {
     number: json['number'] as String?,
     street: json['street'] as String?,
     ward: json['ward'] as String?,
-    name: json['name'] as String?,
+    district: json['district'] as String?,
     price: json['price'] as String?,
     type: json['type'] as String?,
     roomCode: json['room_code'] as String?,
@@ -66,8 +66,8 @@ class MotelIndex {
     final List<int> indexList = [
       street,
       ward,
+      district,
       price,
-      name,
       type,
       roomCode,
       elevator,

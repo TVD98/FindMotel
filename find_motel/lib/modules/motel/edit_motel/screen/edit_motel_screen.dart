@@ -31,7 +31,6 @@ class EditMotelScreen extends StatefulWidget {
 
 class _EditMotelScreenState extends State<EditMotelScreen> {
   // Thay thế TextEditingController bằng Bloc
-  late TextEditingController nameController;
   late TextEditingController commissionController;
   late TextEditingController priceController;
   late TextEditingController addressController;
@@ -41,18 +40,12 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
   void initState() {
     super.initState();
     // Khởi tạo các controller và lắng nghe thay đổi để dispatch events
-    nameController = TextEditingController(text: widget.motel.name);
     commissionController = TextEditingController(text: widget.motel.commission);
     priceController = TextEditingController(text: widget.motel.price.toVND());
     addressController = TextEditingController(text: widget.motel.address);
     noteController = TextEditingController(text: widget.motel.note.join('\n'));
 
     // Lắng nghe thay đổi trên controller và dispatch event
-    nameController.addListener(() {
-      context.read<EditMotelBloc>().add(
-        EditMotelNameChanged(nameController.text),
-      );
-    });
     commissionController.addListener(() {
       context.read<EditMotelBloc>().add(
         EditMotelCommissionChanged(commissionController.text),
@@ -81,7 +74,6 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
   @override
   void dispose() {
     // Đảm bảo dispose các controller
-    nameController.dispose();
     commissionController.dispose();
     priceController.dispose();
     addressController.dispose();
@@ -581,8 +573,6 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
   Widget _buildBasicInfoSection(EditMotelState state) {
     return Column(
       children: [
-        _buildTextField('Tên căn hộ', nameController),
-        const SizedBox(height: 24),
         Row(
           children: [
             Expanded(
@@ -896,7 +886,7 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
       ' mỗi dòng một ghi chú ',
       noteController,
       maxLines: 5,
-      keyboardType: TextInputType.multiline
+      keyboardType: TextInputType.multiline,
     );
   }
 }

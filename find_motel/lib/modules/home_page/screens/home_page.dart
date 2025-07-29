@@ -146,7 +146,7 @@ class _HomePageState extends State<HomePage>
                           final motel = state.motels![idx];
                           return _MotelCard(
                             imageUrl: motel.thumbnail,
-                            title: motel.name,
+                            title: motel.displayName,
                             address: motel.address,
                             price: motel.price.toVND(),
                             motel: motel, // Pass the full motel object

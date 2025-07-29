@@ -186,7 +186,7 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
                 Row(
                   children: [
                     Text(
-                      motelCard.name,
+                      motelCard.displayName,
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w600,

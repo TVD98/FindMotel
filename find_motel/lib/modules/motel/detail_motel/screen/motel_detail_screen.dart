@@ -48,7 +48,7 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
     schedule: DateTime.now(),
     saleId: AppDataManager().currentUserProfile?.email ?? '',
     motelId: widget.detail.id,
-    motelName: widget.detail.name,
+    motelName: widget.detail.displayName,
   );
 
   @override
@@ -65,14 +65,13 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  currentMotelDetail.name,
+                  currentMotelDetail.displayName,
                   style: AppTextStyle.heading4.copyWith(
                     color: AppColors.primary,
                   ),
                 ),
                 const SizedBox(height: AppConstants.spacing),
                 _buildRoomInfo(
-                  currentMotelDetail.roomCode,
                   currentMotelDetail.type,
                   currentMotelDetail.texture,
                 ),
@@ -197,16 +196,10 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
     );
   }
 
-  Widget _buildRoomInfo(String roomCode, String type, String texture) {
+  Widget _buildRoomInfo(String type, String texture) {
     return Column(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            _buildSubAndBodyText("Mã phòng:", roomCode),
-            _buildSubAndBodyText("Kết cấu:", texture),
-          ],
-        ),
+        _buildSubAndBodyText("Kết cấu:", texture),
         const SizedBox(height: 8),
         _buildSubAndBodyText("Kiểu phòng:", type),
       ],

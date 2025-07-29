@@ -24,6 +24,11 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
       emit(state.copyWith(motels: importedMotels, isCanImport: isCanImport));
     });
 
+    on<FilterDuplicateEvent>((event, emit) {
+      final List<ImportedMotel> filteredMotels = state.motels?.where((e) => e.isValid).toList() ?? [];
+      emit(state.copyWith(motels: filteredMotels, isCanImport: true));
+    });
+
     on<SaveMotelsEvent>((event, emit) async {
       emit(state.copyWith(isLoading: true));
       try {
@@ -60,7 +65,7 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
     final streetIndex = motelIndex.street?.toIndex() ?? 0;
     final wardIndex = motelIndex.ward?.toIndex() ?? 0;
     final priceIndex = motelIndex.price?.toIndex() ?? 0;
-    final nameIndex = motelIndex.name?.toIndex() ?? 0;
+    final districtIndex = motelIndex.district?.toIndex() ?? 0;
     final typeIndex = motelIndex.type?.toIndex() ?? 0;
     final roomCodeIndex = motelIndex.roomCode?.toIndex() ?? 0;
     final elevatorIndex = motelIndex.elevator?.toIndex() ?? 0;
@@ -82,7 +87,7 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
         'street': rowData[streetIndex],
         'ward': rowData[wardIndex],
         'price': rowData[priceIndex],
-        'name': rowData[nameIndex],
+        'district': rowData[districtIndex],
         'type': rowData[typeIndex],
         'commission': rowData[commissionIndex],
         'geoPoint': rowData[geoPointIndex],
@@ -96,17 +101,21 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
         'texture': rowData[textureIndex],
         'images': rowData[imagesIndex],
       };
-      motelList.add(_motelFromJson(motelJson));
+      final motel = _motelFromJson(motelJson);
+      if (motel != null) motelList.add(motel);
     }
     return motelList;
   }
 
-  Motel _motelFromJson(Map<String, dynamic> json) {
-    final name = '${json['name']}';
+  Motel? _motelFromJson(Map<String, dynamic> json) {
+    final roomCode = '${json['roomCode']}';
+    if (roomCode.isEmpty) return null;
+
+    final district = '${json['district']}';
     final number = '${json['number']}';
     final street = '${json['street']}';
     final ward = '${json['ward']}';
-    final address = '$number $street, $ward';
+    final address = '$number $street, $ward, $district';
     final carDeposit = (json['car'] as String).toPrice();
     final images = (json['images'] as String)
         .split(',')
@@ -117,9 +126,9 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
     final otherPrice = (json['other'] as String).toPrice();
     final List<String> extensions = [];
     final List<Fee> fees = [
-      Fee(name: 'Điện', price: electricityPrice * 1000, unit: 'số'),
-      Fee(name: 'Nước', price: waterPrice * 1000, unit: 'người'),
-      Fee(name: 'Phí dịch vụ', price: otherPrice * 1000, unit: 'người'),
+      Fee(name: 'Điện', price: electricityPrice, unit: 'số'),
+      Fee(name: 'Nước', price: waterPrice, unit: 'người'),
+      Fee(name: 'Phí dịch vụ', price: otherPrice, unit: 'người'),
     ];
     if ((json['elevator'] as String).toBoolean()) extensions.add('Thang máy');
     if (carDeposit == 0) {
@@ -130,13 +139,13 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
 
     return Motel(
       id: '',
-      name: name,
+      name: '',
       address: address,
-      price: (json['price'] as String).toPrice() * 1000,
+      price: (json['price'] as String).toPrice(),
       type: json['type'] as String,
       commission: json['commission'] as String,
       geoPoint: (json['geoPoint'] as String).toGeoPoint(),
-      roomCode: json['roomCode'] as String,
+      roomCode: roomCode,
       extensions: extensions,
       fees: fees,
       note: [json['note'] as String],

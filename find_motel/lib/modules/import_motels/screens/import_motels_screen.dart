@@ -68,7 +68,9 @@ class _ImportMotelsScreenState extends State<ImportMotelsScreen> {
                         }
                       }
                     : () {
-                        _showErrorDialog();
+                        _showErrorDialog(() {
+                          context.read<ImportMotelsBloc>().add(FilterDuplicateEvent());
+                        });
                       },
                 icon: SvgPicture.asset('assets/images/ic_save.svg'),
               ),
@@ -86,23 +88,6 @@ class _ImportMotelsScreenState extends State<ImportMotelsScreen> {
                 const Center(child: CircularProgressIndicator()),
             ],
           ),
-        );
-      },
-    );
-  }
-
-  void _showErrorDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return CommonAlertDialog(
-          alertType: AlertType.error,
-          title: 'Không thể lưu',
-          content: 'Nhà trọ trùng ID',
-          trailingActionTitle: 'Đóng',
-          onTrailingPressed: () {
-            Navigator.of(context).pop();
-          },
         );
       },
     );
@@ -128,8 +113,6 @@ class _ImportMotelsScreenState extends State<ImportMotelsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildField('Tên', motel.name),
-          const SizedBox(height: 4),
           _build2Field('Mã phòng:', motel.roomCode, 'Kết cấu:', motel.texture),
           const SizedBox(height: 4),
           _buildField('Kiểu phòng:', motel.type),
@@ -274,6 +257,28 @@ class _ImportMotelsScreenState extends State<ImportMotelsScreen> {
             Navigator.of(context).pop();
             ReloadService.setHomeNeedsReload();
             Navigator.pop(context);
+          },
+        );
+      },
+    );
+  }
+
+  void _showErrorDialog(Function onFilterPressed) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return CommonAlertDialog(
+          alertType: AlertType.error,
+          title: 'Không thể lưu',
+          content: 'Nhà trọ trùng ID, nhấn Lọc để xóa các trọ bị lặp',
+          leadingActionTitle: 'Đóng',
+          trailingActionTitle: 'Lọc',
+          onLeadingPressed: () {
+            Navigator.of(context).pop();
+          },
+          onTrailingPressed: () {
+            Navigator.of(context).pop();
+            onFilterPressed();
           },
         );
       },

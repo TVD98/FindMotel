@@ -13,7 +13,6 @@ class EditMotelBloc extends Bloc<EditMotelEvent, EditMotelState> {
     : _motelsService = motelsService ?? FirestoreService(),
       super(const EditMotelState()) {
     on<EditMotelInitialized>(_onInitialized);
-    on<EditMotelNameChanged>(_onNameChanged);
     on<EditMotelTypeChanged>(_onTypeChanged);
     on<EditMotelTextureChanged>(_onTextureChanged);
     on<EditMotelCommissionChanged>(_onCommissionChanged);
@@ -54,13 +53,6 @@ class EditMotelBloc extends Bloc<EditMotelEvent, EditMotelState> {
         location: motel.geoPoint,
       ),
     );
-  }
-
-  void _onNameChanged(
-    EditMotelNameChanged event,
-    Emitter<EditMotelState> emit,
-  ) {
-    emit(state.copyWith(name: event.name));
   }
 
   void _onTypeChanged(

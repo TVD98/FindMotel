@@ -33,8 +33,7 @@ class FirestoreService
   @override
   Future<({String? id, String? error})> addMotel(Motel motel) async {
     try {
-      final List<String> keywords =
-          motel.name.generateKeywords() + motel.address.generateKeywords();
+      final List<String> keywords = motel.address.generateKeywords();
       final json = motel.toMap();
       json['keywords'] = keywords;
       json['created_at'] = DateTime.now().millisecondsSinceEpoch;
@@ -226,8 +225,7 @@ class FirestoreService
   ) async {
     try {
       final json = motel.toMap();
-      final List<String> keywords =
-          motel.name.generateKeywords() + motel.address.generateKeywords();
+      final List<String> keywords = motel.address.generateKeywords();
       final List<String> imageUrls = await _storageService.uploadImages(
         motel.images,
       );
