@@ -144,6 +144,11 @@ class _ImportMotelsScreenState extends State<ImportMotelsScreen> {
           if (motel.extensions.isNotEmpty)
             _buildField('Tiện ích:', '[${motel.extensions.join(', ')}]'),
           const SizedBox(height: 4),
+          if (motel.car.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4.0),
+              child: _buildField('Xe:', motel.car),
+            ),
           Text(
             'Chi phí khác:',
             style: const TextStyle(

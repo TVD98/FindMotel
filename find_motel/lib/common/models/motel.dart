@@ -43,6 +43,7 @@ class Motel {
   final String id;
   final String address;
   final String commission;
+  final String car;
   final List<String> extensions;
   final List<Fee> fees;
   final LatLng geoPoint;
@@ -62,6 +63,7 @@ class Motel {
     required this.id,
     required this.address,
     required this.commission,
+    required this.car,
     required this.extensions,
     required this.fees,
     required this.geoPoint,
@@ -106,6 +108,7 @@ class Motel {
       id: id ?? map['id'] ?? '',
       address: map['address'] ?? '',
       commission: map['commission'] ?? '',
+      car: map['car'] ?? '',
       extensions: List<String>.from(map['extensions'] ?? []),
       fees: List<Map<String, dynamic>>.from(
         map['fees'],
@@ -134,6 +137,7 @@ class Motel {
     int? createdAt,
     String? address,
     String? commission,
+    String? car,
     List<String>? extensions,
     List<Fee>? fees,
     LatLng? geoPoint,
@@ -152,6 +156,7 @@ class Motel {
       id: id,
       address: address ?? this.address,
       commission: commission ?? this.commission,
+      car: car ?? this.car,
       extensions: extensions ?? this.extensions,
       fees: fees ?? this.fees,
       geoPoint: geoPoint ?? this.geoPoint,
@@ -174,6 +179,7 @@ class Motel {
       id: id,
       address: '',
       commission: '',
+      car: '',
       extensions: const [],
       fees: const [],
       geoPoint: const LatLng(0, 0),

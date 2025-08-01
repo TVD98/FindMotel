@@ -171,6 +171,7 @@ class FirestoreService
       id: data['room_code'] as String? ?? '',
       address: data['address'] as String? ?? '',
       commission: data['commission']?.toString() ?? '',
+      car: data['car'] as String? ?? '',
       extensions: List<String>.from(data['extensions'] ?? const []),
       fees: List<Map<String, dynamic>>.from(
         data['fees'],

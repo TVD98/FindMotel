@@ -114,9 +114,9 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
     final district = '${json['district']}';
     final number = '${json['number']}';
     final street = '${json['street']}';
-    final ward = '${json['ward']}';
+    final ward = 'phường ${json['ward']}';
     final address = '$number $street, $ward, $district';
-    final carDeposit = (json['car'] as String).toPrice();
+    final carDeposit = json['car'];
     final images = (json['images'] as String)
         .split(',')
         .map((e) => e.trim().toImageUrl())
@@ -131,11 +131,6 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
       Fee(name: 'Phí dịch vụ', price: otherPrice, unit: 'người'),
     ];
     if ((json['elevator'] as String).toBoolean()) extensions.add('Thang máy');
-    if (carDeposit == 0) {
-      extensions.add('Xe');
-    } else {
-      fees.add(Fee(name: 'Xe', price: carDeposit, unit: 'người'));
-    }
 
     return Motel(
       id: '',
@@ -144,6 +139,7 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
       price: (json['price'] as String).toPrice(),
       type: json['type'] as String,
       commission: json['commission'] as String,
+      car: carDeposit,
       geoPoint: (json['geoPoint'] as String).toGeoPoint(),
       roomCode: roomCode,
       extensions: extensions,
