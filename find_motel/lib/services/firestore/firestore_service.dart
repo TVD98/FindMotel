@@ -269,7 +269,7 @@ class FirestoreService
     return Province(
       id: doc.id,
       name: data['name'] as String? ?? '',
-      wards: List<String>.from(data['wards'] ?? const []),
+      districts: List<District>.from(data['districts'] ?? const []),
     );
   }
 

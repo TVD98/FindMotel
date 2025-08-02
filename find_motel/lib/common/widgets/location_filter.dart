@@ -70,11 +70,17 @@ class _LocationFilterState extends State<LocationFilter> {
     try {
       final provinces = await _apiService.fetchProvinces();
       setState(() {
-        _province.addAll(provinces);
+        _isLoading = true;
+      });
+      _province.addAll(provinces);
+      setState(() {
         _isLoading = false;
       });
     } catch (e) {
       print('Error fetching provinces: $e');
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
