@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:find_motel/theme/app_colors.dart';
 import 'package:find_motel/theme/app_textStyle.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:find_motel/common/widgets/location_filter.dart';
 
 class FilterPage extends StatefulWidget {
   const FilterPage({super.key});
@@ -33,6 +34,7 @@ class _FilterPageState extends State<FilterPage> {
   final List<String> _allRoomTypeOptions = AppDataManager().allRoomTypies;
 
   late String _selectedProvince;
+  late String _selectedDistrict;
   late String _selectedWard;
   late String _selectedRoomType;
   late List<String> _selectedAmenities;
@@ -46,6 +48,7 @@ class _FilterPageState extends State<FilterPage> {
     roomCode: _roomCodeController.text.isEmpty ? '' : _roomCodeController.text,
     address: Address(
       province: _formatStringSelection(_selectedProvince),
+      district: _formatStringSelection(_selectedDistrict),
       ward: _formatStringSelection(_selectedWard),
     ),
     amenities: _selectedAmenities.isEmpty ? [] : _selectedAmenities,
@@ -62,25 +65,26 @@ class _FilterPageState extends State<FilterPage> {
     ),
   );
 
-  MotelsFilter get _motelsFilterDefault => AppDataManager().filterMotels.copyWith(
-    roomCode: '',
-    address: Address(
-      province: _formatStringSelection(_selectedProvince),
-      ward: _formatStringSelection('Tất cả'),
-    ),
-    amenities: [],
-    status: [],
-    texturies: [],
-    type: 'Khác',
-    priceRange: Range2D(
-      values: const RangeValues(1_000_000, 10_000_000),
-      maxValue: Constant.maxPrice,
-    ),
-    distanceRange: Range(
-      value: Constant.defaultDistance,
-      maxValue: Constant.maxDistance,
-    ),
-  );
+  MotelsFilter get _motelsFilterDefault =>
+      AppDataManager().filterMotels.copyWith(
+        roomCode: '',
+        address: Address(
+          province: _formatStringSelection('Tp. Hồ Chí Minh'),
+          ward: _formatStringSelection('Tất cả'),
+        ),
+        amenities: [],
+        status: [],
+        texturies: [],
+        type: 'Khác',
+        priceRange: Range2D(
+          values: const RangeValues(1_000_000, 10_000_000),
+          maxValue: Constant.maxPrice,
+        ),
+        distanceRange: Range(
+          value: Constant.defaultDistance,
+          maxValue: Constant.maxDistance,
+        ),
+      );
 
   @override
   void initState() {
@@ -92,6 +96,7 @@ class _FilterPageState extends State<FilterPage> {
   void _setupFieldsByFilters() {
     final initialData = AppDataManager().filterMotels;
     _selectedProvince = initialData.address?.province ?? 'Tất cả';
+    _selectedDistrict = initialData.address?.district ?? 'Tất cả';
     _selectedWard = initialData.address?.ward ?? 'Tất cả';
     _selectedAmenities = initialData.amenities ?? [];
     _selectedStatusList = initialData.status ?? [];
@@ -119,7 +124,31 @@ class _FilterPageState extends State<FilterPage> {
             children: [
               _buildRoomCodeRow(),
               _divider(),
-              _buildAreaSection(),
+              LocationFilter(
+                selectedProvince: _selectedProvince,
+                selectedDistrict: _selectedDistrict,
+                selectedWard: _selectedWard,
+                // Cung cấp các hàm callback để cập nhật trạng thái
+                onProvinceChanged: (newProvince) {
+                  setState(() {
+                    _selectedProvince = newProvince ?? 'Tất cả';
+                    _selectedDistrict = 'Tất cả';
+                    _selectedWard = 'Tất cả';
+                  });
+                },
+                onDistrictChanged: (newDistrict) {
+                  setState(() {
+                    _selectedDistrict = newDistrict ?? 'Tất cả';
+                    _selectedWard = 'Tất cả';
+                  });
+                },
+                onWardChanged: (newWard) {
+                  setState(() {
+                    _selectedWard = newWard ?? 'Tất cả';
+                  });
+                },
+              ),
+              // _buildAreaSection(),
               _divider(),
               _buildAmenitiesSection(),
               _divider(),
@@ -166,86 +195,86 @@ class _FilterPageState extends State<FilterPage> {
     );
   }
 
-  Widget _buildAreaSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Khu vực:',
-          style: AppTextStyle.smallLabel.copyWith(color: AppColors.primary),
-        ),
-        const SizedBox(height: 8.0),
-        Padding(
-          padding: const EdgeInsets.only(left: 12),
-          child: SizedBox(
-            width: 300,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(right: 12.0),
-                      child: Text(
-                        'Tỉnh/Tp:',
-                        style: AppTextStyle.smallLabel.copyWith(
-                          color: AppColors.elementPrimary,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: FixedDropdownButton(
-                        value: _selectedProvince,
-                        items: _allProvinceOptions.map((e) => e.name).toList(),
-                        // width: 162.0,
-                        style: DropdownStyle.large,
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedProvince = value ?? 'Tất cả';
-                          });
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10.0),
-                Row(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(right: 12.0),
-                      child: Text(
-                        'Phường/xã:',
-                        style: AppTextStyle.smallLabel.copyWith(
-                          color: AppColors.elementPrimary,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: FixedDropdownButton(
-                        value: _selectedWard,
-                        items:
-                            ['Tất cả'] +
-                            _allProvinceOptions[_allProvinceOptions.indexWhere(
-                                  (e) => e.name == _selectedProvince,
-                                )]
-                                .wards,
-                        style: DropdownStyle.large,
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedWard = value ?? 'Tất cả';
-                          });
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+  // Widget _buildAreaSection() {
+  //   return Column(
+  //     crossAxisAlignment: CrossAxisAlignment.start,
+  //     children: [
+  //       Text(
+  //         'Khu vực:',
+  //         style: AppTextStyle.smallLabel.copyWith(color: AppColors.primary),
+  //       ),
+  //       const SizedBox(height: 8.0),
+  //       Padding(
+  //         padding: const EdgeInsets.only(left: 12),
+  //         child: SizedBox(
+  //           width: 300,
+  //           child: Column(
+  //             crossAxisAlignment: CrossAxisAlignment.start,
+  //             children: [
+  //               Row(
+  //                 children: [
+  //                   Padding(
+  //                     padding: EdgeInsets.only(right: 12.0),
+  //                     child: Text(
+  //                       'Tỉnh/Tp:',
+  //                       style: AppTextStyle.smallLabel.copyWith(
+  //                         color: AppColors.elementPrimary,
+  //                       ),
+  //                     ),
+  //                   ),
+  //                   Expanded(
+  //                     child: FixedDropdownButton(
+  //                       value: _selectedProvince,
+  //                       items: _allProvinceOptions.map((e) => e.name).toList(),
+  //                       // width: 162.0,
+  //                       style: DropdownStyle.large,
+  //                       onChanged: (value) {
+  //                         setState(() {
+  //                           _selectedProvince = value ?? 'Tất cả';
+  //                         });
+  //                       },
+  //                     ),
+  //                   ),
+  //                 ],
+  //               ),
+  //               const SizedBox(height: 10.0),
+  //               Row(
+  //                 children: [
+  //                   Padding(
+  //                     padding: EdgeInsets.only(right: 12.0),
+  //                     child: Text(
+  //                       'Phường/xã:',
+  //                       style: AppTextStyle.smallLabel.copyWith(
+  //                         color: AppColors.elementPrimary,
+  //                       ),
+  //                     ),
+  //                   ),
+  //                   Expanded(
+  //                     child: FixedDropdownButton(
+  //                       value: _selectedWard,
+  //                       items:
+  //                           ['Tất cả'] +
+  //                           _allProvinceOptions[_allProvinceOptions.indexWhere(
+  //                                 (e) => e.name == _selectedProvince,
+  //                               )]
+  //                               .wards,
+  //                       style: DropdownStyle.large,
+  //                       onChanged: (value) {
+  //                         setState(() {
+  //                           _selectedWard = value ?? 'Tất cả';
+  //                         });
+  //                       },
+  //                     ),
+  //                   ),
+  //                 ],
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //       ),
+  //     ],
+  //   );
+  // }
 
   Widget _buildAmenitiesSection() {
     return Column(

@@ -26,7 +26,7 @@ class AppDataManager {
 
   MotelsFilter filterMotels = MotelsFilter(
     roomCode: null,
-    address: Address(province: 'Tp. Hồ Chí Minh', ward: null),
+    address: Address(province: 'Tp. Hồ Chí Minh', district: null, ward: null),
     amenities: null,
     status: null,
     texturies: null,

@@ -67,9 +67,10 @@ class Range2D implements QueryFilter {
 
 class Address implements KeywordsFilter {
   final String? province;
+  final String? district;
   final String? ward;
 
-  Address({this.province, this.ward});
+  Address({this.province,this.district, this.ward});
 
   @override
   List<String> makeKeywords(List<String> keywords) {
