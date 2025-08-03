@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:find_motel/common/models/motel.dart';
+import 'package:find_motel/utilities/excel_reader.dart';
 
 class ImportMotelsEvent extends Equatable {
   const ImportMotelsEvent();
@@ -9,7 +10,7 @@ class ImportMotelsEvent extends Equatable {
 }
 
 class HandleFileEvent extends ImportMotelsEvent {
-  final List<List<String>> data;
+  final List<ExcelData> data;
 
   const HandleFileEvent({required this.data});
 

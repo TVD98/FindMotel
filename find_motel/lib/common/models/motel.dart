@@ -57,6 +57,7 @@ class Motel {
   final String marker;
   final String thumbnail;
   final String texture;
+  final List<String> phoneNumbers;
 
   Motel({
     this.createdAt,
@@ -77,9 +78,10 @@ class Motel {
     required this.marker,
     required this.thumbnail,
     required this.texture,
+    required this.phoneNumbers,
   });
 
-  String get displayName => id;
+  String get displayName => roomCode;
 
   /// Convert this [Motel] instance to a Map suitable for Firestore.
   Map<String, dynamic> toMap() {
@@ -99,6 +101,7 @@ class Motel {
       'marker': marker,
       'thumbnail': thumbnail,
       'texture': texture,
+      'phone_numbers': phoneNumbers,
       if (createdAt != null) 'created_at': createdAt,
     };
   }
@@ -129,6 +132,7 @@ class Motel {
       marker: map['marker'] ?? '',
       thumbnail: map['thumbnail'] ?? '',
       texture: map['texture'] ?? '',
+      phoneNumbers: List<String>.from(map['phone_numbers'] ?? []),
       createdAt: map['created_at'] is int ? map['created_at'] as int : null,
     );
   }
@@ -151,6 +155,7 @@ class Motel {
     String? marker,
     String? thumbnail,
     String? texture,
+    List<String>? phoneNumbers,
   }) {
     return Motel(
       id: id,
@@ -170,6 +175,7 @@ class Motel {
       marker: marker ?? this.marker,
       thumbnail: thumbnail ?? this.thumbnail,
       texture: texture ?? this.texture,
+      phoneNumbers: phoneNumbers ?? this.phoneNumbers,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -193,6 +199,7 @@ class Motel {
       marker: '',
       thumbnail: '',
       texture: '',
+      phoneNumbers: const [],
       createdAt: null,
     );
   }

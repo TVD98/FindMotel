@@ -188,6 +188,7 @@ class FirestoreService
       thumbnail: data['thumbnail'] as String? ?? '',
       texture: data['texture'] as String? ?? '',
       createdAt: data['created_at'] as int? ?? 0,
+      phoneNumbers: List<String>.from(data['phone_numbers'] ?? const []),
     );
   }
 

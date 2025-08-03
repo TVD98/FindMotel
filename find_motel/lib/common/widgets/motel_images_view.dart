@@ -182,10 +182,11 @@ class _MotelImagesViewState extends State<MotelImagesView> {
         width: width,
         fit: BoxFit.cover,
         errorWidget: (context, error, stackTrace) {
-          return SizedBox(
-            height: height,
+          return Container(
             width: width,
-            child: Center(child: Icon(Icons.error, color: Colors.red)),
+            height: height,
+            color: Colors.grey[200],
+            child: const Icon(Icons.error, color: Colors.grey),
           );
         },
       );

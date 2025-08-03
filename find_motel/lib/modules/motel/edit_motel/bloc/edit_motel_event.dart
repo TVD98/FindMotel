@@ -9,6 +9,13 @@ abstract class EditMotelEvent extends Equatable {
   List<Object> get props => [];
 }
 
+class EditMotelPhoneNumbersChanged extends EditMotelEvent {
+  final List<String> phoneNumbers;
+  const EditMotelPhoneNumbersChanged(this.phoneNumbers);
+  @override
+  List<Object> get props => [phoneNumbers];
+}
+
 class EditMotelTypeChanged extends EditMotelEvent {
   final String type;
   const EditMotelTypeChanged(this.type);

@@ -4,8 +4,15 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:file_picker/file_picker.dart';
 import 'package:excel/excel.dart';
 
+class ExcelData {
+  final String sheetName;
+  final List<List<String>> data;
+
+  ExcelData({required this.sheetName, required this.data});
+}
+
 class ExcelReader {
-  Future<List<List<String>>> readExcelFile() async {
+  Future<List<ExcelData>> readExcelFile() async {
     try {
       FilePickerResult? pickedFile = await FilePicker.platform.pickFiles(
         type: FileType.custom,
@@ -42,13 +49,14 @@ class ExcelReader {
         // Nếu đã có dữ liệu bytes (dù từ web hay mobile/desktop)
         if (bytes != null) {
           var excel = Excel.decodeBytes(bytes);
-          List<List<String>> data = [];
+          List<ExcelData> data = [];
 
           // Duyệt qua tất cả các bảng (sheets) trong file Excel
           for (var table in excel.tables.keys) {
             var sheet = excel.tables[table];
             if (sheet != null) {
               // Duyệt qua từng hàng trong sheet
+              List<List<String>> sheetData = [];
               for (var row in sheet.rows) {
                 List<String> rowData = [];
                 // Duyệt qua từng ô trong hàng
@@ -56,10 +64,9 @@ class ExcelReader {
                   // Lấy giá trị của ô và chuyển đổi thành String, nếu null thì là chuỗi rỗng
                   rowData.add(cell?.value?.toString() ?? '');
                 }
-                data.add(rowData); // Thêm hàng dữ liệu vào danh sách
+                sheetData.add(rowData);
               }
-              // Nếu bạn chỉ muốn đọc sheet đầu tiên, có thể thêm break ở đây
-              break;
+              data.add(ExcelData(sheetName: table, data: sheetData));
             }
           }
           return data;

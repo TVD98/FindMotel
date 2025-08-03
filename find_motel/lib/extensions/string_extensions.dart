@@ -163,4 +163,38 @@ extension StringExtensions on String {
     }
     return this; // Trả về chuỗi gốc nếu không có ".0" hoặc ",0" ở cuối
   }
+
+  List<String> extractPhoneNumbers() {
+    // Biểu thức chính quy để tìm các chuỗi số có 9 đến 11 chữ số
+    // Rất phù hợp với định dạng số điện thoại ở Việt Nam
+    final RegExp regex = RegExp(r'\d{9,11}');
+
+    // Danh sách để lưu các số điện thoại tìm được
+    final List<String> phoneNumbers = [];
+
+    // Tìm tất cả các kết quả phù hợp trong chuỗi
+    for (final Match m in regex.allMatches(this)) {
+      // Thêm số điện thoại tìm được vào danh sách
+      phoneNumbers.add(m.group(0)!.padLeft(10, '0'));
+    }
+
+    return phoneNumbers;
+  }
+
+  String formatPhoneNumber() {
+    // 1. Làm sạch chuỗi, chỉ giữ lại các chữ số
+    final cleanNumber = replaceAll(RegExp(r'\D'), '');
+
+    // 2. Thêm số 0 vào đầu nếu cần, để chuỗi có đủ 10 chữ số
+    // Ví dụ: "1234567" sẽ thành "0001234567"
+    final paddedNumber = cleanNumber.padLeft(10, '0');
+
+    // 3. Tách chuỗi thành 3 phần và ghép lại với dấu "-"
+    // xxx-xxx-xxxx
+    final part1 = paddedNumber.substring(0, 3);
+    final part2 = paddedNumber.substring(3, 6);
+    final part3 = paddedNumber.substring(6, 10);
+
+    return '$part1-$part2-$part3';
+  }
 }

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:find_motel/common/models/motel.dart';
 import 'package:find_motel/extensions/double_extensions.dart';
 import 'package:find_motel/managers/app_data_manager.dart';
@@ -120,7 +121,7 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
                   left: 0,
                   right: 0,
                   child: SizedBox(
-                    height: 254, // Chiều cao cố định cho slider
+                    height: 270, // Chiều cao cố định cho slider
                     child: ListView.builder(
                       controller: _scrollController,
                       scrollDirection: Axis.horizontal,
@@ -204,38 +205,45 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
                     ),
                   ],
                 ),
-                Row(
-                  children: [
-                    Image.asset(
-                      'assets/images/ic_marker.png',
-                      width: 24,
-                      height: 24,
-                    ),
-                    const SizedBox(width: 5),
-                    Text(
-                      motelCard.address,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                        color: AppColors.tertiary,
+                SizedBox(
+                  height: 40,
+                  child: Row(
+                    children: [
+                      Image.asset(
+                        'assets/images/ic_marker.png',
+                        width: 24,
+                        height: 24,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 5),
+                      Expanded(
+                        child: Text(
+                          motelCard.address,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400,
+                            color: AppColors.tertiary,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 8),
             ClipRRect(
               borderRadius: const BorderRadius.all(Radius.circular(10)),
-              child: Image.network(
-                motelCard.images.first,
+              child: CachedNetworkImage(
+                imageUrl: motelCard.images.first,
                 width: double.infinity,
                 height: 108,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
+                errorWidget: (context, error, stackTrace) {
                   return Container(
-                    width: 100,
-                    height: 150,
+                    width: double.infinity,
+                    height: 108,
                     color: Colors.grey[200],
                     child: const Icon(Icons.error, color: Colors.grey),
                   );
@@ -259,7 +267,7 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
                     ), // Bo tròn 10px cho tất cả các góc
                   ),
                   child: Text(
-                    'HH ${motelCard.commission}%',
+                    'HH ${motelCard.commission}',
                     style: TextStyle(
                       color: AppColors.onPrimaryContainer, // Màu chữ
                       fontSize: 14,
