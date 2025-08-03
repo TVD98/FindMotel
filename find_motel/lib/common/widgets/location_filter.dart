@@ -34,71 +34,15 @@ class LocationFilter extends StatefulWidget {
 }
 
 class _LocationFilterState extends State<LocationFilter> {
-  final LocationApiService _apiService = LocationApiService();
-  final List<Province> _province = [];
+  final List<Province> _province = AppDataManager().allProvinces;
   // Lưu trữ danh sách Quận/Huyện và Phường/Xã nội bộ
   List<District> _districts = [];
-  List<Ward> _wards = [];
+  List<Ward> _wards = []; 
 
-  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _fetchProvinces();
-    // _fetchDistrictsAndWards(Constant.provinceCodeHCM);
-    // _updateDropdownData(widget.selectedDistrict, widget.selectedWard);
-  }
-
-  // Phương thức để cập nhật danh sách quận/huyện và phường/xã
-  // void _updateDropdownData(String? district, String? ward) {
-  //   if (district != null) {
-  //     setState(() {
-  //       widget.onDistrictChanged!(district);
-  //       if(ward != null) {
-  //         widget.onWardChanged!(ward);
-  //       }
-  //     });
-  //   } else {
-  //     setState(() {
-  //       widget.onDistrictChanged!('Tất cả');
-  //     });
-  //   }
-  // }
-
-  Future<void> _fetchProvinces() async {
-    try {
-      final provinces = await _apiService.fetchProvinces();
-      setState(() {
-        _isLoading = true;
-      });
-      _province.addAll(provinces);
-      setState(() {
-        _isLoading = false;
-      });
-    } catch (e) {
-      print('Error fetching provinces: $e');
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
-  Future<void> _fetchDistrictsAndWards(String provinceCode) async {
-    int provinceCodeInt = int.parse(provinceCode);
-    try {
-      // Lấy chi tiết tỉnh, bao gồm cả huyện và xã
-      final provinceDetails = await _apiService.fetchProvinceWithDetails(
-        provinceCodeInt,
-      );
-      setState(() {
-        _districts.addAll(provinceDetails.districts);
-        widget.onDistrictChanged!('Tất cả');
-        _wards=[];
-      });
-    } catch (e) {
-      print('Error fetching districts and wards: $e');
-    }
   }
 
   @override
@@ -139,7 +83,10 @@ class _LocationFilterState extends State<LocationFilter> {
                         onChanged: (value) {
                           if (widget.onProvinceChanged != null) {
                             widget.onProvinceChanged!(value);
-                            _fetchDistrictsAndWards(_province[_province.indexWhere((e) => e.name == value)].id);
+                            setState(() {
+                              _districts = _province[_province.indexWhere((e) => e.name == value)].districts;
+                              _wards = _districts[_districts.indexWhere((e) => e.name == widget.selectedDistrict)].wards;
+                            });
                           }
                         },
                       ),
@@ -160,7 +107,7 @@ class _LocationFilterState extends State<LocationFilter> {
                     ),
                     Expanded(
                       child: FixedDropdownButton(
-                        value: widget.selectedWard,
+                        value: widget.selectedDistrict,
                         items:
                             ['Tất cả'] + _districts.map((e) => e.name).toList(),
                         // ['Tất cả'] +
@@ -172,7 +119,10 @@ class _LocationFilterState extends State<LocationFilter> {
                         onChanged: (value) {
                           if (widget.onDistrictChanged != null) {
                             widget.onDistrictChanged!(value);
-                            _wards = _districts[_districts.indexWhere((e) => e.name == value)].wards;
+                            setState(() {
+                              _wards = _districts[_districts.indexWhere((e) => e.name == value)].wards;
+                            });
+
                           }
                         },
                       ),

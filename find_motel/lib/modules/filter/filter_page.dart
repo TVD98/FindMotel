@@ -26,7 +26,6 @@ class FilterPage extends StatefulWidget {
 
 class _FilterPageState extends State<FilterPage> {
   final List<String> _allAmenitiesOptions = AppDataManager().allAmenities;
-  final List<Province> _allProvinceOptions = AppDataManager().allProvinces;
   final List<CheckboxItem> _allStatusOptions = AppDataManager().allStatus
       .map((e) => (e.name, e.title))
       .toList();
@@ -69,7 +68,7 @@ class _FilterPageState extends State<FilterPage> {
       AppDataManager().filterMotels.copyWith(
         roomCode: '',
         address: Address(
-          province: _formatStringSelection('Tp. Hồ Chí Minh'),
+          province: _formatStringSelection('Thành phố Hồ Chí Minh'),
           ward: _formatStringSelection('Tất cả'),
         ),
         amenities: [],
