@@ -1,13 +1,9 @@
-import 'dart:math';
-
 import 'package:find_motel/common/models/area.dart';
 import 'package:find_motel/managers/app_data_manager.dart';
 import 'package:find_motel/common/widgets/fixed_dropdown_button.dart';
 import 'package:flutter/material.dart';
 import 'package:find_motel/theme/app_colors.dart';
 import 'package:find_motel/theme/app_textStyle.dart';
-import 'package:find_motel/services/location_api_service.dart';
-import 'package:find_motel/common/constants/constant.dart';
 
 class LocationFilter extends StatefulWidget {
   final String? selectedProvince;
@@ -35,14 +31,40 @@ class LocationFilter extends StatefulWidget {
 
 class _LocationFilterState extends State<LocationFilter> {
   final List<Province> _province = AppDataManager().allProvinces;
-  // Lưu trữ danh sách Quận/Huyện và Phường/Xã nội bộ
-  List<District> _districts = [];
-  List<Ward> _wards = []; 
-
+  late List<District> _districts;
+  late List<Ward> _wards;
+  late String _selectedProvince;
+  late String _selectedDistrict;
+  late String _selectedWard;
 
   @override
   void initState() {
     super.initState();
+    _selectedProvince = widget.selectedProvince ?? 'Tất cả';
+    _selectedDistrict = widget.selectedDistrict ?? 'Tất cả';
+    _selectedWard = widget.selectedWard ?? 'Tất cả';
+    _updateDistricts(_selectedProvince);
+    _updateWards(_selectedDistrict);
+  }
+
+  void _updateDistricts(String province) {
+    if (province == 'Tất cả') {
+      _districts = [District(code: 0, name: 'Tất cả', wards: [])];
+    } else {
+      _districts =
+          [District(code: 0, name: 'Tất cả', wards: [])] +
+          _province.firstWhere((e) => e.name == province).districts;
+    }
+  }
+
+  void _updateWards(String district) {
+    if (district == 'Tất cả') {
+      _wards = [Ward(code: 0, name: 'Tất cả')];
+    } else {
+      _wards =
+          [Ward(code: 0, name: 'Tất cả')] +
+          _districts.firstWhere((e) => e.name == district).wards;
+    }
   }
 
   @override
@@ -75,17 +97,21 @@ class _LocationFilterState extends State<LocationFilter> {
                     ),
                     Expanded(
                       child: FixedDropdownButton(
-                        value: widget.selectedProvince,
+                        value: _selectedProvince,
                         items:
                             ['Tất cả'] + _province.map((e) => e.name).toList(),
-                        // width: 162.0,
                         style: DropdownStyle.large,
                         onChanged: (value) {
                           if (widget.onProvinceChanged != null) {
                             widget.onProvinceChanged!(value);
                             setState(() {
-                              _districts = _province[_province.indexWhere((e) => e.name == value)].districts;
-                              _wards = _districts[_districts.indexWhere((e) => e.name == widget.selectedDistrict)].wards;
+                              _selectedProvince = value ?? 'Tất cả';
+                              _updateDistricts(_selectedProvince);
+                              _selectedDistrict =
+                                  _districts.firstOrNull?.name ?? 'Tất cả';
+                              _updateWards(_selectedDistrict);
+                              _selectedWard =
+                                  _wards.firstOrNull?.name ?? 'Tất cả';
                             });
                           }
                         },
@@ -107,22 +133,18 @@ class _LocationFilterState extends State<LocationFilter> {
                     ),
                     Expanded(
                       child: FixedDropdownButton(
-                        value: widget.selectedDistrict,
-                        items:
-                            ['Tất cả'] + _districts.map((e) => e.name).toList(),
-                        // ['Tất cả'] +
-                        // province[province.indexWhere(
-                        //       (e) => e.name == widget.selectedProvince,
-                        //     )]
-                        //     .wards,
+                        value: _selectedDistrict,
+                        items: _districts.map((e) => e.name).toList(),
                         style: DropdownStyle.large,
                         onChanged: (value) {
                           if (widget.onDistrictChanged != null) {
                             widget.onDistrictChanged!(value);
                             setState(() {
-                              _wards = _districts[_districts.indexWhere((e) => e.name == value)].wards;
+                              _selectedDistrict = value ?? 'Tất cả';
+                              _updateWards(_selectedDistrict);
+                              _selectedWard =
+                                  _wards.firstOrNull?.name ?? 'Tất cả';
                             });
-
                           }
                         },
                       ),
@@ -143,17 +165,15 @@ class _LocationFilterState extends State<LocationFilter> {
                     ),
                     Expanded(
                       child: FixedDropdownButton(
-                        value: widget.selectedWard,
-                        items: ['Tất cả'] + _wards.map((e) => e.name).toList(),
-                        // ['Tất cả'] +
-                        // province[province.indexWhere(
-                        //       (e) => e.name == widget.selectedProvince,
-                        //     )]
-                        //     .wards,
+                        value: _selectedWard,
+                        items: _wards.map((e) => e.name).toList(),
                         style: DropdownStyle.large,
                         onChanged: (value) {
                           if (widget.onWardChanged != null) {
                             widget.onWardChanged!(value);
+                            setState(() {
+                              _selectedWard = value ?? 'Tất cả';
+                            });
                           }
                         },
                       ),
