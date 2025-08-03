@@ -583,7 +583,7 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
               child: _buildSelectionView(
                 'Kiểu phòng',
                 state.type,
-                ['Không cửa sổ, ban công', ...AppDataManager().allRoomTypies],
+                AppDataManager().allRoomTypies,
                 (options) {
                   context.read<EditMotelBloc>().add(
                     EditMotelTypeChanged(options.first.name),

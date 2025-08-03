@@ -1,3 +1,4 @@
+import 'package:find_motel/common/models/catalog.dart';
 import 'package:find_motel/common/models/filter_option.dart';
 import 'package:find_motel/common/models/motel.dart';
 import 'package:find_motel/common/widgets/common_container.dart';
@@ -22,38 +23,48 @@ class QuicklyFilter extends StatefulWidget {
 }
 
 class _QuicklyFilterState extends State<QuicklyFilter> {
+  Catalog? catalog;
+
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<MotelsFilterCubit, MotelsFilter>(
-      builder: (context, state) {
-        return Column(
-          children: [
-            SearchBarWithCallback(
-              initialText: state.keywords ?? '',
-              hintText: 'Nhập vào tên hoặc địa chỉ…',
-              onSearchPressed: (value) {
-                context.read<MotelsFilterCubit>().search(value);
-              },
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 38,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: [
-                  _iconFilter(context),
-                  const SizedBox(width: 10),
-                  _statusFilterChip(context, state),
-                  const SizedBox(width: 10),
-                  _textureFilterChip(context, state),
-                  const SizedBox(width: 10),
-                  _amenitiesFilterChip(context, state),
-                ],
-              ),
-            ),
-          ],
-        );
+    return BlocListener<CatalogCubit, Catalog>(
+      listenWhen: (previous, current) => previous != current,
+      listener: (context, state) {
+        setState(() {
+          catalog = state;
+        });
       },
+      child: BlocBuilder<MotelsFilterCubit, MotelsFilter>(
+        builder: (context, state) {
+          return Column(
+            children: [
+              SearchBarWithCallback(
+                initialText: state.keywords ?? '',
+                hintText: 'Nhập vào tên hoặc địa chỉ…',
+                onSearchPressed: (value) {
+                  context.read<MotelsFilterCubit>().search(value);
+                },
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 38,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: [
+                    _iconFilter(context),
+                    const SizedBox(width: 10),
+                    _statusFilterChip(context, state),
+                    const SizedBox(width: 10),
+                    _textureFilterChip(context, state),
+                    const SizedBox(width: 10),
+                    _amenitiesFilterChip(context, state),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 
@@ -101,39 +112,39 @@ class _QuicklyFilterState extends State<QuicklyFilter> {
         },
       );
 
-  Widget _textureFilterChip(BuildContext context, MotelsFilter filter) =>
-      _FilterChip(
-        context: context,
-        label: 'Kết cấu',
-        selectedOptions:
-            filter.texturies
-                ?.map((e) => FilterOption(id: e, name: e))
-                .toList() ??
-            [],
-        allOptions: AppDataManager().allTexturies
-            .map((e) => FilterOption(id: e, name: e))
-            .toList(),
-        onApply: (options) {
-          return filter.copyWith(texturies: options.map((e) => e.id).toList());
-        },
-      );
+  Widget _textureFilterChip(
+    BuildContext context,
+    MotelsFilter filter,
+  ) => _FilterChip(
+    context: context,
+    label: 'Kết cấu',
+    selectedOptions:
+        filter.texturies?.map((e) => FilterOption(id: e, name: e)).toList() ??
+        [],
+    allOptions:
+        catalog?.texturies.map((e) => FilterOption(id: e, name: e)).toList() ??
+        [],
+    onApply: (options) {
+      return filter.copyWith(texturies: options.map((e) => e.id).toList());
+    },
+  );
 
-  Widget _amenitiesFilterChip(BuildContext context, MotelsFilter filter) =>
-      _FilterChip(
-        context: context,
-        label: 'Tiện ích',
-        selectedOptions:
-            filter.amenities
-                ?.map((e) => FilterOption(id: e, name: e))
-                .toList() ??
-            [],
-        allOptions: AppDataManager().allAmenities
-            .map((e) => FilterOption(id: e, name: e))
-            .toList(),
-        onApply: (options) {
-          return filter.copyWith(amenities: options.map((e) => e.id).toList());
-        },
-      );
+  Widget _amenitiesFilterChip(
+    BuildContext context,
+    MotelsFilter filter,
+  ) => _FilterChip(
+    context: context,
+    label: 'Tiện ích',
+    selectedOptions:
+        filter.amenities?.map((e) => FilterOption(id: e, name: e)).toList() ??
+        [],
+    allOptions:
+        catalog?.amenities.map((e) => FilterOption(id: e, name: e)).toList() ??
+        [],
+    onApply: (options) {
+      return filter.copyWith(amenities: options.map((e) => e.id).toList());
+    },
+  );
 }
 
 class _FilterChip extends StatelessWidget {

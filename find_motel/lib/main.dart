@@ -75,6 +75,7 @@ class AuthGate extends StatelessWidget {
               BlocProvider(create: (_) => ProfileBloc()),
               BlocProvider(create: (_) => UserProfileCubit()),
               BlocProvider(create: (_) => MotelsFilterCubit()..loadFilter()),
+              BlocProvider(create: (_) => CatalogCubit()),
             ],
             child: const HomeScreen(),
           );

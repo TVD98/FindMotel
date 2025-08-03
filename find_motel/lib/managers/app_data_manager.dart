@@ -30,7 +30,7 @@ class AppDataManager {
     amenities: null,
     status: null,
     texturies: null,
-    type: 'Khác',
+    type: null,
     priceRange: Range2D(
       values: RangeValues(1000000, 10000000),
       maxValue: 20000000,
@@ -38,18 +38,11 @@ class AppDataManager {
     distanceRange: Range(value: 10, maxValue: 100),
   );
 
-  final List<String> allAmenities = ['Thang máy', 'Xe'];
+  List<String> allAmenities = [];
 
-  final List<String> allTexturies = [
-    'DUPLEX',
-    'STUDIO',
-    '1 phòng ngủ',
-    '2 phòng ngủ',
-    '3 phòng ngủ',
-    'Tách bếp',
-  ];
+  List<String> allTexturies = [];
 
-  final List<String> allRoomTypies = ['Ban công', 'Cửa sổ', 'Khác'];
+  List<String> allRoomTypies = [];
 
   final List<RentalStatus> allStatus = RentalStatus.values;
 
