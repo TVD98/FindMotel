@@ -1,4 +1,5 @@
 import 'package:find_motel/common/models/area.dart';
+import 'package:find_motel/common/models/catalog.dart';
 import 'package:find_motel/common/models/import_images_options.dart';
 import 'package:find_motel/common/models/motel_index.dart';
 import 'package:find_motel/common/models/user.dart' as fm;
@@ -51,14 +52,17 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         final result = await Future.wait([
           _catalogService.fetchProvinces(),
           _catalogService.fetchImportImagesOptions(),
+          _catalogService.fetchCatalog(),
         ]);
 
         final provincesResult =
             result[0] as ({String? error, List<Province> provinces});
         final optionsResult =
             result[1] as ({String? error, ImportImagesOptions? options});
+        final catalogResult = result[2] as ({String? error, Catalog? catalog});
         AppDataManager().allProvinces = provincesResult.provinces;
         AppDataManager().importImagesOptions = optionsResult.options;
+        emit(state.copyWith(catalog: catalogResult.catalog));
       } catch (e) {
         print('[HomeBloc] Error getting catalog: $e');
       }

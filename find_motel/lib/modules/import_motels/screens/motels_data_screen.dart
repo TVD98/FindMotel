@@ -3,13 +3,14 @@ import 'package:find_motel/common/widgets/common_app_bar.dart';
 import 'package:find_motel/common/widgets/common_textfield.dart';
 import 'package:find_motel/modules/import_motels/bloc/import_motels_bloc.dart';
 import 'package:find_motel/modules/import_motels/screens/import_motels_screen.dart';
+import 'package:find_motel/modules/import_motels/screens/export_motels_screen.dart';
 import 'package:find_motel/modules/motel/edit_motel/bloc/edit_motel_bloc.dart';
 import 'package:find_motel/modules/motel/edit_motel/screen/edit_motel_screen.dart';
 import 'package:find_motel/services/firestore/firestore_service.dart';
 import 'package:find_motel/services/motel/motels_service.dart';
 import 'package:find_motel/theme/app_colors.dart';
 import 'package:find_motel/theme/app_textStyle.dart';
-import 'package:find_motel/utilities/excel_reader.dart';
+import 'package:find_motel/utilities/excel_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -21,7 +22,7 @@ class MotelsDataScreen extends StatefulWidget {
 }
 
 class _MotelsDataScreenState extends State<MotelsDataScreen> {
-  final ExcelReader excelReader = ExcelReader();
+  final ExcelHelper excelReader = ExcelHelper();
   final IMotelsService motelsService = FirestoreService();
   bool isLoading = false;
 
@@ -175,7 +176,15 @@ class _MotelsDataScreenState extends State<MotelsDataScreen> {
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              onPressed: () {},
+              onPressed: () {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => const ExportMotelsScreen(),
+    ),
+  );
+},
+
               child: Text(
                 'File excel .xlsx',
                 style: AppTextStyle.label.copyWith(color: AppColors.onPrimary),

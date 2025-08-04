@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:find_motel/common/models/user_profile.dart';
 import 'package:find_motel/common/widgets/common_list_view.dart';
+import 'package:find_motel/extensions/datetime_extensions.dart';
 import 'package:find_motel/extensions/double_extensions.dart';
 import 'package:find_motel/managers/app_data_manager.dart';
 import 'package:find_motel/managers/cubit/cubit.dart';
@@ -149,14 +150,15 @@ class _HomePageState extends State<HomePage>
                             title: motel.displayName,
                             address: motel.address,
                             price: motel.price.toVND(),
-                            motel: motel, // Pass the full motel object
+                            createdAt: DateTime.fromMillisecondsSinceEpoch(motel.createdAt ?? 0).formatTimeAgo(),
+                            motel: motel,
                           );
                         }, childCount: state.motels!.length),
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
                           mainAxisSpacing: 16,
                           crossAxisSpacing: 16,
-                          mainAxisExtent: 185,
+                          mainAxisExtent: 200,
                         ),
                       )
                     : const SliverToBoxAdapter(child: SizedBox.shrink()),
@@ -179,6 +181,7 @@ class _MotelCard extends StatelessWidget {
   final String title;
   final String address;
   final String price;
+  final String createdAt;
   final Motel motel; // Add this field
 
   const _MotelCard({
@@ -186,6 +189,7 @@ class _MotelCard extends StatelessWidget {
     required this.title,
     required this.address,
     required this.price,
+    required this.createdAt,
     required this.motel, // Add this required parameter
   });
 
@@ -247,8 +251,9 @@ class _MotelCard extends StatelessWidget {
                           ),
                           child: Center(
                             child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Text(e.toString()),
                                 Icon(
                                   Icons.broken_image_outlined,
                                   size: 40,
@@ -309,7 +314,6 @@ class _MotelCard extends StatelessWidget {
                     SizedBox(
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min, // Added this
                         children: [
                           Icon(
                             Icons.monetization_on,
@@ -329,6 +333,23 @@ class _MotelCard extends StatelessWidget {
                           ),
                         ],
                       ),
+                    ),
+                    const SizedBox(height: 4), // Reduced from 8
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        const Spacer(),
+                        Text(
+                          createdAt,
+                          style: GoogleFonts.quicksand(
+                            color: const Color(0xFF757575),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 11,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
                   ],
                 ),

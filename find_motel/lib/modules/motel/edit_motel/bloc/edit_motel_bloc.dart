@@ -19,6 +19,7 @@ class EditMotelBloc extends Bloc<EditMotelEvent, EditMotelState> {
     on<EditMotelPriceChanged>(_onPriceChanged);
     on<EditMotelAddressChanged>(_onAddressChanged);
     on<EditMotelNoteChanged>(_onNoteChanged);
+    on<EditMotelPhoneNumbersChanged>(_onPhoneNumbersChanged);
     on<EditMotelExtensionsUpdated>(_onExtensionsUpdated);
     on<EditMotelFeeUpdated>(_onFeeUpdated);
     on<EditMotelFeeAdded>(_onFeeAdded);
@@ -46,6 +47,7 @@ class EditMotelBloc extends Bloc<EditMotelEvent, EditMotelState> {
         price: motel.price.toStringAsFixed(0),
         address: motel.address,
         note: motel.note.join('\n'),
+        phoneNumbers: List<String>.from(motel.phoneNumbers),
         extensions: List<String>.from(motel.extensions),
         customFees: motel.fees,
         images: List<String>.from(motel.images),
@@ -139,17 +141,24 @@ class EditMotelBloc extends Bloc<EditMotelEvent, EditMotelState> {
     emit(state.copyWith(location: event.location));
   }
 
+  void _onPhoneNumbersChanged(
+    EditMotelPhoneNumbersChanged event,
+    Emitter<EditMotelState> emit,
+  ) {
+    emit(state.copyWith(phoneNumbers: event.phoneNumbers));
+  }
+
   Future<void> _onSubmitted(
     EditMotelSubmitted event,
     Emitter<EditMotelState> emit,
   ) async {
     emit(state.copyWith(status: EditMotelStatus.loading));
 
-    if (state.name.isEmpty || state.address.isEmpty) {
+    if (state.address.isEmpty) {
       emit(
         state.copyWith(
           status: EditMotelStatus.failure,
-          errorMessage: 'Vui lòng nhập đầy đủ tên căn hộ và địa chỉ!',
+          errorMessage: 'Vui lòng nhập địa chỉ!',
         ),
       );
       return;
@@ -158,7 +167,6 @@ class EditMotelBloc extends Bloc<EditMotelEvent, EditMotelState> {
     try {
       final updatedMotel = state.initialMotel!.copyWith(
         name: state.name,
-        roomCode: state.roomCode,
         type: state.type,
         texture: state.texture,
         commission: state.commission,
@@ -168,6 +176,7 @@ class EditMotelBloc extends Bloc<EditMotelEvent, EditMotelState> {
         extensions: state.extensions,
         fees: state.customFees,
         images: state.images,
+        phoneNumbers: state.phoneNumbers,
         thumbnail: state.images.isNotEmpty ? state.images.first : '',
         geoPoint: state.location ?? state.initialMotel!.geoPoint,
         marker: state.images.isNotEmpty

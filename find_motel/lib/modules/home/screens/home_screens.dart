@@ -36,12 +36,15 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return BlocConsumer<HomeBloc, HomeState>(
       listenWhen: (previous, current) =>
-          previous.userProfile != current.userProfile,
+          previous.userProfile != current.userProfile || previous.catalog != current.catalog,
       listener: (context, state) {
         if (state.userProfile != null) {
           context.read<UserProfileCubit>().updateUserProfile(
             state.userProfile!,
           );
+        }
+        if (state.catalog != null) {
+          context.read<CatalogCubit>().updateCatalog(state.catalog!);
         }
       },
       builder: (context, state) {

@@ -95,7 +95,7 @@ class _SettingPageState extends State<SettingPage> {
                             )
                           : ClipOval(
                               child: Image.asset(
-                                'assets/images/avatarDefault.png',
+                                'assets/images/image_avatar_default.png',
                                 width: 100,
                                 height: 100,
                                 alignment: Alignment.center,

@@ -3,6 +3,7 @@ import 'package:find_motel/extensions/string_extensions.dart';
 import 'package:find_motel/managers/app_data_manager.dart';
 import 'package:find_motel/modules/import_motels/bloc/import_motels_event.dart';
 import 'package:find_motel/modules/import_motels/bloc/import_motels_state.dart';
+import 'package:find_motel/utilities/excel_helper.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:find_motel/services/firestore/firestore_service.dart';
 import 'package:find_motel/services/motel/motels_service.dart';
@@ -13,20 +14,39 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
     : _motelsService = motelsService ?? FirestoreService(),
       super(const ImportMotelsState()) {
     on<HandleFileEvent>((event, emit) {
-      List<List<String>> data = event.data;
-      data = data
-          .map((e) => e.map((e) => e.removeTrailingZero()).toList())
-          .toList();
-      final motels = _parseMotels(data);
-
-      List<ImportedMotel> importedMotels = _reorganizeMotelsById(motels);
-      bool isCanImport = importedMotels.every((e) => e.isValid);
-      emit(state.copyWith(motels: importedMotels, isCanImport: isCanImport));
+      List<ExcelData> data = event.data;
+      List<ImportedMotelList> sheetList = [];
+      List<Motel> existingMotels = [];
+      for (final sheet in data) {
+        final motels = _parseMotels(sheet.data);
+        existingMotels.addAll(motels);
+        if (motels.isEmpty) continue;
+        sheetList.add(
+          ImportedMotelList(
+            sheetName: sheet.sheetName,
+            motels: _reorganizeMotelsById(motels, existingMotels),
+          ),
+        );
+      }
+      bool isCanImport = sheetList.every(
+        (e) => e.motels.every((e) => e.isValid),
+      );
+      emit(state.copyWith(sheetList: sheetList, isCanImport: isCanImport));
     });
 
     on<FilterDuplicateEvent>((event, emit) {
-      final List<ImportedMotel> filteredMotels = state.motels?.where((e) => e.isValid).toList() ?? [];
-      emit(state.copyWith(motels: filteredMotels, isCanImport: true));
+      final List<ImportedMotelList> filteredMotels =
+          state.sheetList
+              ?.map(
+                (sheet) => ImportedMotelList(
+                  sheetName: sheet.sheetName,
+                  motels: sheet.motels.where((motel) => motel.isValid).toList(),
+                ),
+              )
+              .where((sheet) => sheet.motels.isNotEmpty)
+              .toList() ??
+          [];
+      emit(state.copyWith(sheetList: filteredMotels, isCanImport: true));
     });
 
     on<SaveMotelsEvent>((event, emit) async {
@@ -78,6 +98,7 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
     final geoPointIndex = motelIndex.geoPoint?.toIndex() ?? 0;
     final textureIndex = motelIndex.texture?.toIndex() ?? 0;
     final imagesIndex = motelIndex.images?.toIndex() ?? 0;
+    final phoneNumbersIndex = motelIndex.phoneNumbers?.toIndex() ?? 0;
 
     List<Motel> motelList = [];
     for (int i = motelIndex.start! - 1; i < maxRow; i++) {
@@ -100,6 +121,7 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
         'note': rowData[noteIndex],
         'texture': rowData[textureIndex],
         'images': rowData[imagesIndex],
+        'phone_numbers': rowData[phoneNumbersIndex],
       };
       final motel = _motelFromJson(motelJson);
       if (motel != null) motelList.add(motel);
@@ -114,13 +136,14 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
     final district = '${json['district']}';
     final number = '${json['number']}';
     final street = '${json['street']}';
-    final ward = '${json['ward']}';
+    final ward = 'phường ${json['ward']}';
     final address = '$number $street, $ward, $district';
-    final carDeposit = (json['car'] as String).toPrice();
+    final carDeposit = json['car'];
     final images = (json['images'] as String)
         .split(',')
         .map((e) => e.trim().toImageUrl())
         .toList();
+    final phoneNumbers = (json['phone_numbers'] as String).extractPhoneNumbers();
     final electricityPrice = (json['electricity'] as String).toPrice();
     final waterPrice = (json['water'] as String).toPrice();
     final otherPrice = (json['other'] as String).toPrice();
@@ -131,11 +154,6 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
       Fee(name: 'Phí dịch vụ', price: otherPrice, unit: 'người'),
     ];
     if ((json['elevator'] as String).toBoolean()) extensions.add('Thang máy');
-    if (carDeposit == 0) {
-      extensions.add('Xe');
-    } else {
-      fees.add(Fee(name: 'Xe', price: carDeposit, unit: 'người'));
-    }
 
     return Motel(
       id: '',
@@ -144,6 +162,7 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
       price: (json['price'] as String).toPrice(),
       type: json['type'] as String,
       commission: json['commission'] as String,
+      car: carDeposit,
       geoPoint: (json['geoPoint'] as String).toGeoPoint(),
       roomCode: roomCode,
       extensions: extensions,
@@ -154,16 +173,17 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
       marker: images.first,
       thumbnail: images.first,
       texture: json['texture'] as String,
+      phoneNumbers: phoneNumbers,
     );
   }
 
-  List<ImportedMotel> _reorganizeMotelsById(List<Motel> motels) {
+  List<ImportedMotel> _reorganizeMotelsById(List<Motel> motels, List<Motel> existingMotels) {
     if (motels.isEmpty) {
       return [];
     }
 
     final Map<String, int> idCounts = {};
-    for (final motel in motels) {
+    for (final motel in existingMotels) {
       idCounts[motel.roomCode] = (idCounts[motel.roomCode] ?? 0) + 1;
     }
 

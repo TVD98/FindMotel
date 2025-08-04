@@ -1,4 +1,5 @@
 import 'package:find_motel/common/constants/constant.dart';
+import 'package:find_motel/common/models/catalog.dart';
 import 'package:find_motel/common/models/user_profile.dart';
 import 'package:find_motel/managers/app_data_manager.dart';
 import 'package:find_motel/services/motel/models/motels_filter.dart';
@@ -24,7 +25,7 @@ class MotelsFilterCubit extends Cubit<MotelsFilter> {
           amenities: null,
           status: null,
           texturies: null,
-          type: 'Khác',
+          type: null,
           priceRange: Range2D(
             values: RangeValues(1_000_000, 10_000_000),
             maxValue: Constant.maxPrice,
@@ -46,5 +47,16 @@ class MotelsFilterCubit extends Cubit<MotelsFilter> {
     final filter = state.copyWith(keywords: text);
     AppDataManager().filterMotels = filter;
     emit(filter);
+  }
+}
+
+class CatalogCubit extends Cubit<Catalog> {
+  CatalogCubit() : super(Catalog(types: [], amenities: [], texturies: []));
+
+  void updateCatalog(Catalog catalog) {
+    AppDataManager().allAmenities = catalog.amenities;
+    AppDataManager().allTexturies = catalog.texturies;
+    AppDataManager().allRoomTypies = catalog.types;
+    emit(catalog);
   }
 }

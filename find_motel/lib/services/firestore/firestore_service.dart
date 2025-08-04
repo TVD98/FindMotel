@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:find_motel/common/models/area.dart';
+import 'package:find_motel/common/models/catalog.dart';
 import 'package:find_motel/common/models/import_images_options.dart';
 import 'package:find_motel/extensions/list_string_extensions.dart';
 import 'package:find_motel/extensions/string_extensions.dart';
@@ -145,7 +146,7 @@ class FirestoreService
             .toList();
       }
 
-      if (filter?.type != null && filter!.type! != 'Khác') {
+      if (filter?.type != null && filter!.type!.isNotEmpty) {
         resultMotels = resultMotels
             .where((motel) => motel.type == filter.type)
             .toList();
@@ -172,6 +173,7 @@ class FirestoreService
       id: data['room_code'] as String? ?? '',
       address: data['address'] as String? ?? '',
       commission: data['commission']?.toString() ?? '',
+      car: data['car'] as String? ?? '',
       extensions: List<String>.from(data['extensions'] ?? const []),
       fees: List<Map<String, dynamic>>.from(
         data['fees'],
@@ -188,6 +190,7 @@ class FirestoreService
       thumbnail: data['thumbnail'] as String? ?? '',
       texture: data['texture'] as String? ?? '',
       createdAt: data['created_at'] as int? ?? 0,
+      phoneNumbers: List<String>.from(data['phone_numbers'] ?? const []),
     );
   }
 
@@ -280,6 +283,23 @@ class FirestoreService
       return (options: ImportImagesOptions.fromMap(doc.data()!), error: null);
     } catch (e) {
       return (options: null, error: e.toString());
+    }
+  }
+
+  @override
+  Future<({Catalog? catalog, String? error})> fetchCatalog() async {
+    try {
+      final snapshot = await _firestore
+          .collection(FirestorePaths.catalogCollection)
+          .limit(1)
+          .get();
+      if (snapshot.docs.isEmpty) {
+        return (catalog: null, error: 'Not found catalog');
+      }
+      final doc = snapshot.docs.first;
+      return (catalog: Catalog.fromMap(doc.data()), error: null);
+    } catch (e) {
+      return (catalog: null, error: e.toString());
     }
   }
 
