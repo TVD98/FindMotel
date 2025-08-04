@@ -19,6 +19,7 @@ class MotelIndex {
   String? geoPoint;
   String? texture;
   String? images;
+  String? phoneNumbers;
 
   MotelIndex({
     this.start,
@@ -39,6 +40,7 @@ class MotelIndex {
     this.geoPoint,
     this.texture,
     this.images,
+    this.phoneNumbers,
   });
 
   factory MotelIndex.fromJson(Map<String, dynamic> json) => MotelIndex(
@@ -60,6 +62,7 @@ class MotelIndex {
     geoPoint: json['geo_point'] as String?,
     texture: json['texture'] as String?,
     images: json['images'] as String?,
+    phoneNumbers: json['phone_numbers'] as String?,
   );
 
   int? maxFields() {
@@ -79,7 +82,8 @@ class MotelIndex {
       note,
       geoPoint,
       texture,
-      images
+      images,
+      phoneNumbers,
     ].map((e) => e?.toIndex()).where((e) => e != null).cast<int>().toList();
     if (indexList.isEmpty) return null;
     return indexList.reduce((a, b) => a > b ? a : b);

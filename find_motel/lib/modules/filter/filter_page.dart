@@ -62,25 +62,26 @@ class _FilterPageState extends State<FilterPage> {
     ),
   );
 
-  MotelsFilter get _motelsFilterDefault => AppDataManager().filterMotels.copyWith(
-    roomCode: '',
-    address: Address(
-      province: _formatStringSelection(_selectedProvince),
-      ward: _formatStringSelection('Tất cả'),
-    ),
-    amenities: [],
-    status: [],
-    texturies: [],
-    type: 'Khác',
-    priceRange: Range2D(
-      values: const RangeValues(1_000_000, 10_000_000),
-      maxValue: Constant.maxPrice,
-    ),
-    distanceRange: Range(
-      value: Constant.defaultDistance,
-      maxValue: Constant.maxDistance,
-    ),
-  );
+  MotelsFilter get _motelsFilterDefault =>
+      AppDataManager().filterMotels.copyWith(
+        roomCode: '',
+        address: Address(
+          province: _formatStringSelection(_selectedProvince),
+          ward: _formatStringSelection('Tất cả'),
+        ),
+        amenities: [],
+        status: [],
+        texturies: [],
+        type: 'Khác',
+        priceRange: Range2D(
+          values: const RangeValues(1_000_000, 10_000_000),
+          maxValue: Constant.maxPrice,
+        ),
+        distanceRange: Range(
+          value: Constant.defaultDistance,
+          maxValue: Constant.maxDistance,
+        ),
+      );
 
   @override
   void initState() {
@@ -96,7 +97,7 @@ class _FilterPageState extends State<FilterPage> {
     _selectedAmenities = initialData.amenities ?? [];
     _selectedStatusList = initialData.status ?? [];
     _selectedTextureList = initialData.texturies ?? [];
-    _selectedRoomType = initialData.type ?? 'Khác';
+    _selectedRoomType = initialData.type ?? '';
     _selectedPriceRangeValues =
         initialData.priceRange?.values ??
         const RangeValues(1_000_000, 10_000_000);
@@ -115,6 +116,7 @@ class _FilterPageState extends State<FilterPage> {
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildRoomCodeRow(),
@@ -348,6 +350,7 @@ class _FilterPageState extends State<FilterPage> {
 
   Widget _buildRoomTypeSection() {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
@@ -364,9 +367,10 @@ class _FilterPageState extends State<FilterPage> {
             initialSelected: [_selectedRoomType],
             selectionMode: CheckboxListSelectionMode.single,
             displayMode: CheckboxListDisplayMode.grid,
-            gridCrossAxisCount: 3,
+            gridCrossAxisCount: 2,
+            gridChildAspectRatio: 4.0,
             onChange: (value) {
-              _selectedRoomType = value.first;
+              _selectedRoomType = value.firstOrNull ?? '';
             },
           ),
         ),
@@ -415,7 +419,8 @@ class _FilterPageState extends State<FilterPage> {
             items: _allTextureOptions.map((e) => (e, e)).toList(),
             initialSelected: _selectedTextureList,
             displayMode: CheckboxListDisplayMode.grid,
-            gridCrossAxisCount: 3,
+            gridCrossAxisCount: 2,
+            gridChildAspectRatio: 4.0,
             onChange: (value) {
               _selectedTextureList = value;
             },
@@ -442,9 +447,6 @@ class _FilterPageState extends State<FilterPage> {
               onPressed: () {
                 final MotelsFilter filters = _motelsFilterDefault;
                 context.read<MotelsFilterCubit>().updateFilter(filters);
-                // setState(() {
-                //   _setupFieldsByFilters();
-                // });
                 Navigator.of(context).pushReplacement(
                   MaterialPageRoute(
                     builder: (_) => BlocProvider.value(

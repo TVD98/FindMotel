@@ -3,6 +3,7 @@ import 'package:find_motel/modules/import_motels/bloc/import_motels_bloc.dart';
 import 'package:find_motel/modules/import_motels/bloc/import_motels_event.dart';
 import 'package:find_motel/services/reload_service.dart';
 import 'package:find_motel/theme/app_colors.dart';
+import 'package:find_motel/utilities/excel_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:find_motel/common/widgets/common_app_bar.dart';
@@ -11,7 +12,7 @@ import 'package:find_motel/extensions/double_extensions.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class ImportMotelsScreen extends StatefulWidget {
-  final List<List<String>> data;
+  final List<ExcelData> data;
   const ImportMotelsScreen({super.key, required this.data});
 
   @override
@@ -30,63 +31,88 @@ class _ImportMotelsScreenState extends State<ImportMotelsScreen> {
     return BlocConsumer<ImportMotelsBloc, ImportMotelsState>(
       listener: (context, state) {
         if (state.isSaved ?? false) {
-          _showSaveMotelsSuccessDialog(context, state.motels?.length ?? 0);
+          _showSaveMotelsSuccessDialog(context, state.sheetList?.expand((e) => e.motels).length ?? 0);
         }
       },
       builder: (context, state) {
-        return Scaffold(
-          appBar: CommonAppBar(
-            title: 'Import Motels',
-            onLeadingPressed: () {
-              if (state.motels?.isNotEmpty ?? false) {
-                _showConfirmDialog(context);
-              } else {
-                Navigator.pop(context);
-              }
-            },
-            actions: [
-              if (state.motels?.isNotEmpty ?? false)
-                Text(
-                  '${state.motels?.length ?? 0} trọ',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: AppColors.headerLineOnPrimary,
+        return DefaultTabController(
+          length: state.sheetList?.length ?? 0,
+          child: Scaffold(
+            appBar: CommonAppBar(
+              title: 'Import Motels',
+              tabBar: TabBar(
+                isScrollable: true,
+                indicatorColor: AppColors.headerLineOnPrimary,
+                dividerColor: AppColors.strokeLight,
+                labelColor: AppColors.headerLineOnPrimary,
+                unselectedLabelColor: AppColors.elementSecondary,
+                tabs:
+                    state.sheetList
+                        ?.map((e) => Tab(text: e.sheetName))
+                        .toList() ??
+                    [],
+              ),
+              onLeadingPressed: () {
+                if (state.sheetList?.isNotEmpty ?? false) {
+                  _showConfirmDialog(context);
+                } else {
+                  Navigator.pop(context);
+                }
+              },
+              actions: [
+                if (state.sheetList?.isNotEmpty ?? false)
+                  Text(
+                    '${state.sheetList?.expand((e) => e.motels).length ?? 0} trọ',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: AppColors.headerLineOnPrimary,
+                    ),
                   ),
-                ),
-              IconButton(
-                onPressed: state.isCanImport
-                    ? () {
-                        if (state.motels?.isNotEmpty ?? false) {
-                          context.read<ImportMotelsBloc>().add(
-                            SaveMotelsEvent(
-                              motels: state.motels!
-                                  .map((e) => e.motel)
-                                  .toList(),
-                            ),
-                          );
+                IconButton(
+                  onPressed: state.isCanImport
+                      ? () {
+                          if (state.sheetList?.isNotEmpty ?? false) {
+                            context.read<ImportMotelsBloc>().add(
+                              SaveMotelsEvent(
+                                motels: state.sheetList!
+                                    .expand((e) => e.motels.map((e) => e.motel))
+                                    .toList(),
+                              ),
+                            );
+                          }
                         }
-                      }
-                    : () {
-                        _showErrorDialog(() {
-                          context.read<ImportMotelsBloc>().add(FilterDuplicateEvent());
-                        });
-                      },
-                icon: SvgPicture.asset('assets/images/ic_save.svg'),
-              ),
-            ],
-          ),
-          body: Stack(
-            children: [
-              ListView.builder(
-                itemCount: state.motels?.length ?? 0,
-                itemBuilder: (context, index) {
-                  return _buildMotel(state.motels![index]);
-                },
-              ),
-              if (state.isLoading)
-                const Center(child: CircularProgressIndicator()),
-            ],
+                      : () {
+                          _showErrorDialog(() {
+                            context.read<ImportMotelsBloc>().add(
+                              FilterDuplicateEvent(),
+                            );
+                          });
+                        },
+                  icon: SvgPicture.asset('assets/images/ic_save.svg'),
+                ),
+              ],
+            ),
+            body: Stack(
+              children: [
+                TabBarView(
+                  children:
+                      state.sheetList
+                          ?.map(
+                            (e) => ListView.builder(
+                              itemCount: e.motels.length,
+                              itemBuilder: (context, index) {
+                                return _buildMotel(e.motels[index]);
+                              },
+                            ),
+                          )
+                          .toList() ??
+                      [],
+                ),
+                if (state.isLoading)
+                  const Center(child: CircularProgressIndicator()),
+              ],
+            ),
           ),
         );
       },
@@ -129,21 +155,32 @@ class _ImportMotelsScreenState extends State<ImportMotelsScreen> {
                   height: 14,
                 ),
                 const SizedBox(width: 10),
-                Text(
-                  motel.address,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
-                    color: AppColors.elementSecondary,
+                Expanded(
+                  child: Text(
+                    motel.address,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      color: AppColors.elementSecondary,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 4),
+          _buildField('Số điện thoại:', motel.phoneNumbers.join(', ')),
+          const SizedBox(height: 4),
           if (motel.extensions.isNotEmpty)
             _buildField('Tiện ích:', '[${motel.extensions.join(', ')}]'),
           const SizedBox(height: 4),
+          if (motel.car.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4.0),
+              child: _buildField('Xe:', motel.car),
+            ),
           Text(
             'Chi phí khác:',
             style: const TextStyle(

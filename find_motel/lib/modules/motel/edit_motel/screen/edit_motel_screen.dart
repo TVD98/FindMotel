@@ -6,6 +6,7 @@ import 'package:find_motel/common/widgets/selection_bottom_sheet.dart';
 import 'package:find_motel/extensions/double_extensions.dart';
 import 'package:find_motel/managers/app_data_manager.dart';
 import 'package:find_motel/modules/motel/edit_motel/screen/motel_fees_form.dart';
+import 'package:find_motel/modules/motel/edit_motel/screen/motel_phone_numbers_form.dart';
 import 'package:find_motel/theme/app_textStyle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -328,6 +329,9 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
                     _buildBasicInfoSection(state),
                     const SizedBox(height: 16),
                     _divider(),
+                    _buildPhoneNumberSection(state.phoneNumbers),
+                    const SizedBox(height: 16),
+                    _divider(),
                     const SizedBox(height: 8),
                     Text(
                       'Tiện ích:',
@@ -579,7 +583,7 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
               child: _buildSelectionView(
                 'Kiểu phòng',
                 state.type,
-                ['Không cửa sổ, ban công', ...AppDataManager().allRoomTypies],
+                AppDataManager().allRoomTypies,
                 (options) {
                   context.read<EditMotelBloc>().add(
                     EditMotelTypeChanged(options.first.name),
@@ -619,6 +623,24 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
         const SizedBox(height: 24),
         _buildTextField('Địa chỉ', addressController, maxLines: 2),
       ],
+    );
+  }
+
+  Widget _buildPhoneNumberSection(List<String> phoneNumbers) {
+    return MotelPhoneNumbersForm(
+      phoneNumbers: phoneNumbers,
+      onAdd: (newPhone) {
+        final updated = List<String>.from(phoneNumbers)..add(newPhone);
+        context.read<EditMotelBloc>().add(
+          EditMotelPhoneNumbersChanged(updated),
+        );
+      },
+      onDelete: (phone) {
+        final updated = List<String>.from(phoneNumbers)..remove(phone);
+        context.read<EditMotelBloc>().add(
+          EditMotelPhoneNumbersChanged(updated),
+        );
+      },
     );
   }
 

@@ -2,33 +2,15 @@ import 'package:find_motel/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-/// A reusable navigation header (AppBar) for the app.
-///
-/// Usage:
-/// ```dart
-/// Scaffold(
-///   appBar: const CommonAppBar(title: 'Home'),
-///   body: ...,
-/// )
-/// ```
+/// A reusable navigation header (AppBar) with full layout control.
 class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
-  /// Header title text.
   final String title;
-
-  /// Provide an asset path to display a custom leading icon. When set, this overrides the default back arrow.
   final String? leadingAsset;
-
-  /// Optional callback to handle leading icon press.
   final VoidCallback? onLeadingPressed;
-
-  /// Optional list of widgets to display in the AppBar actions.
   final List<Widget>? actions;
-
-  /// Color for the leading icon. Defaults to Colors.white.
   final Color? leadingIconColor;
-
-  /// Color for background. Defaults to AppColors.headerLinePrimary.
   final Color? backgroundColor;
+  final TabBar? tabBar;
 
   const CommonAppBar({
     super.key,
@@ -38,49 +20,81 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.actions,
     this.leadingIconColor = Colors.white,
     this.backgroundColor = AppColors.headerLinePrimary,
+    this.tabBar,
   });
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
-
-  @override
   Widget build(BuildContext context) {
-    return AppBar(
-      automaticallyImplyLeading: false,
-      leading: leadingAsset != null
-          ? IconButton(
-              onPressed: () {
-                if (onLeadingPressed == null) {
-                  if (Navigator.of(context).canPop()) {
-                    Navigator.of(context).pop();
-                  }
-                } else {
-                  onLeadingPressed!();
-                }
-              },
-              icon: SvgPicture.asset(
-                leadingAsset!,
-                height: 24,
-                width: 24,
-                colorFilter: leadingIconColor != null
-                    ? ColorFilter.mode(leadingIconColor!, BlendMode.srcIn)
-                    : null,
+    return Container(
+      color: backgroundColor,
+      child: SafeArea(
+        child: Column(
+          children: [
+            // Phần trên của AppBar (tiêu đề và nút)
+            SizedBox(
+              height: kToolbarHeight,
+              child: Row(
+                children: [
+                  // Nút Leading (quay lại)
+                  if (leadingAsset != null)
+                    IconButton(
+                      onPressed: () {
+                        if (onLeadingPressed == null) {
+                          if (Navigator.of(context).canPop()) {
+                            Navigator.of(context).pop();
+                          }
+                        } else {
+                          onLeadingPressed!();
+                        }
+                      },
+                      icon: SvgPicture.asset(
+                        leadingAsset!,
+                        height: 24,
+                        width: 24,
+                        colorFilter: leadingIconColor != null
+                            ? ColorFilter.mode(
+                                leadingIconColor!,
+                                BlendMode.srcIn,
+                              )
+                            : null,
+                      ),
+                    ),
+                  // Tiêu đề
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        left: leadingAsset == null ? 16 : 0,
+                      ),
+                      child: Text(
+                        title,
+                        style: const TextStyle(
+                          color: AppColors.headerLineOnPrimary,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Các widget actions
+                  if (actions != null) ...actions!,
+                ],
               ),
-            )
-          : null,
-      title: Text(
-        title,
-        style: const TextStyle(
-          color: AppColors.headerLineOnPrimary,
-          fontSize: 18,
-          fontWeight: FontWeight.w400,
+            ),
+            // Phần dưới của AppBar (TabBar)
+            if (tabBar != null)
+              tabBar!,
+          ],
         ),
       ),
-      centerTitle: false,
-      titleSpacing: leadingAsset == null ? 16 : 0,
-      backgroundColor: backgroundColor,
-      elevation: 0,
-      actions: actions,
+    );
+  }
+
+  // Cập nhật chiều cao của AppBar tùy thuộc vào việc có TabBar hay không
+  @override
+  Size get preferredSize {
+    // Chiều cao mặc định của AppBar + chiều cao của TabBar (nếu có)
+    return Size.fromHeight(
+      kToolbarHeight + (tabBar?.preferredSize.height ?? 0),
     );
   }
 }

@@ -1,3 +1,5 @@
+import 'package:find_motel/extensions/double_extensions.dart';
+import 'package:find_motel/extensions/string_extensions.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -43,6 +45,7 @@ class Motel {
   final String id;
   final String address;
   final String commission;
+  final String car;
   final List<String> extensions;
   final List<Fee> fees;
   final LatLng geoPoint;
@@ -56,12 +59,14 @@ class Motel {
   final String marker;
   final String thumbnail;
   final String texture;
+  final List<String> phoneNumbers;
 
   Motel({
     this.createdAt,
     required this.id,
     required this.address,
     required this.commission,
+    required this.car,
     required this.extensions,
     required this.fees,
     required this.geoPoint,
@@ -75,9 +80,10 @@ class Motel {
     required this.marker,
     required this.thumbnail,
     required this.texture,
+    required this.phoneNumbers,
   });
 
-  String get displayName => id;
+  String get displayName => roomCode;
 
   /// Convert this [Motel] instance to a Map suitable for Firestore.
   Map<String, dynamic> toMap() {
@@ -97,6 +103,8 @@ class Motel {
       'marker': marker,
       'thumbnail': thumbnail,
       'texture': texture,
+      'phone_numbers': phoneNumbers,
+      'car': car,
       if (createdAt != null) 'created_at': createdAt,
     };
   }
@@ -106,6 +114,7 @@ class Motel {
       id: id ?? map['id'] ?? '',
       address: map['address'] ?? '',
       commission: map['commission'] ?? '',
+      car: map['car'] ?? '',
       extensions: List<String>.from(map['extensions'] ?? []),
       fees: List<Map<String, dynamic>>.from(
         map['fees'],
@@ -126,6 +135,7 @@ class Motel {
       marker: map['marker'] ?? '',
       thumbnail: map['thumbnail'] ?? '',
       texture: map['texture'] ?? '',
+      phoneNumbers: List<String>.from(map['phone_numbers'] ?? []),
       createdAt: map['created_at'] is int ? map['created_at'] as int : null,
     );
   }
@@ -134,6 +144,7 @@ class Motel {
     int? createdAt,
     String? address,
     String? commission,
+    String? car,
     List<String>? extensions,
     List<Fee>? fees,
     LatLng? geoPoint,
@@ -147,11 +158,13 @@ class Motel {
     String? marker,
     String? thumbnail,
     String? texture,
+    List<String>? phoneNumbers,
   }) {
     return Motel(
       id: id,
       address: address ?? this.address,
       commission: commission ?? this.commission,
+      car: car ?? this.car,
       extensions: extensions ?? this.extensions,
       fees: fees ?? this.fees,
       geoPoint: geoPoint ?? this.geoPoint,
@@ -165,6 +178,7 @@ class Motel {
       marker: marker ?? this.marker,
       thumbnail: thumbnail ?? this.thumbnail,
       texture: texture ?? this.texture,
+      phoneNumbers: phoneNumbers ?? this.phoneNumbers,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -174,6 +188,7 @@ class Motel {
       id: id,
       address: '',
       commission: '',
+      car: '',
       extensions: const [],
       fees: const [],
       geoPoint: const LatLng(0, 0),
@@ -187,7 +202,39 @@ class Motel {
       marker: '',
       thumbnail: '',
       texture: '',
+      phoneNumbers: const [],
       createdAt: null,
     );
+  }
+
+  Map<String, String> getRowData() {
+    Map<String, String> parsedAddress = address.parseAddress();
+    final elevator = extensions.contains('Thang máy') ? 'Có' : 'Không';
+    final electricity = fees
+        .firstWhere((fee) => fee.name == 'Điện')
+        .price
+        .toVND();
+    final water = fees.firstWhere((fee) => fee.name == 'Nước').price.toVND();
+    final other = fees
+        .firstWhere((fee) => fee.name == 'Phí dịch vụ')
+        .price
+        .toVND();
+    return {
+      'roomCode': roomCode,
+      'type': type,
+      'price': price.toVND(),
+      'commission': commission,
+      'car': car,
+      'elevator': elevator,
+      'electricity': electricity,
+      'water': water,
+      'other': other,
+      'images': images.join(', '),
+      'texture': texture,
+      'phone_numbers': phoneNumbers.join(' - '),
+      'note': note.join(', '),
+      'location': '${geoPoint.latitude}, ${geoPoint.longitude}',
+      ...parsedAddress,
+    };
   }
 }

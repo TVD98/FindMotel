@@ -16,6 +16,7 @@ import 'package:find_motel/common/widgets/common_app_bar.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:find_motel/modules/motel/detail_motel/bloc/motel_detail_bloc.dart';
 import 'package:find_motel/modules/motel/detail_motel/bloc/motel_detail_state.dart';
+import 'package:find_motel/utilities/phone_service.dart';
 
 class AppConstants {
   static const padding = 16.0;
@@ -35,10 +36,6 @@ class MotelDetailScreen extends StatefulWidget {
 }
 
 class _MotelDetailScreenState extends State<MotelDetailScreen> {
-  @override
-  void initState() {
-    super.initState();
-  }
 
   Deal get deal => Deal(
     id: '',
@@ -93,6 +90,8 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
                 _divider(),
                 _buildExtensions(currentMotelDetail.extensions),
                 _divider(),
+                _buildCar(currentMotelDetail.car),
+                _divider(),
                 _buildFees(currentMotelDetail.fees),
                 _divider(),
                 _buildNotes(currentMotelDetail.note),
@@ -146,12 +145,29 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
                   child: content,
                 ),
               ),
+              floatingActionButton: isCanEdit
+                  ? FloatingActionButton(
+                      onPressed: () =>
+                          _showHotlineBottomSheet(context, currentMotelDetail.phoneNumbers),
+                      tooltip: 'Hotline',
+                      child: const Icon(Icons.phone),
+                    )
+                  : null,
             );
           }
           return const SizedBox.shrink();
         },
       ),
     );
+  }
+
+  void _showHotlineBottomSheet(BuildContext context, List<String> phoneNumbers) {
+    final phoneService = PhoneService(
+      hotlineNumbers: phoneNumbers
+          .map((e) => PhoneContact(name: '', phone: e))
+          .toList(),
+    );
+    phoneService.showHotlineBottomSheet(context);
   }
 
   _divider() =>
@@ -334,6 +350,19 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
                     )
                     .toList(),
               ),
+      ],
+    );
+  }
+
+  Widget _buildCar(String car) {
+    return Row(
+      children: [
+        Text(
+          "Xe:",
+          style: AppTextStyle.subtitle.copyWith(color: AppColors.primary),
+        ),
+        const SizedBox(height: AppConstants.spacing),
+        Text(car),
       ],
     );
   }
