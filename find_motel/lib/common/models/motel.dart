@@ -1,3 +1,5 @@
+import 'package:find_motel/extensions/double_extensions.dart';
+import 'package:find_motel/extensions/string_extensions.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -102,6 +104,7 @@ class Motel {
       'thumbnail': thumbnail,
       'texture': texture,
       'phone_numbers': phoneNumbers,
+      'car': car,
       if (createdAt != null) 'created_at': createdAt,
     };
   }
@@ -202,5 +205,36 @@ class Motel {
       phoneNumbers: const [],
       createdAt: null,
     );
+  }
+
+  Map<String, String> getRowData() {
+    Map<String, String> parsedAddress = address.parseAddress();
+    final elevator = extensions.contains('Thang máy') ? 'Có' : 'Không';
+    final electricity = fees
+        .firstWhere((fee) => fee.name == 'Điện')
+        .price
+        .toVND();
+    final water = fees.firstWhere((fee) => fee.name == 'Nước').price.toVND();
+    final other = fees
+        .firstWhere((fee) => fee.name == 'Phí dịch vụ')
+        .price
+        .toVND();
+    return {
+      'roomCode': roomCode,
+      'type': type,
+      'price': price.toVND(),
+      'commission': commission,
+      'car': car,
+      'elevator': elevator,
+      'electricity': electricity,
+      'water': water,
+      'other': other,
+      'images': images.join(', '),
+      'texture': texture,
+      'phone_numbers': phoneNumbers.join(' - '),
+      'note': note.join(', '),
+      'location': '${geoPoint.latitude}, ${geoPoint.longitude}',
+      ...parsedAddress,
+    };
   }
 }

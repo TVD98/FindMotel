@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:find_motel/common/models/motel.dart';
-import 'package:find_motel/utilities/excel_reader.dart';
+import 'package:find_motel/utilities/excel_helper.dart';
 
 class ImportMotelsEvent extends Equatable {
   const ImportMotelsEvent();

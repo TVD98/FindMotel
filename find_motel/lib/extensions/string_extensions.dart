@@ -197,4 +197,32 @@ extension StringExtensions on String {
 
     return '$part1-$part2-$part3';
   }
+
+  Map<String, String> parseAddress() {
+    final Map<String, String> parsedAddress = {
+      'number': '',
+      'street': '',
+      'ward': '',
+      'district': '',
+    };
+
+    final firstSplit = split(' ');
+    if (firstSplit.length < 2) return parsedAddress;
+    final number = firstSplit[0];
+    final remainingAddress = firstSplit.sublist(1).join(' ').trim();
+    final secondSplit = remainingAddress.split(',');
+    if (secondSplit.length < 3) return parsedAddress;
+    final street = secondSplit[0].trim();
+    final ward = secondSplit[1]
+        .replaceAll(RegExp(r'p(hương|huong|hường)', caseSensitive: false), '')
+        .trim();
+    final district = secondSplit[2].trim();
+
+    parsedAddress['number'] = number;
+    parsedAddress['street'] = street;
+    parsedAddress['ward'] = ward;
+    parsedAddress['district'] = district;
+
+    return parsedAddress;
+  }
 }

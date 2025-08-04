@@ -3,7 +3,7 @@ import 'package:find_motel/modules/import_motels/bloc/import_motels_bloc.dart';
 import 'package:find_motel/modules/import_motels/bloc/import_motels_event.dart';
 import 'package:find_motel/services/reload_service.dart';
 import 'package:find_motel/theme/app_colors.dart';
-import 'package:find_motel/utilities/excel_reader.dart';
+import 'package:find_motel/utilities/excel_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:find_motel/common/widgets/common_app_bar.dart';
