@@ -77,15 +77,14 @@ class Address implements KeywordsFilter {
   @override
   List<String> makeKeywords(List<String> keywords) {
     if (district != null) {
-      keywords = keywords + [district!.normalizeAddressString()];
       if (ward != null) {
-        return keywords + [ward!.normalizeAddressString()];
+        keywords = keywords + [ward!.normalizeAddressString(), district!.normalizeAddressString()];
       } else {
-        return keywords;
+        keywords = keywords + [district!.normalizeAddressString()];
       }
-    } else {
       return keywords;
     }
+    return keywords;
   }
 }
 

@@ -74,9 +74,9 @@ class _LocationFilterState extends State<LocationFilter> {
         ),
         const SizedBox(height: 8.0),
         Padding(
-          padding: const EdgeInsets.only(left: 12),
+          padding: const EdgeInsets.only(left: 12.0),
           child: SizedBox(
-            width: 300,
+            width: double.infinity,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
