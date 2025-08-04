@@ -1,28 +1,21 @@
 import 'package:find_motel/common/models/area.dart';
 import 'package:find_motel/managers/app_data_manager.dart';
 import 'package:find_motel/common/widgets/fixed_dropdown_button.dart';
+import 'package:find_motel/services/motel/models/motels_filter.dart';
 import 'package:flutter/material.dart';
 import 'package:find_motel/theme/app_colors.dart';
 import 'package:find_motel/theme/app_textStyle.dart';
 
 class LocationFilter extends StatefulWidget {
-  final String? selectedProvince;
-  final String? selectedDistrict;
-  final String? selectedWard;
+  final Address? address;
 
   // Thêm các hàm callback
-  final void Function(String? newProvince)? onProvinceChanged;
-  final void Function(String? newDistrict)? onDistrictChanged;
-  final void Function(String? newWard)? onWardChanged;
+  final void Function(Address? newAddress)? onAddressChanged;
 
   const LocationFilter({
     super.key,
-    required this.selectedProvince,
-    required this.selectedDistrict,
-    required this.selectedWard,
-    this.onProvinceChanged,
-    this.onDistrictChanged,
-    this.onWardChanged,
+    required this.address,
+    this.onAddressChanged,
   });
 
   @override
@@ -40,9 +33,9 @@ class _LocationFilterState extends State<LocationFilter> {
   @override
   void initState() {
     super.initState();
-    _selectedProvince = widget.selectedProvince ?? 'Tất cả';
-    _selectedDistrict = widget.selectedDistrict ?? 'Tất cả';
-    _selectedWard = widget.selectedWard ?? 'Tất cả';
+    _selectedProvince = widget.address?.province ?? 'Tất cả';
+    _selectedDistrict = widget.address?.district ?? 'Tất cả';
+    _selectedWard = widget.address?.ward ?? 'Tất cả';
     _updateDistricts(_selectedProvince);
     _updateWards(_selectedDistrict);
   }
@@ -66,6 +59,9 @@ class _LocationFilterState extends State<LocationFilter> {
           _districts.firstWhere((e) => e.name == district).wards;
     }
   }
+
+  String? _formatStringSelection(String? input) =>
+      input == 'Tất cả' ? null : input;
 
   @override
   Widget build(BuildContext context) {
@@ -102,8 +98,13 @@ class _LocationFilterState extends State<LocationFilter> {
                             ['Tất cả'] + _province.map((e) => e.name).toList(),
                         style: DropdownStyle.large,
                         onChanged: (value) {
-                          if (widget.onProvinceChanged != null) {
-                            widget.onProvinceChanged!(value);
+                          if (widget.onAddressChanged != null) {
+                            final newAddress = Address(
+                              province: _formatStringSelection(value),
+                              district: null,
+                              ward: null,
+                            );
+                            widget.onAddressChanged!(newAddress);
                             setState(() {
                               _selectedProvince = value ?? 'Tất cả';
                               _updateDistricts(_selectedProvince);
@@ -137,8 +138,13 @@ class _LocationFilterState extends State<LocationFilter> {
                         items: _districts.map((e) => e.name).toList(),
                         style: DropdownStyle.large,
                         onChanged: (value) {
-                          if (widget.onDistrictChanged != null) {
-                            widget.onDistrictChanged!(value);
+                          if (widget.onAddressChanged != null) {
+                            final newAddress = Address(
+                              province: _selectedProvince,
+                              district: _formatStringSelection(value),
+                              ward: null,
+                            );
+                            widget.onAddressChanged!(newAddress);
                             setState(() {
                               _selectedDistrict = value ?? 'Tất cả';
                               _updateWards(_selectedDistrict);
@@ -169,8 +175,13 @@ class _LocationFilterState extends State<LocationFilter> {
                         items: _wards.map((e) => e.name).toList(),
                         style: DropdownStyle.large,
                         onChanged: (value) {
-                          if (widget.onWardChanged != null) {
-                            widget.onWardChanged!(value);
+                          if (widget.onAddressChanged != null) {
+                            final newAddress = Address(
+                              province: _selectedProvince,
+                              district: _selectedDistrict,
+                              ward: _formatStringSelection(value),
+                            );
+                            widget.onAddressChanged!(newAddress);
                             setState(() {
                               _selectedWard = value ?? 'Tất cả';
                             });
