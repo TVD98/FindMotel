@@ -36,7 +36,6 @@ class MotelDetailScreen extends StatefulWidget {
 }
 
 class _MotelDetailScreenState extends State<MotelDetailScreen> {
-
   Deal get deal => Deal(
     id: '',
     name: '',
@@ -147,8 +146,10 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
               ),
               floatingActionButton: isCanEdit
                   ? FloatingActionButton(
-                      onPressed: () =>
-                          _showHotlineBottomSheet(context, currentMotelDetail.phoneNumbers),
+                      onPressed: () => _showHotlineBottomSheet(
+                        context,
+                        currentMotelDetail.phoneNumbers,
+                      ),
                       tooltip: 'Hotline',
                       child: const Icon(Icons.phone),
                     )
@@ -161,7 +162,10 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
     );
   }
 
-  void _showHotlineBottomSheet(BuildContext context, List<String> phoneNumbers) {
+  void _showHotlineBottomSheet(
+    BuildContext context,
+    List<String> phoneNumbers,
+  ) {
     final phoneService = PhoneService(
       hotlineNumbers: phoneNumbers
           .map((e) => PhoneContact(name: '', phone: e))
@@ -361,8 +365,8 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
           "Xe:",
           style: AppTextStyle.subtitle.copyWith(color: AppColors.primary),
         ),
-        const SizedBox(height: AppConstants.spacing),
-        Text(car),
+        const SizedBox(width: AppConstants.spacing),
+        Text(car, style: TextStyle(fontSize: 14)),
       ],
     );
   }
