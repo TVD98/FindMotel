@@ -21,7 +21,7 @@ class MotelsFilterCubit extends Cubit<MotelsFilter> {
     : super(
         MotelsFilter(
           roomCode: null,
-          address: Address(province: 'Tp. Hồ Chí Minh', ward: null),
+          address: Address(province: 'Thành phố Hồ Chí Minh', district: null, ward: null),
           amenities: null,
           status: null,
           texturies: null,

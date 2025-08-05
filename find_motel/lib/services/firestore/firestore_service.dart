@@ -16,6 +16,7 @@ import 'package:find_motel/constants/firestore_paths.dart';
 import 'package:find_motel/common/models/user_profile.dart';
 import 'package:find_motel/common/models/deal.dart';
 import 'package:find_motel/services/customer/customer_service.dart';
+import 'package:find_motel/services/location_api_service.dart';
 
 /// Service that fetches motel data from Firebase Cloud Firestore.
 class FirestoreService
@@ -256,26 +257,18 @@ class FirestoreService
   @override
   Future<({List<Province>? provinces, String? error})> fetchProvinces() async {
     try {
-      final provinces = await _firestore
-          .collection(FirestorePaths.areasCollection)
-          .get()
-          .then((value) => value.docs.map((e) => _provinceFromDoc(e)).toList());
+      final List<Province> provinces = [];
+      final allProvinces = await LocationApiService().fetchProvinces();
+      final List<int> provinceCodes = allProvinces.map((p) => p.code).toList();
+      for (var provinceCode in provinceCodes) {
+         final province = await LocationApiService().fetchProvinceWithDetails(provinceCode);
+         provinces.add(province);
+      }
       return (provinces: provinces, error: null);
     } catch (e) {
       return (provinces: null, error: e.toString());
     }
   }
-
-  Province _provinceFromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
-    final data = doc.data()!;
-
-    return Province(
-      id: doc.id,
-      name: data['name'] as String? ?? '',
-      wards: List<String>.from(data['wards'] ?? const []),
-    );
-  }
-
   @override
   Future<({ImportImagesOptions? options, String? error})>
   fetchImportImagesOptions() async {

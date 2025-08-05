@@ -142,13 +142,19 @@ extension StringExtensions on String {
     String result = this;
 
     // Danh sách các cụm từ cần loại bỏ
-    final List<String> phrasesToRemove = ['phường', 'xã', 'đặc khu'];
+    final List<String> phrasesToRemove = [ 'đặc khu','quận','huyện','tỉnh','thành phố'];
 
     for (String phrase in phrasesToRemove) {
-      result = result.replaceAll(
+      String resultTemp = result.replaceAll(
         RegExp(r'\b' + phrase + r'\b', caseSensitive: false),
         '',
       );
+      try {
+        int.parse(resultTemp);
+      }
+      catch (e) {
+        result = resultTemp;
+      }
     }
 
     // Loại bỏ khoảng trắng thừa do việc xóa cụm từ gây ra

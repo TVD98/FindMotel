@@ -7,6 +7,7 @@ import '../bloc/setting_page_bloc.dart';
 import '../bloc/setting_page_event.dart';
 import '../bloc/setting_page_state.dart';
 import 'package:find_motel/theme/app_colors.dart';
+import 'package:find_motel/theme/app_textStyle.dart';
 import 'package:find_motel/common/widgets/custom_button.dart';
 import 'package:find_motel/common/widgets/common_app_bar.dart';
 import 'package:find_motel/services/image_picker/image_picker_service.dart';
@@ -145,17 +146,16 @@ class _SettingPageState extends State<SettingPage> {
                     hintText: (state.name?.isEmpty ?? true)
                         ? 'Nhập tên người dùng'
                         : state.name ?? '',
-                    hintStyle: const TextStyle(
+                    hintStyle: AppTextStyle.body.copyWith(
                       color: AppColors.tertiary,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w400,
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10.0),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.0),
                       borderSide: const BorderSide(
                         color: AppColors.strokeLight,
-                        width: 1.0,
-                        strokeAlign: BorderSide.strokeAlignInside,
                       ),
                     ),
                     filled: true,
@@ -165,10 +165,9 @@ class _SettingPageState extends State<SettingPage> {
                       horizontal: 16.0,
                     ),
                   ),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w400,
-                  ),
+                  style: AppTextStyle.body.copyWith(
+                      color: AppColors.elementSecondary,
+                    ),
                 ),
                 _divider(),
                 const SizedBox(height: 30),

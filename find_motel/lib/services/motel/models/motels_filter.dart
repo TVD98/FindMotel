@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:find_motel/common/models/motel.dart';
 import 'package:find_motel/extensions/string_extensions.dart';
 import 'package:find_motel/managers/app_data_manager.dart';
@@ -67,14 +69,20 @@ class Range2D implements QueryFilter {
 
 class Address implements KeywordsFilter {
   final String? province;
+  final String? district;
   final String? ward;
 
-  Address({this.province, this.ward});
+  Address({this.province, this.district, this.ward});
 
   @override
   List<String> makeKeywords(List<String> keywords) {
-    if (ward != null) {
-      return keywords + [ward!.normalizeAddressString()];
+    if (district != null) {
+      if (ward != null) {
+        keywords = keywords + [ward!.normalizeAddressString(), district!.normalizeAddressString()];
+      } else {
+        keywords = keywords + [district!.normalizeAddressString()];
+      }
+      return keywords;
     }
     return keywords;
   }

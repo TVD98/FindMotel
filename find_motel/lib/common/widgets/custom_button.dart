@@ -1,5 +1,4 @@
 import 'package:find_motel/theme/app_colors.dart';
-import 'package:find_motel/theme/app_textStyle.dart';
 import 'package:flutter/material.dart';
 
 class CustomButton extends StatelessWidget {

@@ -1,5 +1,4 @@
 import 'package:find_motel/common/constants/constant.dart';
-import 'package:find_motel/common/models/area.dart';
 import 'package:find_motel/common/widgets/common_textfield.dart';
 import 'package:find_motel/common/widgets/price_range_input.dart';
 import 'package:find_motel/common/widgets/rectange_checkbox_list.dart';
@@ -9,12 +8,12 @@ import 'package:find_motel/common/widgets/common_app_bar.dart';
 import 'package:find_motel/extensions/double_extensions.dart';
 import 'package:find_motel/managers/app_data_manager.dart';
 import 'package:find_motel/managers/cubit/cubit.dart';
-import 'package:find_motel/common/widgets/fixed_dropdown_button.dart';
 import 'package:find_motel/services/motel/models/motels_filter.dart';
 import 'package:flutter/material.dart';
 import 'package:find_motel/theme/app_colors.dart';
 import 'package:find_motel/theme/app_textStyle.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:find_motel/common/widgets/location_filter.dart';
 
 class FilterPage extends StatefulWidget {
   const FilterPage({super.key});
@@ -25,15 +24,13 @@ class FilterPage extends StatefulWidget {
 
 class _FilterPageState extends State<FilterPage> {
   final List<String> _allAmenitiesOptions = AppDataManager().allAmenities;
-  final List<Province> _allProvinceOptions = AppDataManager().allProvinces;
   final List<CheckboxItem> _allStatusOptions = AppDataManager().allStatus
       .map((e) => (e.name, e.title))
       .toList();
   final List<String> _allTextureOptions = AppDataManager().allTexturies;
   final List<String> _allRoomTypeOptions = AppDataManager().allRoomTypies;
 
-  late String _selectedProvince;
-  late String _selectedWard;
+  late Address? _selectedAddress;
   late String _selectedRoomType;
   late List<String> _selectedAmenities;
   late List<String> _selectedStatusList;
@@ -44,10 +41,7 @@ class _FilterPageState extends State<FilterPage> {
 
   MotelsFilter get _motelsFilter => AppDataManager().filterMotels.copyWith(
     roomCode: _roomCodeController.text.isEmpty ? '' : _roomCodeController.text,
-    address: Address(
-      province: _formatStringSelection(_selectedProvince),
-      ward: _formatStringSelection(_selectedWard),
-    ),
+    address: _selectedAddress ?? Address(province: 'Thành phố Hồ Chí Minh', district: null, ward: null),
     amenities: _selectedAmenities.isEmpty ? [] : _selectedAmenities,
     status: _selectedStatusList.isEmpty ? [] : _selectedStatusList,
     texturies: _selectedTextureList.isEmpty ? [] : _selectedTextureList,
@@ -66,8 +60,9 @@ class _FilterPageState extends State<FilterPage> {
       AppDataManager().filterMotels.copyWith(
         roomCode: '',
         address: Address(
-          province: _formatStringSelection(_selectedProvince),
-          ward: _formatStringSelection('Tất cả'),
+          province: 'Thành phố Hồ Chí Minh',
+          district: null,
+          ward: null,
         ),
         amenities: [],
         status: [],
@@ -92,8 +87,7 @@ class _FilterPageState extends State<FilterPage> {
 
   void _setupFieldsByFilters() {
     final initialData = AppDataManager().filterMotels;
-    _selectedProvince = initialData.address?.province ?? 'Tất cả';
-    _selectedWard = initialData.address?.ward ?? 'Tất cả';
+    _selectedAddress = initialData.address ?? Address(province: 'Thành phố Hồ Chí Minh', district: null, ward: null);
     _selectedAmenities = initialData.amenities ?? [];
     _selectedStatusList = initialData.status ?? [];
     _selectedTextureList = initialData.texturies ?? [];
@@ -121,7 +115,16 @@ class _FilterPageState extends State<FilterPage> {
             children: [
               _buildRoomCodeRow(),
               _divider(),
-              _buildAreaSection(),
+              LocationFilter(
+                address: _selectedAddress,
+                // Cung cấp các hàm callback để cập nhật trạng thái
+                onAddressChanged: (newAddress) {
+                  setState(() {
+                    _selectedAddress = newAddress;
+                  });
+                },
+              ),
+              // _buildAreaSection(),
               _divider(),
               _buildAmenitiesSection(),
               _divider(),
@@ -162,87 +165,6 @@ class _FilterPageState extends State<FilterPage> {
           child: CommonTextfield(
             controller: _roomCodeController,
             style: TextFieldStyle.medium,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAreaSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Khu vực:',
-          style: AppTextStyle.smallLabel.copyWith(color: AppColors.primary),
-        ),
-        const SizedBox(height: 8.0),
-        Padding(
-          padding: const EdgeInsets.only(left: 12),
-          child: SizedBox(
-            width: 300,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(right: 12.0),
-                      child: Text(
-                        'Tỉnh/Tp:',
-                        style: AppTextStyle.smallLabel.copyWith(
-                          color: AppColors.elementPrimary,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: FixedDropdownButton(
-                        value: _selectedProvince,
-                        items: _allProvinceOptions.map((e) => e.name).toList(),
-                        // width: 162.0,
-                        style: DropdownStyle.large,
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedProvince = value ?? 'Tất cả';
-                          });
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10.0),
-                Row(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(right: 12.0),
-                      child: Text(
-                        'Phường/xã:',
-                        style: AppTextStyle.smallLabel.copyWith(
-                          color: AppColors.elementPrimary,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: FixedDropdownButton(
-                        value: _selectedWard,
-                        items:
-                            ['Tất cả'] +
-                            _allProvinceOptions[_allProvinceOptions.indexWhere(
-                                  (e) => e.name == _selectedProvince,
-                                )]
-                                .wards,
-                        style: DropdownStyle.large,
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedWard = value ?? 'Tất cả';
-                          });
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
           ),
         ),
       ],
@@ -482,9 +404,6 @@ class _FilterPageState extends State<FilterPage> {
   // ----------------------------
   // Data helper methods
   // ----------------------------
-
-  String? _formatStringSelection(String? input) =>
-      input == 'Tất cả' ? null : input;
 
   Widget buildRangeValueText(RangeValues values, double maxValue) {
     final double startValue = values.start;
