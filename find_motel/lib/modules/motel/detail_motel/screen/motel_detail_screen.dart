@@ -324,7 +324,10 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
         ),
         const SizedBox(height: AppConstants.spacing),
         extensions.isEmpty
-            ? const Text('Không có tiện ích', style: TextStyle(fontSize: 14))
+            ? Text(
+                'Không có tiện ích',
+                style: AppTextStyle.body.copyWith(color: AppColors.elementSecondary),
+              )
             : Wrap(
                 spacing: AppConstants.spacing,
                 runSpacing: AppConstants.spacing,
@@ -366,7 +369,7 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
           style: AppTextStyle.subtitle.copyWith(color: AppColors.primary),
         ),
         const SizedBox(width: AppConstants.spacing),
-        Text(car, style: TextStyle(fontSize: 14)),
+        Text(car, style: AppTextStyle.body.copyWith(color: AppColors.elementSecondary)),
       ],
     );
   }

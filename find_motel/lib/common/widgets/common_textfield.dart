@@ -8,6 +8,8 @@ import 'package:intl/intl.dart';
 enum TextFieldStyle { large, medium }
 
 class CommonTextfield extends StatefulWidget {
+  /// Border radius cho textfield, nếu null sẽ mặc định là BorderRadius.circular(4)
+  final BorderRadius? borderRadius;
   final TextEditingController controller;
   final String? label;
   final String? hintText;
@@ -21,6 +23,7 @@ class CommonTextfield extends StatefulWidget {
 
   const CommonTextfield({
     super.key,
+    this.borderRadius,
     required this.controller,
     this.label,
     this.hintText,
@@ -143,11 +146,11 @@ class _CommonTextfieldState extends State<CommonTextfield> {
             hintText: widget.hintText ?? '',
             contentPadding: contentPadding,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: widget.borderRadius ?? BorderRadius.circular(4),
               borderSide: const BorderSide(color: AppColors.strokeLight),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: widget.borderRadius ?? BorderRadius.circular(4),
               borderSide: BorderSide(color: widget.bolderColor ?? AppColors.strokeLight),
             ),
             filled: true,

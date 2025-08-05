@@ -176,6 +176,7 @@ class _SettingPageState extends State<SettingPage> {
                   height: 44,
                   child: CustomButton(
                     label: state.isSaving ? 'Đang lưu...' : 'Lưu cài đặt',
+                    textStyle: AppTextStyle.title,
                     radius: 10.0,
                     onPressed: state.isSaving
                         ? null

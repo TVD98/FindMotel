@@ -8,6 +8,7 @@ import 'package:find_motel/extensions/double_extensions.dart';
 import 'package:find_motel/extensions/string_extensions.dart';
 import 'package:find_motel/modules/deal_manager/bloc/deal_manager_event.dart';
 import 'package:find_motel/theme/app_colors.dart';
+import 'package:find_motel/theme/app_textStyle.dart';
 import 'package:find_motel/utilities/mask_input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -216,6 +217,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                                     : state.isViewMode
                                     ? 'Sửa'
                                     : 'Lưu',
+                                textStyle: AppTextStyle.title,
                                 onPressed: () {
                                   if (state.isCreate || !state.isViewMode) {
                                     context.read<DealDetailBloc>().add(

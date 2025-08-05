@@ -124,6 +124,13 @@ class FirestoreService
 
       // 5. Apply local-only filters (e.g. distance).
       List<Motel> resultMotels = fetchedMotels;
+
+      if (filter?.address != null) {
+        resultMotels = resultMotels
+            .where((motel) => filter!.address!.checkCondition(motel))
+            .toList();
+      }
+
       if (filter?.distanceRange != null) {
         resultMotels = resultMotels
             .where((motel) => filter!.distanceRange!.checkCondition(motel))

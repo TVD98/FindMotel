@@ -6,17 +6,25 @@ extension ListStringX on List<String> {
     String field,
   ) {
     if (isEmpty) return query;
-    return query.where(field, arrayContainsAny: this);
+    if (length == 1) {
+      return query.where(field, arrayContains: first);
+    } else {
+      return query.where(field, arrayContainsAny: this);
+    }
   }
 
   Query<Map<String, dynamic>> applyWhereIn(
-      Query<Map<String, dynamic>> query, String field) {
+    Query<Map<String, dynamic>> query,
+    String field,
+  ) {
     if (isEmpty) return query;
     return query.where(field, whereIn: this);
   }
 
   Query<Map<String, dynamic>> applyWhereNotIn(
-      Query<Map<String, dynamic>> query, String field) {
+    Query<Map<String, dynamic>> query,
+    String field,
+  ) {
     if (isEmpty) return query;
     return query.where(field, whereNotIn: this);
   }

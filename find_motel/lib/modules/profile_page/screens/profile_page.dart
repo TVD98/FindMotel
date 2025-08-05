@@ -10,6 +10,7 @@ import 'package:find_motel/modules/setting_page/screens/setting_page.dart';
 import 'package:find_motel/modules/setting_page/bloc/setting_page_bloc.dart';
 import 'package:find_motel/theme/app_colors.dart';
 import 'package:find_motel/common/widgets/custom_button.dart';
+import 'package:find_motel/theme/app_textStyle.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:find_motel/modules/profile_page/bloc/profile_page_bloc.dart';
 import 'package:find_motel/modules/profile_page/bloc/profile_page_state.dart';
@@ -141,6 +142,7 @@ class _ProfilePageState extends State<ProfilePage>
                           child: CustomButton(
                             label: 'Đăng xuất',
                             icon: Icons.logout,
+                            textStyle: AppTextStyle.title,
                             textColor: AppColors.onPrimary,
                             backgroundColor: AppColors.primary,
                             onPressed: () {

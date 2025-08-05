@@ -4,6 +4,7 @@ import 'package:find_motel/common/widgets/common_app_bar.dart';
 import 'package:find_motel/common/widgets/custom_button.dart';
 import 'package:find_motel/common/widgets/fixed_dropdown_button.dart';
 import 'package:find_motel/theme/app_colors.dart';
+import 'package:find_motel/theme/app_textStyle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -96,8 +97,9 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
                             height: 40,
                             child: CustomButton(
                               label: 'Đặt lại',
+                              textStyle: AppTextStyle.title,
                               textColor: AppColors.primary,
-                              backgroundColor: AppColors.onPrimary,
+                              backgroundColor: AppColors.onSurface2,
                               strokeColor: AppColors.strokeLight,
                               radius: 4.0,
                               isDisabled:
@@ -116,6 +118,7 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
                             height: 40,
                             child: CustomButton(
                               label: 'Lưu',
+                              textStyle: AppTextStyle.title,
                               textColor: AppColors.onPrimary,
                               backgroundColor: AppColors.primary,
                               strokeColor: AppColors.strokeLight,

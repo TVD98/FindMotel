@@ -142,7 +142,7 @@ extension StringExtensions on String {
     String result = this;
 
     // Danh sách các cụm từ cần loại bỏ
-    final List<String> phrasesToRemove = [ 'đặc khu','quận','huyện','tỉnh','thành phố'];
+    final List<String> phrasesToRemove = [ 'đặc khu', 'quận', 'huyện', 'tỉnh', 'thành phố'];
 
     for (String phrase in phrasesToRemove) {
       String resultTemp = result.replaceAll(

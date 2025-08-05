@@ -67,7 +67,7 @@ class Range2D implements QueryFilter {
   }
 }
 
-class Address implements KeywordsFilter {
+class Address implements KeywordsFilter, LocalFilter {
   final String? province;
   final String? district;
   final String? ward;
@@ -77,14 +77,26 @@ class Address implements KeywordsFilter {
   @override
   List<String> makeKeywords(List<String> keywords) {
     if (district != null) {
-      if (ward != null) {
-        keywords = keywords + [ward!.normalizeAddressString(), district!.normalizeAddressString()];
-      } else {
-        keywords = keywords + [district!.normalizeAddressString()];
-      }
-      return keywords;
+      keywords = keywords + [district!.normalizeAddressString()];
+    } else if (ward != null) {
+      keywords = keywords + [ward!.normalizeAddressString()];
     }
     return keywords;
+  }
+
+  @override
+  bool checkCondition(Motel motel) {
+    if (district != null && ward != null) {
+      final parsedAddress = motel.address.parseAddress();
+      return parsedAddress['ward']?.normalizeAddressString() ==
+          ward!
+              .replaceAll(
+                RegExp(r'p(hương|huong|hường)', caseSensitive: false),
+                '',
+              )
+              .trim();
+    }
+    return true;
   }
 }
 

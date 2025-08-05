@@ -41,7 +41,9 @@ class _FilterPageState extends State<FilterPage> {
 
   MotelsFilter get _motelsFilter => AppDataManager().filterMotels.copyWith(
     roomCode: _roomCodeController.text.isEmpty ? '' : _roomCodeController.text,
-    address: _selectedAddress ?? Address(province: 'Thành phố Hồ Chí Minh', district: null, ward: null),
+    address:
+        _selectedAddress ??
+        Address(province: 'Thành phố Hồ Chí Minh', district: null, ward: null),
     amenities: _selectedAmenities.isEmpty ? [] : _selectedAmenities,
     status: _selectedStatusList.isEmpty ? [] : _selectedStatusList,
     texturies: _selectedTextureList.isEmpty ? [] : _selectedTextureList,
@@ -87,7 +89,9 @@ class _FilterPageState extends State<FilterPage> {
 
   void _setupFieldsByFilters() {
     final initialData = AppDataManager().filterMotels;
-    _selectedAddress = initialData.address ?? Address(province: 'Thành phố Hồ Chí Minh', district: null, ward: null);
+    _selectedAddress =
+        initialData.address ??
+        Address(province: 'Thành phố Hồ Chí Minh', district: null, ward: null);
     _selectedAmenities = initialData.amenities ?? [];
     _selectedStatusList = initialData.status ?? [];
     _selectedTextureList = initialData.texturies ?? [];
@@ -97,7 +101,7 @@ class _FilterPageState extends State<FilterPage> {
         const RangeValues(1_000_000, 10_000_000);
     _roomCodeController = TextEditingController(text: initialData.roomCode);
     _distanceController = TextEditingController(
-      text: initialData.distanceRange?.value.toString(),
+      text: initialData.distanceRange?.value.toInt().toString(),
     );
   }
 
@@ -108,39 +112,42 @@ class _FilterPageState extends State<FilterPage> {
       appBar: CommonAppBar(title: 'Bộ lọc'),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildRoomCodeRow(),
-              _divider(),
-              LocationFilter(
-                address: _selectedAddress,
-                // Cung cấp các hàm callback để cập nhật trạng thái
-                onAddressChanged: (newAddress) {
-                  setState(() {
-                    _selectedAddress = newAddress;
-                  });
-                },
-              ),
-              // _buildAreaSection(),
-              _divider(),
-              _buildAmenitiesSection(),
-              _divider(),
-              _buildPriceRangeSection(),
-              _divider(),
-              _buildDistanceSection(),
-              _divider(),
-              _buildRoomTypeSection(),
-              _divider(),
-              _buildStatusSection(),
-              _divider(),
-              _buildTextureSection(),
-              const SizedBox(height: 16),
-              _buildActionButtons(context),
-              const SizedBox(height: 16),
-            ],
+        child: GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildRoomCodeRow(),
+                _divider(),
+                LocationFilter(
+                  address: _selectedAddress,
+                  // Cung cấp các hàm callback để cập nhật trạng thái
+                  onAddressChanged: (newAddress) {
+                    setState(() {
+                      _selectedAddress = newAddress;
+                    });
+                  },
+                ),
+                // _buildAreaSection(),
+                _divider(),
+                _buildAmenitiesSection(),
+                _divider(),
+                _buildPriceRangeSection(),
+                _divider(),
+                _buildDistanceSection(),
+                _divider(),
+                _buildRoomTypeSection(),
+                _divider(),
+                _buildStatusSection(),
+                _divider(),
+                _buildTextureSection(),
+                const SizedBox(height: 16),
+                _buildActionButtons(context),
+                const SizedBox(height: 16),
+              ],
+            ),
           ),
         ),
       ),
@@ -253,6 +260,7 @@ class _FilterPageState extends State<FilterPage> {
                 controller: _distanceController,
                 style: TextFieldStyle.medium,
                 backgroundColor: AppColors.onSurface1,
+                keyboardType: TextInputType.number,
               ),
             ),
             Positioned(

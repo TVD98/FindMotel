@@ -1,11 +1,9 @@
 import 'package:find_motel/common/widgets/custom_button.dart';
 import 'package:find_motel/theme/app_colors.dart';
+import 'package:find_motel/theme/app_textStyle.dart';
 import 'package:flutter/material.dart';
 
-enum AlertType {
-  success,
-  error,
-}
+enum AlertType { success, error }
 
 class CommonAlertDialog extends StatelessWidget {
   final String title;
@@ -44,7 +42,9 @@ class CommonAlertDialog extends StatelessWidget {
             TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: alertType == AlertType.error ? AppColors.error : AppColors.primary,
+              color: alertType == AlertType.error
+                  ? AppColors.error
+                  : AppColors.primary,
             ),
       ),
       content: Text(
@@ -68,6 +68,7 @@ class CommonAlertDialog extends StatelessWidget {
                 height: 38,
                 child: CustomButton(
                   label: leadingActionTitle!,
+                  textStyle: AppTextStyle.label,
                   textColor: AppColors.primary,
                   backgroundColor: AppColors.onPrimary,
                   strokeColor: AppColors.strokeLight,
@@ -83,6 +84,7 @@ class CommonAlertDialog extends StatelessWidget {
                 height: 38,
                 child: CustomButton(
                   label: trailingActionTitle!,
+                  textStyle: AppTextStyle.label,
                   textColor: AppColors.onPrimary,
                   backgroundColor: AppColors.primary,
                   strokeColor: AppColors.strokeLight,

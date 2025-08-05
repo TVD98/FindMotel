@@ -1,5 +1,6 @@
 import 'package:find_motel/extensions/string_extensions.dart';
 import 'package:find_motel/services/image_picker/image_source_option.dart';
+import 'package:find_motel/theme/app_textStyle.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:find_motel/theme/app_colors.dart';
@@ -133,6 +134,7 @@ class ImagePickerService {
                   height: 38,
                   child: CustomButton(
                     label: 'Hủy',
+                    textStyle: AppTextStyle.label,
                     textColor: AppColors.primary,
                     backgroundColor: AppColors.onPrimary,
                     strokeColor: AppColors.strokeLight,
@@ -148,6 +150,7 @@ class ImagePickerService {
                   height: 38,
                   child: CustomButton(
                     label: 'Thêm',
+                    textStyle: AppTextStyle.label,
                     textColor: AppColors.onPrimary,
                     backgroundColor: AppColors.primary,
                     strokeColor: AppColors.strokeLight,

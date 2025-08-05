@@ -31,7 +31,10 @@ class _ImportMotelsScreenState extends State<ImportMotelsScreen> {
     return BlocConsumer<ImportMotelsBloc, ImportMotelsState>(
       listener: (context, state) {
         if (state.isSaved ?? false) {
-          _showSaveMotelsSuccessDialog(context, state.sheetList?.expand((e) => e.motels).length ?? 0);
+          _showSaveMotelsSuccessDialog(
+            context,
+            state.sheetList?.expand((e) => e.motels).length ?? 0,
+          );
         }
       },
       builder: (context, state) {
@@ -171,11 +174,14 @@ class _ImportMotelsScreenState extends State<ImportMotelsScreen> {
             ),
           ),
           const SizedBox(height: 4),
-          _buildField('Số điện thoại:', motel.phoneNumbers.join(', ')),
-          const SizedBox(height: 4),
           if (motel.extensions.isNotEmpty)
-            _buildField('Tiện ích:', '[${motel.extensions.join(', ')}]'),
-          const SizedBox(height: 4),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4.0),
+              child: _buildField(
+                'Tiện ích:',
+                '[${motel.extensions.join(', ')}]',
+              ),
+            ),
           if (motel.car.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(bottom: 4.0),

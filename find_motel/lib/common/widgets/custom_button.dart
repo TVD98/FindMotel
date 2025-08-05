@@ -40,9 +40,7 @@ class CustomButton extends StatelessWidget {
         child: Container(
           alignment: Alignment.center, // Căn giữa nội dung
           decoration: BoxDecoration(
-            color: isDisabled
-                ? backgroundColor.withOpacity(0.9)
-                : backgroundColor, // Màu nền nhạt hơn khi disable
+            color: backgroundColor, // Màu nền nhạt hơn khi disable
             borderRadius: BorderRadius.circular(radius),
             border: isNoBorder
                 ? null
@@ -57,13 +55,7 @@ class CustomButton extends StatelessWidget {
               if (icon != null)
                 Padding(
                   padding: const EdgeInsets.only(right: 6.0),
-                  child: Icon(
-                    icon,
-                    color: isDisabled
-                        ? (iconColor ?? textColor).withOpacity(0.9)
-                        : (iconColor ?? textColor),
-                    size: 20.0,
-                  ),
+                  child: Icon(icon, color: iconColor ?? textColor, size: 20.0),
                 ),
               Padding(
                 padding: const EdgeInsets.symmetric(
@@ -72,9 +64,7 @@ class CustomButton extends StatelessWidget {
                 ),
                 child: Text(
                   label,
-                  style: textStyle?.copyWith(
-                    color: isDisabled ? textColor.withOpacity(0.9) : textColor,
-                  ),
+                  style: textStyle?.copyWith(color: textColor),
                 ),
               ),
             ],

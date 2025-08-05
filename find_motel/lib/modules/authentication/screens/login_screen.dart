@@ -1,3 +1,6 @@
+import 'package:find_motel/common/widgets/common_textfield.dart';
+import 'package:find_motel/common/widgets/custom_button.dart';
+import 'package:find_motel/theme/app_textStyle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
@@ -38,14 +41,44 @@ class LoginScreen extends StatelessWidget {
             );
           }
         },
-        child: const _LoginForm(),
+        child: _LoginForm(),
       ),
     );
   }
 }
 
-class _LoginForm extends StatelessWidget {
+class _LoginForm extends StatefulWidget {
   const _LoginForm();
+
+  @override
+  State<_LoginForm> createState() => _LoginFormState();
+}
+
+class _LoginFormState extends State<_LoginForm> {
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    emailController.addListener(_onEmailChange);
+    passwordController.addListener(_onPasswordChange);
+  }
+
+  void _onEmailChange() {
+    context.read<LoginBloc>().add(EmailChanged(emailController.text));
+  }
+
+  void _onPasswordChange() {
+    context.read<LoginBloc>().add(PasswordChanged(passwordController.text));
+  }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,80 +96,47 @@ class _LoginForm extends StatelessWidget {
                     minHeight: MediaQuery.of(context).size.height,
                   ),
                   child: IntrinsicHeight(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const SizedBox(height: 80),
-                        SvgPicture.asset(
-                          'assets/images/ic_logo.svg',
-                          fit: BoxFit.scaleDown,
-                        ),
-                        const SizedBox(height: 40),
-                        _buildTextField(
-                          hint: 'Email',
-                          onChanged: (value) => context.read<LoginBloc>().add(
-                            EmailChanged(value),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const SizedBox(height: 80),
+                          SvgPicture.asset(
+                            'assets/images/ic_logo.svg',
+                            fit: BoxFit.scaleDown,
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                        _buildTextField(
-                          hint: 'Password',
-                          obscureText: true,
-                          onChanged: (value) => context.read<LoginBloc>().add(
-                            PasswordChanged(value),
+                          const SizedBox(height: 40),
+                          CommonTextfield(
+                            controller: emailController,
+                            hintText: 'Email',
+                            borderRadius: BorderRadius.circular(100),
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 30),
-                          child: SizedBox(
+                          const SizedBox(height: 12),
+                          CommonTextfield(
+                            controller: passwordController,
+                            hintText: 'Password',
+                            borderRadius: BorderRadius.circular(100),
+                          ),
+                          const SizedBox(height: 12),
+                          SizedBox(
                             height: 44,
                             width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: state.canLogin
-                                  ? () => context.read<LoginBloc>().add(
-                                      LoginSubmitted(),
-                                    )
-                                  : null,
-                              style: ButtonStyle(
-                                backgroundColor:
-                                    WidgetStateProperty.resolveWith<Color>((
-                                      states,
-                                    ) {
-                                      if (states.contains(
-                                        WidgetState.disabled,
-                                      )) {
-                                        return AppColors.primary.withOpacity(
-                                          0.5,
-                                        );
-                                      }
-                                      return AppColors.primary;
-                                    }),
-                                foregroundColor: WidgetStateProperty.all<Color>(
-                                  Colors.white,
-                                ),
-                                shape:
-                                    WidgetStateProperty.all<
-                                      RoundedRectangleBorder
-                                    >(
-                                      RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(44),
-                                      ),
-                                    ),
-                                elevation: WidgetStateProperty.all(0),
+                            child: CustomButton(
+                              label: 'Login',
+                              textStyle: AppTextStyle.title,
+                              textColor: AppColors.onPrimary,
+                              backgroundColor: AppColors.primary,
+                              onPressed: () => context.read<LoginBloc>().add(
+                                LoginSubmitted(),
                               ),
-                              child: Text(
-                                'Login',
-                                style: GoogleFonts.quicksand(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
+                              radius: 100,
+                              isDisabled: !state.canLogin,
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 40),
-                      ],
+                          const SizedBox(height: 40),
+                        ],
+                      ),
                     ),
                   ),
                 ),
