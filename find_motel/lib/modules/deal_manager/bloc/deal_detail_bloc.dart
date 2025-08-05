@@ -6,6 +6,7 @@ import 'deal_detail_event.dart';
 import 'deal_detail_state.dart';
 
 class DealDetailBloc extends Bloc<DealDetailEvent, DealDetailState> {
+  ICustomerService get customerService => _customerService;
   final ICustomerService _customerService;
   final IMotelsService _motelsService;
 
@@ -16,7 +17,8 @@ class DealDetailBloc extends Bloc<DealDetailEvent, DealDetailState> {
        _motelsService = motelsService ?? FirestoreService(),
        super(const DealDetailState()) {
     on<DealDetailStarted>((event, emit) {
-      emit(state.copyWith(isViewMode: true));
+      final isCreate = event.deal.id.isEmpty;
+      emit(state.copyWith(isCreate: isCreate, isViewMode: !isCreate));
     });
 
     on<DealDetailMotelLoaded>((event, emit) async {
@@ -36,6 +38,16 @@ class DealDetailBloc extends Bloc<DealDetailEvent, DealDetailState> {
 
     on<DealDetailCountinueEditing>((event, emit) {
       emit(state.copyWith(error: null));
+    });
+
+    on<DealDetailDeleted>((event, emit) async {
+      emit(state.copyWith(isSaving: true));
+      final result = await _customerService.deleteDeal(event.dealId);
+      if (result.$1) {
+        emit(state.copyWith(isSaving: false, isDeleted: true));
+      } else {
+        emit(state.copyWith(isSaving: false, error: result.$2));
+      }
     });
 
     on<DealDetailSaved>((event, emit) async {

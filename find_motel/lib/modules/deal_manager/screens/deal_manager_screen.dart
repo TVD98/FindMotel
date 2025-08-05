@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:find_motel/common/widgets/common_app_bar.dart';
+import 'package:find_motel/common/widgets/common_alert_dialog.dart';
 import 'package:find_motel/extensions/double_extensions.dart';
 import 'package:find_motel/modules/deal_manager/screens/deal_detail_screen.dart';
 import 'package:find_motel/theme/app_colors.dart';
@@ -28,9 +29,6 @@ class _DealManagerScreenState extends State<DealManagerScreen> {
         appBar: const CommonAppBar(title: 'Quản lý lịch hẹn'),
         body: BlocBuilder<DealManagerBloc, DealManagerState>(
           builder: (context, state) {
-            if (state.status == DealManagerStatus.loading) {
-              return const Center(child: CircularProgressIndicator());
-            }
             if (state.status == DealManagerStatus.failure) {
               return Center(
                 child: Text(state.errorMessage ?? 'Đã có lỗi xảy ra'),
@@ -39,25 +37,76 @@ class _DealManagerScreenState extends State<DealManagerScreen> {
             if (state.deals.isEmpty) {
               return const Center(child: Text('Chưa có lịch hẹn nào'));
             }
-            return ListView.builder(
-              itemCount: state.deals.length,
-              itemBuilder: (context, index) {
-                final deal = state.deals[index];
-                return GestureDetector(
-                  onTap: () async {
-                    final result = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => DealDetailScreen(deal: deal),
+            return Stack(
+              children: [
+                ListView.builder(
+                  itemCount: state.deals.length,
+                  itemBuilder: (context, index) {
+                    final deal = state.deals[index];
+                    return Dismissible(
+                      key: Key(deal.id.toString()),
+                      direction: DismissDirection.endToStart,
+                      background: Container(
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        color: Colors.red,
+                        child: const Icon(Icons.delete, color: Colors.white),
+                      ),
+                      confirmDismiss: (direction) async {
+                        final result = await showDialog<bool>(
+                          context: context,
+                          builder: (context) {
+                            return CommonAlertDialog(
+                              title: 'Xác nhận',
+                              content:
+                                  'Bạn có chắc chắn muốn xóa lịch hẹn này?',
+                              leadingActionTitle: 'Hủy',
+                              trailingActionTitle: 'Xóa',
+                              onLeadingPressed: () =>
+                                  Navigator.of(context).pop(false),
+                              onTrailingPressed: () =>
+                                  Navigator.of(context).pop(true),
+                            );
+                          },
+                        );
+                        if (result == true) {
+                          context.read<DealManagerBloc>().add(
+                            DeleteDealEvent(deal.id),
+                          );
+                          return true;
+                        }
+                        return false;
+                      },
+                      child: GestureDetector(
+                        onTap: () async {
+                          final result = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  DealDetailScreen(deal: deal),
+                            ),
+                          );
+                          if (result is Deal) {
+                            context.read<DealManagerBloc>().add(
+                              DealUpdatedEvent(result),
+                            );
+                          } else if (result is String) {
+                            context.read<DealManagerBloc>().add(
+                              DeleteDealEvent(result),
+                            );
+                          }
+                        },
+                        child: _DealItem(deal: deal),
                       ),
                     );
-                    if (result is Deal) {
-                      context.read<DealManagerBloc>().add(DealUpdatedEvent(result));
-                    }
                   },
-                  child: _DealItem(deal: deal),
-                );
-              },
+                ),
+                if (state.status == DealManagerStatus.loading)
+                  Container(
+                    color: Colors.black.withOpacity(0.2),
+                    child: const Center(child: CircularProgressIndicator()),
+                  ),
+              ],
             );
           },
         ),

@@ -18,3 +18,12 @@ class DealUpdatedEvent extends DealManagerEvent {
   @override
   List<Object?> get props => [deal];
 }
+
+class DeleteDealEvent extends DealManagerEvent {
+  final String dealId;
+
+  const DeleteDealEvent(this.dealId);
+
+  @override
+  List<Object?> get props => [dealId];
+}

@@ -13,6 +13,7 @@ class DealManagerBloc extends Bloc<DealManagerEvent, DealManagerState> {
       super(const DealManagerState()) {
     on<LoadDealsEvent>(_onLoadDeals);
     on<DealUpdatedEvent>(_updateDeal);
+    on<DeleteDealEvent>(_deleteDeal);
   }
 
   Future<void> _onLoadDeals(
@@ -46,5 +47,16 @@ class DealManagerBloc extends Bloc<DealManagerEvent, DealManagerState> {
     emit(
       state.copyWith(deals: updatedDeals, status: DealManagerStatus.success),
     );
+  }
+
+  Future<void> _deleteDeal(DeleteDealEvent event, Emitter<DealManagerState> emit) async {
+    emit(state.copyWith(status: DealManagerStatus.loading));
+    final (result, error) = await _customerService.deleteDeal(event.dealId);
+    if (result) {
+      final updatedDeals = state.deals.where((deal) => deal.id != event.dealId).toList();
+      emit(state.copyWith(deals: updatedDeals, status: DealManagerStatus.success));
+    } else {
+      emit(state.copyWith(status: DealManagerStatus.failure, errorMessage: error ?? 'Xóa lịch hẹn thất bại'));
+    }
   }
 }

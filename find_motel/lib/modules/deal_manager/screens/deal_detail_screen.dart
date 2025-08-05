@@ -2,9 +2,11 @@ import 'package:find_motel/common/models/deal.dart';
 import 'package:find_motel/common/widgets/common_alert_dialog.dart';
 import 'package:find_motel/common/widgets/common_app_bar.dart';
 import 'package:find_motel/common/widgets/common_textfield.dart';
+import 'package:find_motel/common/widgets/custom_button.dart';
 import 'package:find_motel/extensions/datetime_extensions.dart';
 import 'package:find_motel/extensions/double_extensions.dart';
 import 'package:find_motel/extensions/string_extensions.dart';
+import 'package:find_motel/modules/deal_manager/bloc/deal_manager_event.dart';
 import 'package:find_motel/theme/app_colors.dart';
 import 'package:find_motel/utilities/mask_input.dart';
 import 'package:flutter/material.dart';
@@ -64,13 +66,17 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) =>
-          DealDetailBloc()
-            ..add(DealDetailMotelLoaded(motelId: widget.deal.motelId)),
+      create: (_) => DealDetailBloc()
+        ..add(DealDetailStarted(deal: widget.deal))
+        ..add(DealDetailMotelLoaded(motelId: widget.deal.motelId)),
       child: BlocListener<DealDetailBloc, DealDetailState>(
         listener: (context, state) {
           if (state.isSaved == true) {
             Navigator.of(context).pop(_deal);
+          }
+
+          if (state.isDeleted == true) {
+            Navigator.of(context).pop(widget.deal.id);
           }
 
           if (state.error != null) {
@@ -86,29 +92,41 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                 Scaffold(
                   backgroundColor: Colors.white,
                   appBar: CommonAppBar(
-                    title: 'Chi tiết Deal',
-                    actions: [
-                      IconButton(
-                        onPressed: () {
-                          if (state.isViewMode) {
-                            context.read<DealDetailBloc>().add(
-                              DealDetailEditToggled(),
-                            );
-                          } else {
-                            context.read<DealDetailBloc>().add(
-                              DealDetailSaved(deal: _deal),
-                            );
-                          }
-                        },
-                        icon: SvgPicture.asset(
-                          state.isViewMode
-                              ? 'assets/images/ic_header_edit.svg'
-                              : 'assets/images/ic_header_save.svg',
-                          width: 24,
-                          height: 24,
-                        ),
-                      ),
-                    ],
+                    title: state.isCreate
+                        ? 'Tạo cuộc hẹn'
+                        : 'Chi tiết cuộc hẹn',
+                    actions: state.isCreate
+                        ? null
+                        : [
+                            IconButton(
+                              icon: const Icon(
+                                Icons.delete_outline,
+                                color: AppColors.error,
+                              ),
+                              tooltip: 'Xóa lịch hẹn',
+                              onPressed: () async {
+                                final confirm = await showDialog<bool>(
+                                  context: context,
+                                  builder: (ctx) => CommonAlertDialog(
+                                    title: 'Xác nhận',
+                                    content:
+                                        'Bạn có chắc chắn muốn xóa lịch hẹn này?',
+                                    leadingActionTitle: 'Hủy',
+                                    trailingActionTitle: 'Xóa',
+                                    onLeadingPressed: () =>
+                                        Navigator.of(ctx).pop(false),
+                                    onTrailingPressed: () =>
+                                        Navigator.of(ctx).pop(true),
+                                  ),
+                                );
+                                if (confirm == true && context.mounted) {
+                                  context.read<DealDetailBloc>().add(
+                                    DealDetailDeleted(dealId: widget.deal.id),
+                                  );
+                                }
+                              },
+                            ),
+                          ],
                   ),
                   body: GestureDetector(
                     behavior: HitTestBehavior.translucent,
@@ -166,12 +184,6 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                               label: 'Họ và tên',
                               enabled: !state.isViewMode,
                             ),
-                            const SizedBox(height: 25),
-                            CommonTextfield(
-                              controller: nameController,
-                              label: 'Họ và tên',
-                              enabled: !state.isViewMode,
-                            ),
                             const SizedBox(height: 16),
                             CommonTextfield(
                               controller: phoneController,
@@ -191,7 +203,31 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                               controller: scheduleController,
                               label: 'Lịch hẹn',
                               enabled: !state.isViewMode,
+                              keyboardType: TextInputType.number,
                               inputFormatters: [dateMaskFormatter],
+                            ),
+                            _divider(),
+                            SizedBox(
+                              width: double.infinity,
+                              height: 44,
+                              child: CustomButton(
+                                label: state.isCreate
+                                    ? 'Tạo'
+                                    : state.isViewMode
+                                    ? 'Sửa'
+                                    : 'Lưu',
+                                onPressed: () {
+                                  if (state.isCreate || !state.isViewMode) {
+                                    context.read<DealDetailBloc>().add(
+                                      DealDetailSaved(deal: _deal),
+                                    );
+                                  } else {
+                                    context.read<DealDetailBloc>().add(
+                                      DealDetailEditToggled(),
+                                    );
+                                  }
+                                },
+                              ),
                             ),
                           ],
                         ),
