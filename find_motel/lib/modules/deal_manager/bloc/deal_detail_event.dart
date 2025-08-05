@@ -6,7 +6,14 @@ abstract class DealDetailEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class DealDetailStarted extends DealDetailEvent {}
+class DealDetailStarted extends DealDetailEvent {
+  final Deal deal;
+
+  DealDetailStarted({required this.deal});
+
+  @override
+  List<Object?> get props => [deal];
+}
 
 class DealDetailMotelLoaded extends DealDetailEvent {
   final String motelId;
@@ -20,6 +27,15 @@ class DealDetailMotelLoaded extends DealDetailEvent {
 class DealDetailEditToggled extends DealDetailEvent {}
 
 class DealDetailCountinueEditing extends DealDetailEvent {}
+
+class DealDetailDeleted extends DealDetailEvent {
+  final String dealId;
+
+  DealDetailDeleted({required this.dealId});
+
+  @override
+  List<Object?> get props => [dealId];
+}
 
 class DealDetailSaved extends DealDetailEvent {
   final Deal deal;
