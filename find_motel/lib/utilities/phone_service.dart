@@ -30,7 +30,10 @@ class PhoneService {
   }
 
   // Hàm hiển thị bottom sheet
-  void showHotlineBottomSheet(BuildContext context) {
+  void showHotlineBottomSheet(
+    BuildContext context, {
+    String title = 'Danh sách hotline',
+  }) {
     showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {
@@ -39,8 +42,8 @@ class PhoneService {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'Danh sách hotline',
+              Text(
+                title,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,

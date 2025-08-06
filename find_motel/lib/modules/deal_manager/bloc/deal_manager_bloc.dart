@@ -24,6 +24,7 @@ class DealManagerBloc extends Bloc<DealManagerEvent, DealManagerState> {
     final userProfile = AppDataManager().currentUserProfile;
     final (deals, error) = await _customerService.fetchDeals(
       saleId: userProfile?.email ?? '',
+      motelId: event.motelId,
     );
     if (error != null) {
       emit(
@@ -37,26 +38,42 @@ class DealManagerBloc extends Bloc<DealManagerEvent, DealManagerState> {
   }
 
   void _updateDeal(DealUpdatedEvent event, Emitter<DealManagerState> emit) {
+    bool isExist = false;
     final updatedDeals = state.deals.map((deal) {
       if (deal.id == event.deal.id) {
+        isExist = true;
         return event.deal;
       }
       return deal;
     }).toList();
-
+    if (!isExist) {
+      updatedDeals.insert(0, event.deal);
+    }
     emit(
       state.copyWith(deals: updatedDeals, status: DealManagerStatus.success),
     );
   }
 
-  Future<void> _deleteDeal(DeleteDealEvent event, Emitter<DealManagerState> emit) async {
+  Future<void> _deleteDeal(
+    DeleteDealEvent event,
+    Emitter<DealManagerState> emit,
+  ) async {
     emit(state.copyWith(status: DealManagerStatus.loading));
     final (result, error) = await _customerService.deleteDeal(event.dealId);
     if (result) {
-      final updatedDeals = state.deals.where((deal) => deal.id != event.dealId).toList();
-      emit(state.copyWith(deals: updatedDeals, status: DealManagerStatus.success));
+      final updatedDeals = state.deals
+          .where((deal) => deal.id != event.dealId)
+          .toList();
+      emit(
+        state.copyWith(deals: updatedDeals, status: DealManagerStatus.success),
+      );
     } else {
-      emit(state.copyWith(status: DealManagerStatus.failure, errorMessage: error ?? 'Xóa lịch hẹn thất bại'));
+      emit(
+        state.copyWith(
+          status: DealManagerStatus.failure,
+          errorMessage: error ?? 'Xóa lịch hẹn thất bại',
+        ),
+      );
     }
   }
 }

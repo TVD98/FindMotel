@@ -432,13 +432,16 @@ class FirestoreService
 
   // ICustomerService implementation
   @override
-  Future<(List<Deal>?, String?)> fetchDeals({String? saleId}) async {
+  Future<(List<Deal>?, String?)> fetchDeals({String? saleId, String? motelId}) async {
     try {
       Query<Map<String, dynamic>> query = _firestore
           .collection(FirestorePaths.dealsCollection)
           .orderBy('schedule', descending: false);
       if (saleId != null && saleId.isNotEmpty) {
         query = query.where('saleId', isEqualTo: saleId);
+      }
+      if (motelId != null && motelId.isNotEmpty) {
+        query = query.where('motelId', isEqualTo: motelId);
       }
       final snapshot = await query.get();
       final customers = snapshot.docs.map((doc) {

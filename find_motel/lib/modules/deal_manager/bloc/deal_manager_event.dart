@@ -8,7 +8,11 @@ abstract class DealManagerEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class LoadDealsEvent extends DealManagerEvent {}
+class LoadDealsEvent extends DealManagerEvent {
+  final String? motelId;
+
+  const LoadDealsEvent({this.motelId});
+}
 
 class DealUpdatedEvent extends DealManagerEvent {
   final Deal deal;

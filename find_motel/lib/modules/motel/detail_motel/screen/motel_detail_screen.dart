@@ -5,6 +5,7 @@ import 'package:find_motel/common/widgets/motel_images_view.dart';
 import 'package:find_motel/extensions/double_extensions.dart';
 import 'package:find_motel/managers/app_data_manager.dart';
 import 'package:find_motel/modules/deal_manager/screens/deal_detail_screen.dart';
+import 'package:find_motel/modules/deal_manager/screens/deal_manager_screen.dart';
 import 'package:find_motel/modules/motel/detail_motel/bloc/motel_detail_event.dart';
 import 'package:find_motel/modules/motel/edit_motel/bloc/edit_motel_bloc.dart';
 import 'package:find_motel/modules/motel/edit_motel/screen/edit_motel_screen.dart';
@@ -36,17 +37,6 @@ class MotelDetailScreen extends StatefulWidget {
 }
 
 class _MotelDetailScreenState extends State<MotelDetailScreen> {
-  Deal get deal => Deal(
-    id: '',
-    name: '',
-    phone: '',
-    price: widget.detail.price,
-    schedule: DateTime.now(),
-    saleId: AppDataManager().currentUserProfile?.email ?? '',
-    motelId: widget.detail.id,
-    motelName: widget.detail.displayName,
-  );
-
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
@@ -106,7 +96,7 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
                       Navigator.push(
                         blocContext,
                         MaterialPageRoute(
-                          builder: (context) => DealDetailScreen(deal: deal),
+                          builder: (context) => DealManagerScreen(motel: currentMotelDetail),
                         ),
                       );
                     },
@@ -494,16 +484,4 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
       ),
     );
   }
-}
-
-class GeoPoint {
-  /* ... */
-}
-
-class MotelResult {
-  /* ... */
-}
-
-abstract class IMotelDataService {
-  /* ... */
 }

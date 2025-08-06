@@ -10,6 +10,7 @@ import 'package:find_motel/modules/deal_manager/bloc/deal_manager_event.dart';
 import 'package:find_motel/theme/app_colors.dart';
 import 'package:find_motel/theme/app_textStyle.dart';
 import 'package:find_motel/utilities/mask_input.dart';
+import 'package:find_motel/utilities/phone_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -88,6 +89,7 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
         },
         child: BlocBuilder<DealDetailBloc, DealDetailState>(
           builder: (context, state) {
+            final isCanCall = !state.isCreate && widget.deal.phone.isNotEmpty;
             return Stack(
               children: [
                 Scaffold(
@@ -236,6 +238,15 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
                       ),
                     ),
                   ),
+                  floatingActionButton: isCanCall
+                      ? FloatingActionButton(
+                          onPressed: () => _showHotlineBottomSheet(context, [
+                            widget.deal.phone,
+                          ]),
+                          tooltip: 'Liên hệ',
+                          child: const Icon(Icons.phone),
+                        )
+                      : null,
                 ),
                 if (state.isSaving)
                   Container(
@@ -274,5 +285,17 @@ class _DealDetailScreenState extends State<DealDetailScreen> {
         );
       },
     );
+  }
+
+  void _showHotlineBottomSheet(
+    BuildContext context,
+    List<String> phoneNumbers,
+  ) {
+    final phoneService = PhoneService(
+      hotlineNumbers: phoneNumbers
+          .map((e) => PhoneContact(name: '', phone: e))
+          .toList(),
+    );
+    phoneService.showHotlineBottomSheet(context, title: 'Liên hệ');
   }
 }
