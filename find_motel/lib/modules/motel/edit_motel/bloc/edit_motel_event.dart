@@ -2,6 +2,13 @@ import 'package:equatable/equatable.dart';
 import 'package:find_motel/common/models/motel.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+class EditMotelCarChanged extends EditMotelEvent {
+  final String car;
+  const EditMotelCarChanged(this.car);
+  @override
+  List<Object> get props => [car];
+}
+
 abstract class EditMotelEvent extends Equatable {
   const EditMotelEvent();
 

@@ -19,6 +19,7 @@ class EditMotelBloc extends Bloc<EditMotelEvent, EditMotelState> {
     on<EditMotelPriceChanged>(_onPriceChanged);
     on<EditMotelAddressChanged>(_onAddressChanged);
     on<EditMotelNoteChanged>(_onNoteChanged);
+    on<EditMotelCarChanged>(_onCarChanged);
     on<EditMotelPhoneNumbersChanged>(_onPhoneNumbersChanged);
     on<EditMotelExtensionsUpdated>(_onExtensionsUpdated);
     on<EditMotelFeeUpdated>(_onFeeUpdated);
@@ -99,6 +100,13 @@ class EditMotelBloc extends Bloc<EditMotelEvent, EditMotelState> {
     emit(state.copyWith(note: event.note));
   }
 
+  void _onCarChanged(
+    EditMotelCarChanged event,
+    Emitter<EditMotelState> emit,
+  ) {
+    emit(state.copyWith(car: event.car));
+  }
+
   void _onExtensionsUpdated(
     EditMotelExtensionsUpdated event,
     Emitter<EditMotelState> emit,
@@ -177,6 +185,7 @@ class EditMotelBloc extends Bloc<EditMotelEvent, EditMotelState> {
         fees: state.customFees,
         images: state.images,
         phoneNumbers: state.phoneNumbers,
+        car: state.car,
         thumbnail: state.images.isNotEmpty ? state.images.first : '',
         geoPoint: state.location ?? state.initialMotel!.geoPoint,
         marker: state.images.isNotEmpty

@@ -14,6 +14,7 @@ class EditMotelState extends Equatable {
   final String price;
   final String address;
   final String note;
+  final String car;
   final List<String> phoneNumbers;
   final List<String> extensions;
   final List<Fee> customFees;
@@ -33,6 +34,7 @@ class EditMotelState extends Equatable {
     this.price = '',
     this.address = '',
     this.note = '',
+    this.car = '',
     this.phoneNumbers = const [],
     this.extensions = const [],
     this.customFees = const [],
@@ -53,6 +55,7 @@ class EditMotelState extends Equatable {
     String? price,
     String? address,
     String? note,
+    String? car,
     List<String>? phoneNumbers,
     List<String>? extensions,
     List<Fee>? customFees,
@@ -72,6 +75,7 @@ class EditMotelState extends Equatable {
       price: price ?? this.price,
       address: address ?? this.address,
       note: note ?? this.note,
+      car: car ?? this.car,
       phoneNumbers: phoneNumbers ?? this.phoneNumbers,
       extensions: extensions ?? this.extensions,
       customFees: customFees ?? this.customFees,
@@ -94,6 +98,7 @@ class EditMotelState extends Equatable {
     price,
     address,
     note,
+    car,
     phoneNumbers,
     extensions,
     customFees,

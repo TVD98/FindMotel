@@ -622,6 +622,15 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
         ),
         const SizedBox(height: 24),
         _buildTextField('Địa chỉ', addressController, maxLines: 2),
+        const SizedBox(height: 24),
+        CommonTextfield(
+          label: 'Thông tin xe',
+          initialValue: state.car,
+          hintText: 'Nhập loại xe hoặc thông tin bãi đỗ xe',
+          onChanged: (value) {
+            context.read<EditMotelBloc>().add(EditMotelCarChanged(value));
+          },
+        ),
       ],
     );
   }
