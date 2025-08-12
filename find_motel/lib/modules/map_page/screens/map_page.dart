@@ -221,7 +221,7 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w400,
-                            color: AppColors.tertiary,
+                            color: AppColors.elementSecondary,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,

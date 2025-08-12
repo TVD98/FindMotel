@@ -36,9 +36,11 @@ class EditMotelBloc extends Bloc<EditMotelEvent, EditMotelState> {
     Emitter<EditMotelState> emit,
   ) {
     final motel = event.motel;
+    final mode = motel.createdAt == null ? EditMotelMode.create : EditMotelMode.edit;
 
     emit(
       state.copyWith(
+        mode: mode,
         initialMotel: motel,
         name: motel.name,
         roomCode: motel.roomCode,

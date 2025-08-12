@@ -298,7 +298,7 @@ class _MotelCard extends StatelessWidget {
                             child: Text(
                               address,
                               style: GoogleFonts.quicksand(
-                                color: const Color(0xFF757575),
+                                color: AppColors.elementSecondary,
                                 fontSize: 11,
                                 height: 1.2,
                                 fontWeight: FontWeight.w500,
@@ -324,7 +324,7 @@ class _MotelCard extends StatelessWidget {
                           Text(
                             price,
                             style: GoogleFonts.quicksand(
-                              color: const Color(0xFF757575),
+                              color: AppColors.elementSecondary,
                               fontWeight: FontWeight.w600,
                               fontSize: 11,
                             ),
@@ -342,7 +342,7 @@ class _MotelCard extends StatelessWidget {
                         Text(
                           createdAt,
                           style: GoogleFonts.quicksand(
-                            color: const Color(0xFF757575),
+                            color: AppColors.elementSecondary,
                             fontWeight: FontWeight.w600,
                             fontSize: 11,
                           ),

@@ -1,10 +1,8 @@
 import 'dart:io';
-import 'package:find_motel/common/models/deal.dart';
 import 'package:find_motel/common/models/motel.dart';
 import 'package:find_motel/common/widgets/motel_images_view.dart';
 import 'package:find_motel/extensions/double_extensions.dart';
 import 'package:find_motel/managers/app_data_manager.dart';
-import 'package:find_motel/modules/deal_manager/screens/deal_detail_screen.dart';
 import 'package:find_motel/modules/deal_manager/screens/deal_manager_screen.dart';
 import 'package:find_motel/modules/motel/detail_motel/bloc/motel_detail_event.dart';
 import 'package:find_motel/modules/motel/edit_motel/bloc/edit_motel_bloc.dart';

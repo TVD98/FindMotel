@@ -36,15 +36,22 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
   late TextEditingController priceController;
   late TextEditingController addressController;
   late TextEditingController noteController;
+  late TextEditingController carController; // Thêm controller cho thông tin xe
 
   @override
   void initState() {
     super.initState();
-    // Khởi tạo các controller và lắng nghe thay đổi để dispatch events
     commissionController = TextEditingController(text: widget.motel.commission);
     priceController = TextEditingController(text: widget.motel.price.toVND());
     addressController = TextEditingController(text: widget.motel.address);
     noteController = TextEditingController(text: widget.motel.note.join('\n'));
+    carController = TextEditingController(text: widget.motel.car);
+
+    carController.addListener(() {
+      context.read<EditMotelBloc>().add(
+        EditMotelCarChanged(carController.text),
+      );
+    });
 
     // Lắng nghe thay đổi trên controller và dispatch event
     commissionController.addListener(() {
@@ -79,6 +86,7 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
     priceController.dispose();
     addressController.dispose();
     noteController.dispose();
+    carController.dispose(); // Dispose controller thông tin xe
     super.dispose();
   }
 
@@ -302,17 +310,18 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
         onTap: () => FocusScope.of(context).unfocus(),
-        child: Scaffold(
-          appBar: const CommonAppBar(title: 'Chỉnh sửa căn hộ'),
-          backgroundColor: AppColors.surface,
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: BlocBuilder<EditMotelBloc, EditMotelState>(
-              builder: (context, state) {
-                final isLoading = state.status == EditMotelStatus.loading;
-                final isDeleting = state.status == EditMotelStatus.deleting;
-
-                return Column(
+        child: BlocBuilder<EditMotelBloc, EditMotelState>(
+          builder: (context, state) {
+            return Scaffold(
+              appBar: CommonAppBar(
+                title: state.mode == EditMotelMode.edit
+                    ? 'Chỉnh Sửa Phòng Trọ'
+                    : 'Thêm Phòng Trọ',
+              ),
+              backgroundColor: AppColors.surface,
+              body: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildImageSection(state.images),
@@ -341,6 +350,9 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
                     ),
                     const SizedBox(height: 8),
                     _buildExtensionsSection(context, state.extensions),
+                    const SizedBox(height: 16),
+                    _divider(),
+                    _buildCarSection(),
                     const SizedBox(height: 16),
                     _divider(),
                     const SizedBox(height: 8),
@@ -373,192 +385,17 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
                     const SizedBox(height: 8),
                     _buildNotesSection(),
                     const SizedBox(height: 24),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              minimumSize: const Size.fromHeight(48),
-                              backgroundColor: (isLoading || isDeleting)
-                                  ? Colors.grey
-                                  : AppColors.onPrimary,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                            onPressed: (isLoading || isDeleting)
-                                ? null
-                                : () async {
-                                    final shouldDelete = await showDialog<bool>(
-                                      context: context,
-                                      builder: (dialogContext) => AlertDialog(
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            16,
-                                          ),
-                                        ),
-                                        title: Row(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.end,
-                                          children: [
-                                            Icon(
-                                              Icons.warning_amber_outlined,
-                                              color: AppColors.error,
-                                              size: 32,
-                                            ),
-                                            SizedBox(width: 8),
-                                            Text(
-                                              'Xác nhận xóa !',
-                                              style: AppTextStyle.heading5
-                                                  .copyWith(
-                                                    color: AppColors.error,
-                                                  ),
-                                            ),
-                                            const Divider(
-                                              color: AppColors.strokeLight,
-                                              thickness: 1,
-                                              height: 4,
-                                            ),
-                                          ],
-                                        ),
-
-                                        content: Text(
-                                          'Bạn có chắc chắn muốn xóa căn hộ "${state.name}"?',
-                                          style: AppTextStyle.body,
-                                        ),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () => Navigator.pop(
-                                              dialogContext,
-                                              false,
-                                            ),
-                                            child: Text(
-                                              'Hủy',
-                                              style: GoogleFonts.quicksand(
-                                                color: Colors.grey,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                          ),
-                                          ElevatedButton(
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor:
-                                                  AppColors.primary,
-                                              foregroundColor:
-                                                  AppColors.onPrimary,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(8),
-                                              ),
-                                            ),
-                                            onPressed: () => Navigator.pop(
-                                              dialogContext,
-                                              true,
-                                            ),
-                                            child: Text(
-                                              'Xóa',
-                                              style: AppTextStyle.smallLabel
-                                                  .copyWith(
-                                                    color: AppColors.onPrimary,
-                                                  ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-
-                                    if (shouldDelete == true) {
-                                      context.read<EditMotelBloc>().add(
-                                        const EditMotelDeleted(),
-                                      );
-                                    }
-                                  },
-                            child: isDeleting
-                                ? Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          valueColor:
-                                              AlwaysStoppedAnimation<Color>(
-                                                Colors.white,
-                                              ),
-                                        ),
-                                      ),
-                                      SizedBox(width: 12),
-                                      Text('Đang xóa...'),
-                                    ],
-                                  )
-                                : Text(
-                                    'Xóa',
-                                    style: AppTextStyle.label.copyWith(
-                                      color: AppColors.tertiary,
-                                    ),
-                                  ),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              minimumSize: const Size.fromHeight(48),
-                              backgroundColor: (isLoading || isDeleting)
-                                  ? Colors.grey
-                                  : AppColors.primary,
-                              textStyle: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                            onPressed: (isLoading || isDeleting)
-                                ? null
-                                : () {
-                                    context.read<EditMotelBloc>().add(
-                                      const EditMotelSubmitted(),
-                                    );
-                                  },
-                            child: isLoading
-                                ? Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          valueColor:
-                                              AlwaysStoppedAnimation<Color>(
-                                                Colors.white,
-                                              ),
-                                        ),
-                                      ),
-                                      SizedBox(width: 12),
-                                      Text('Đang lưu...'),
-                                    ],
-                                  )
-                                : Text(
-                                    'Lưu',
-                                    style: AppTextStyle.label.copyWith(
-                                      color: AppColors.onPrimary,
-                                    ),
-                                  ),
-                          ),
-                        ),
-                      ],
+                    _buildBottomActionButtons(
+                      context: context,
+                      isLoading: state.status == EditMotelStatus.loading,
+                      isDeleting: state.status == EditMotelStatus.deleting,
+                      state: state,
                     ),
                   ],
-                );
-              },
-            ),
-          ),
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
@@ -622,15 +459,6 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
         ),
         const SizedBox(height: 24),
         _buildTextField('Địa chỉ', addressController, maxLines: 2),
-        const SizedBox(height: 24),
-        CommonTextfield(
-          label: 'Thông tin xe',
-          initialValue: state.car,
-          hintText: 'Nhập loại xe hoặc thông tin bãi đỗ xe',
-          onChanged: (value) {
-            context.read<EditMotelBloc>().add(EditMotelCarChanged(value));
-          },
-        ),
       ],
     );
   }
@@ -779,6 +607,20 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
     );
   }
 
+  Widget _buildCarSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Xe:',
+          style: AppTextStyle.subtitle.copyWith(color: AppColors.primary),
+        ),
+        const SizedBox(height: 8),
+        _buildTextField('', carController),
+      ],
+    );
+  }
+
   Widget _buildFeesSection(List<Fee> customFees) {
     return MotelFeesForm(
       fees: customFees,
@@ -914,10 +756,205 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
 
   Widget _buildNotesSection() {
     return _buildTextField(
-      ' mỗi dòng một ghi chú ',
+      '',
       noteController,
       maxLines: 5,
       keyboardType: TextInputType.multiline,
+    );
+  }
+
+  Widget _buildDeleteButton({
+    required BuildContext context,
+    required bool isDeleting,
+    required bool isLoading,
+    required EditMotelState state,
+  }) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        minimumSize: const Size.fromHeight(48),
+        backgroundColor: (isLoading || isDeleting)
+            ? Colors.grey
+            : AppColors.onPrimary,
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+      onPressed: (isLoading || isDeleting)
+          ? null
+          : () async {
+              final shouldDelete = await showDialog<bool>(
+                context: context,
+                builder: (dialogContext) => AlertDialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  title: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Icon(
+                        Icons.warning_amber_outlined,
+                        color: AppColors.error,
+                        size: 32,
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        'Xác nhận xóa !',
+                        style: AppTextStyle.heading5.copyWith(
+                          color: AppColors.error,
+                        ),
+                      ),
+                      const Divider(
+                        color: AppColors.strokeLight,
+                        thickness: 1,
+                        height: 4,
+                      ),
+                    ],
+                  ),
+                  content: Text(
+                    'Bạn có chắc chắn muốn xóa căn hộ ${state.initialMotel?.displayName}?',
+                    style: AppTextStyle.body,
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(dialogContext, false),
+                      child: Text(
+                        'Hủy',
+                        style: GoogleFonts.quicksand(
+                          color: Colors.grey,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: AppColors.onPrimary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      onPressed: () => Navigator.pop(dialogContext, true),
+                      child: Text(
+                        'Xóa',
+                        style: AppTextStyle.smallLabel.copyWith(
+                          color: AppColors.onPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+              if (shouldDelete == true && context.mounted) {
+                context.read<EditMotelBloc>().add(const EditMotelDeleted());
+              }
+            },
+      child: isDeleting
+          ? Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                ),
+                SizedBox(width: 12),
+                Text('Đang xóa...'),
+              ],
+            )
+          : Text(
+              'Xóa',
+              style: AppTextStyle.label.copyWith(color: AppColors.tertiary),
+            ),
+    );
+  }
+
+  // Xây dựng nút "Lưu"
+  Widget _buildSaveButton({
+    required BuildContext context,
+    required bool isLoading,
+    required bool isDeleting,
+    required EditMotelMode mode,
+  }) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        minimumSize: const Size.fromHeight(48),
+        backgroundColor: (isLoading || isDeleting)
+            ? Colors.grey
+            : AppColors.primary,
+        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+      onPressed: (isLoading || isDeleting)
+          ? null
+          : () {
+              context.read<EditMotelBloc>().add(const EditMotelSubmitted());
+            },
+      child: isLoading
+          ? Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                ),
+                SizedBox(width: 12),
+                Text(
+                  mode == EditMotelMode.edit ? 'Đang lưu...' : 'Đang thêm...',
+                ),
+              ],
+            )
+          : Text(
+              mode == EditMotelMode.edit ? 'Lưu' : 'Thêm',
+              style: AppTextStyle.label.copyWith(color: AppColors.onPrimary),
+            ),
+    );
+  }
+
+  // Xây dựng phần nút hành động ở cuối trang
+  Widget _buildBottomActionButtons({
+    required BuildContext context,
+    required bool isLoading,
+    required bool isDeleting,
+    required EditMotelState state,
+  }) {
+    return Row(
+      children: state.mode == EditMotelMode.edit
+          ? [
+              Expanded(
+                child: _buildDeleteButton(
+                  context: context,
+                  isDeleting: isDeleting,
+                  isLoading: isLoading,
+                  state: state,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildSaveButton(
+                  context: context,
+                  isLoading: isLoading,
+                  isDeleting: isDeleting,
+                  mode: EditMotelMode.edit,
+                ),
+              ),
+            ]
+          : [
+              Expanded(
+                child: _buildSaveButton(
+                  context: context,
+                  isLoading: isLoading,
+                  isDeleting: isDeleting,
+                  mode: EditMotelMode.create,
+                ),
+              ),
+            ],
     );
   }
 }

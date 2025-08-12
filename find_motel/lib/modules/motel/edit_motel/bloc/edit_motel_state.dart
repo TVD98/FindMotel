@@ -4,6 +4,8 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 enum EditMotelStatus { initial, loading, success, failure, deleting }
 
+enum EditMotelMode { create, edit }
+
 class EditMotelState extends Equatable {
   final EditMotelStatus status;
   final String name;
@@ -23,6 +25,7 @@ class EditMotelState extends Equatable {
   final String? errorMessage;
   final Motel? initialMotel;
   final Motel? updatedMotel;
+  final EditMotelMode mode;
 
   const EditMotelState({
     this.status = EditMotelStatus.initial,
@@ -43,6 +46,7 @@ class EditMotelState extends Equatable {
     this.errorMessage,
     this.initialMotel,
     this.updatedMotel,
+    this.mode = EditMotelMode.edit,
   });
 
   EditMotelState copyWith({
@@ -64,6 +68,7 @@ class EditMotelState extends Equatable {
     String? errorMessage,
     Motel? initialMotel,
     Motel? updatedMotel,
+    EditMotelMode? mode,
   }) {
     return EditMotelState(
       status: status ?? this.status,
@@ -84,6 +89,7 @@ class EditMotelState extends Equatable {
       errorMessage: errorMessage,
       initialMotel: initialMotel ?? this.initialMotel,
       updatedMotel: updatedMotel,
+      mode: mode ?? this.mode,
     );
   }
 
@@ -107,5 +113,6 @@ class EditMotelState extends Equatable {
     errorMessage,
     initialMotel,
     updatedMotel,
+    mode,
   ];
 }
