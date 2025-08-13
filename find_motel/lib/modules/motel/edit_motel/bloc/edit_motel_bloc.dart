@@ -26,6 +26,7 @@ class EditMotelBloc extends Bloc<EditMotelEvent, EditMotelState> {
     on<EditMotelFeeAdded>(_onFeeAdded);
     on<EditMotelFeeDeleted>(_onFeeDeleted);
     on<EditMotelImagesUpdated>(_onImagesUpdated);
+    on<EditMotelStatusChanged>(_onStatusChanged);
     on<EditMotelSubmitted>(_onSubmitted);
     on<EditMotelDeleted>(_onDeleted);
     on<EditMotelLocationUpdated>(_onLocationUpdated);
@@ -36,7 +37,9 @@ class EditMotelBloc extends Bloc<EditMotelEvent, EditMotelState> {
     Emitter<EditMotelState> emit,
   ) {
     final motel = event.motel;
-    final mode = motel.createdAt == null ? EditMotelMode.create : EditMotelMode.edit;
+    final mode = motel.createdAt == null
+        ? EditMotelMode.create
+        : EditMotelMode.edit;
 
     emit(
       state.copyWith(
@@ -56,6 +59,7 @@ class EditMotelBloc extends Bloc<EditMotelEvent, EditMotelState> {
         images: List<String>.from(motel.images),
         status: EditMotelStatus.initial,
         location: motel.geoPoint,
+        rentalStatus: motel.status,
       ),
     );
   }
@@ -102,10 +106,7 @@ class EditMotelBloc extends Bloc<EditMotelEvent, EditMotelState> {
     emit(state.copyWith(note: event.note));
   }
 
-  void _onCarChanged(
-    EditMotelCarChanged event,
-    Emitter<EditMotelState> emit,
-  ) {
+  void _onCarChanged(EditMotelCarChanged event, Emitter<EditMotelState> emit) {
     emit(state.copyWith(car: event.car));
   }
 
@@ -158,6 +159,13 @@ class EditMotelBloc extends Bloc<EditMotelEvent, EditMotelState> {
     emit(state.copyWith(phoneNumbers: event.phoneNumbers));
   }
 
+  void _onStatusChanged(
+    EditMotelStatusChanged event,
+    Emitter<EditMotelState> emit,
+  ) {
+    emit(state.copyWith(rentalStatus: event.status));
+  }
+
   Future<void> _onSubmitted(
     EditMotelSubmitted event,
     Emitter<EditMotelState> emit,
@@ -181,6 +189,7 @@ class EditMotelBloc extends Bloc<EditMotelEvent, EditMotelState> {
         texture: state.texture,
         commission: state.commission,
         price: double.tryParse(state.price) ?? 0,
+        status: state.rentalStatus,
         address: state.address,
         note: state.note.split('\n'),
         extensions: state.extensions,

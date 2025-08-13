@@ -328,6 +328,10 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
                     const SizedBox(height: 16),
                     _divider(),
                     const SizedBox(height: 8),
+                    _buildStatusCardSection(state.rentalStatus),
+                    const SizedBox(height: 16),
+                    _divider(),
+                    const SizedBox(height: 8),
                     Text(
                       'Thông tin cơ bản:',
                       style: AppTextStyle.subtitle.copyWith(
@@ -408,6 +412,36 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
       onImagesChanged: (images) {
         context.read<EditMotelBloc>().add(EditMotelImagesUpdated(images));
       },
+    );
+  }
+
+  Widget _buildStatusCardSection(RentalStatus status) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: Text(
+            'Thông tin cho thuê:',
+            style: AppTextStyle.subtitle.copyWith(color: AppColors.primary),
+          ),
+        ),
+        const SizedBox(width: 24),
+        Expanded(
+          child: _buildSelectionView(
+            'Trạng thái',
+            status.title,
+            AppDataManager().allStatus.map((e) => e.title).toList(),
+            (options) {
+              final rentalStatus = AppDataManager().allStatus.firstWhere(
+                (e) => e.title == options.first.name,
+              );
+              context.read<EditMotelBloc>().add(
+                EditMotelStatusChanged(rentalStatus),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 

@@ -36,7 +36,8 @@ class FirestoreService
   @override
   Future<({String? id, String? error})> addMotel(Motel motel) async {
     try {
-      final List<String> keywords = motel.address.generateKeywords();
+      final List<String> keywords =
+          motel.roomCode.generateKeywords() + motel.address.generateKeywords();
       final json = motel.toMap();
       json['keywords'] = keywords;
       json['created_at'] = DateTime.now().millisecondsSinceEpoch;
@@ -237,7 +238,8 @@ class FirestoreService
   ) async {
     try {
       final json = motel.toMap();
-      final List<String> keywords = motel.address.generateKeywords();
+      final List<String> keywords =
+          motel.roomCode.generateKeywords() + motel.address.generateKeywords();
       final List<String> imageUrls = await _storageService.uploadImages(
         motel.images,
       );
@@ -268,7 +270,9 @@ class FirestoreService
       final List<Province> provinces = [];
       final allProvinces = await _locationService.getProvinces();
       provinces.addAll(
-        allProvinces.map((p) => Province(id: p.id, name: p.fullName, units: [])),
+        allProvinces.map(
+          (p) => Province(id: p.id, name: p.fullName, units: []),
+        ),
       );
       return (provinces: provinces, error: null);
     } catch (e) {

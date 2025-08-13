@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:find_motel/common/models/motel.dart';
+import 'package:find_motel/common/widgets/custom_card.dart';
 import 'package:find_motel/common/widgets/motel_images_view.dart';
 import 'package:find_motel/extensions/double_extensions.dart';
 import 'package:find_motel/managers/app_data_manager.dart';
@@ -8,6 +9,7 @@ import 'package:find_motel/modules/motel/detail_motel/bloc/motel_detail_event.da
 import 'package:find_motel/modules/motel/edit_motel/bloc/edit_motel_bloc.dart';
 import 'package:find_motel/modules/motel/edit_motel/screen/edit_motel_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:find_motel/theme/app_colors.dart';
 import 'package:find_motel/theme/app_textStyle.dart';
@@ -48,11 +50,17 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
             final content = Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  currentMotelDetail.displayName,
-                  style: AppTextStyle.heading4.copyWith(
-                    color: AppColors.primary,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      currentMotelDetail.displayName,
+                      style: AppTextStyle.heading4.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const Spacer(),
+                    _buildStatusCard(currentMotelDetail.status),
+                  ],
                 ),
                 const SizedBox(height: AppConstants.spacing),
                 _buildRoomInfo(
@@ -200,6 +208,55 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
           textColor: AppColors.elementSecondary,
         ),
       ],
+    );
+  }
+
+  Widget _buildStatusCard(RentalStatus status) {
+    final Widget icon;
+    final String title = status.title;
+    final Color backgroundColor;
+    final Color textColor;
+    Color borderColor = Colors.transparent;
+    double borderWidth = 0.0;
+    switch (status) {
+      case RentalStatus.empty:
+        icon = SvgPicture.asset(
+          'assets/images/ic_empty.svg',
+          width: 18,
+          height: 18,
+        );
+        backgroundColor = AppColors.onSurface1;
+        borderColor = AppColors.elementSecondary;
+        textColor = AppColors.elementSecondary;
+        borderWidth = 1.0;
+        break;
+      case RentalStatus.deposit:
+        icon = SvgPicture.asset(
+          'assets/images/ic_deposit.svg',
+          width: 18,
+          height: 18,
+        );
+        backgroundColor = AppColors.secondarySecondary;
+        textColor = AppColors.onSecondary;
+        break;
+      case RentalStatus.rented:
+        icon = SvgPicture.asset(
+          'assets/images/ic_rented.svg',
+          width: 18,
+          height: 18,
+        );
+        backgroundColor = AppColors.headerLinePrimary;
+        textColor = AppColors.onSecondary;
+        break;
+    }
+    return CustomCard(
+      imageWidget: icon,
+      title: title,
+      titleColor: textColor,
+      backgroundColor: backgroundColor,
+      borderRadius: 30.0,
+      borderColor: borderColor,
+      borderWidth: borderWidth,
     );
   }
 

@@ -107,6 +107,13 @@ class EditMotelLocationUpdated extends EditMotelEvent {
   List<Object> get props => [location];
 }
 
+class EditMotelStatusChanged extends EditMotelEvent {
+  final RentalStatus status;
+  const EditMotelStatusChanged(this.status);
+  @override
+  List<Object> get props => [status];
+}
+
 class EditMotelSubmitted extends EditMotelEvent {
   const EditMotelSubmitted();
 }
