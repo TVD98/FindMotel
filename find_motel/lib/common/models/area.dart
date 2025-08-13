@@ -1,50 +1,27 @@
 class Province {
-  final int code;
+  final String id;
   final String name;
-  final List<District> districts;
+  final List<Unit> units;
 
-  Province({required this.code, required this.name, required this.districts});
+  Province({required this.id, required this.name, required this.units});
 
-  factory Province.fromJson(Map<String, dynamic> json) {
+  Province copyWith(List<Unit>? units) => Province(id: id, name: name, units: units ?? this.units);
+
+  Province copyWithChildren(String districtId, List<Unit> wards) {
     return Province(
-      code: json['code'],
-      name: json['name'] ?? '',
-      districts:
-          (json['districts'] as List<dynamic>?)
-              ?.map((e) => District.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          [],
+      id: id,
+      name: name,
+      units: units.map((e) => e.id == districtId ? e.copyWith(wards) : e).toList(),
     );
   }
 }
 
-class District {
-  final int code;
+class Unit {
+  final String id;
   final String name;
-  final List<Ward> wards;
+  final List<Unit> units;
 
-  District({required this.code, required this.name, required this.wards});
+  Unit({required this.id, required this.name, required this.units});
 
-  factory District.fromJson(Map<String, dynamic> json) {
-    return District(
-      code: json['code'],
-      name: json['name'] ?? '',
-      wards:
-          (json['wards'] as List<dynamic>?)
-              ?.map((e) => Ward.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          [],
-    );
-  }
-}
-
-class Ward {
-  final int code;
-  final String name;
-
-  Ward({required this.code, required this.name});
-
-  factory Ward.fromJson(Map<String, dynamic> json) {
-    return Ward(code: json['code'], name: json['name'] ?? '');
-  }
+  Unit copyWith(List<Unit>? units) => Unit(id: id, name: name, units: units ?? this.units);
 }

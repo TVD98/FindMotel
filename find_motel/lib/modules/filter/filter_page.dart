@@ -13,7 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:find_motel/theme/app_colors.dart';
 import 'package:find_motel/theme/app_textStyle.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:find_motel/common/widgets/location_filter.dart';
+import 'package:find_motel/common/widgets/location_filter/views/location_filter.dart';
 
 class FilterPage extends StatefulWidget {
   const FilterPage({super.key});

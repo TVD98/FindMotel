@@ -24,12 +24,21 @@ abstract class LocalFilter {
 class Range implements LocalFilter {
   final double value;
   final double maxValue;
+  final bool isOn;
 
-  Range({required this.value, required this.maxValue});
+  Range({required this.value, required this.maxValue, this.isOn = true});
+
+  Range copyWith({double? value, double? maxValue, bool? isOn}) {
+    return Range(
+      value: value ?? this.value,
+      maxValue: maxValue ?? this.maxValue,
+      isOn: isOn ?? this.isOn,
+    );
+  }
 
   @override
   bool checkCondition(Motel motel) {
-    if (value > maxValue) return true;
+    if (value > maxValue || !isOn) return true;
 
     // If we don't have the user's current location yet, we can't apply a distance filter.
     final LatLng? currentLocation = AppDataManager().currentLocation;
@@ -145,5 +154,9 @@ class MotelsFilter {
       priceRange: priceRange ?? this.priceRange,
       distanceRange: distanceRange ?? this.distanceRange,
     );
+  }
+
+  MotelsFilter copyWithOffDistance() {
+    return copyWith(distanceRange: distanceRange?.copyWith(isOn: false));
   }
 }

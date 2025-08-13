@@ -4,6 +4,8 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 enum EditMotelStatus { initial, loading, success, failure, deleting }
 
+enum EditMotelMode { create, edit }
+
 class EditMotelState extends Equatable {
   final EditMotelStatus status;
   final String name;
@@ -14,6 +16,8 @@ class EditMotelState extends Equatable {
   final String price;
   final String address;
   final String note;
+  final String car;
+  final RentalStatus rentalStatus;
   final List<String> phoneNumbers;
   final List<String> extensions;
   final List<Fee> customFees;
@@ -22,6 +26,7 @@ class EditMotelState extends Equatable {
   final String? errorMessage;
   final Motel? initialMotel;
   final Motel? updatedMotel;
+  final EditMotelMode mode;
 
   const EditMotelState({
     this.status = EditMotelStatus.initial,
@@ -33,6 +38,8 @@ class EditMotelState extends Equatable {
     this.price = '',
     this.address = '',
     this.note = '',
+    this.car = '',
+    this.rentalStatus = RentalStatus.empty,
     this.phoneNumbers = const [],
     this.extensions = const [],
     this.customFees = const [],
@@ -41,6 +48,7 @@ class EditMotelState extends Equatable {
     this.errorMessage,
     this.initialMotel,
     this.updatedMotel,
+    this.mode = EditMotelMode.edit,
   });
 
   EditMotelState copyWith({
@@ -53,6 +61,8 @@ class EditMotelState extends Equatable {
     String? price,
     String? address,
     String? note,
+    String? car,
+    RentalStatus? rentalStatus,
     List<String>? phoneNumbers,
     List<String>? extensions,
     List<Fee>? customFees,
@@ -61,6 +71,7 @@ class EditMotelState extends Equatable {
     String? errorMessage,
     Motel? initialMotel,
     Motel? updatedMotel,
+    EditMotelMode? mode,
   }) {
     return EditMotelState(
       status: status ?? this.status,
@@ -72,6 +83,8 @@ class EditMotelState extends Equatable {
       price: price ?? this.price,
       address: address ?? this.address,
       note: note ?? this.note,
+      car: car ?? this.car,
+      rentalStatus: rentalStatus ?? this.rentalStatus,
       phoneNumbers: phoneNumbers ?? this.phoneNumbers,
       extensions: extensions ?? this.extensions,
       customFees: customFees ?? this.customFees,
@@ -80,6 +93,7 @@ class EditMotelState extends Equatable {
       errorMessage: errorMessage,
       initialMotel: initialMotel ?? this.initialMotel,
       updatedMotel: updatedMotel,
+      mode: mode ?? this.mode,
     );
   }
 
@@ -94,6 +108,8 @@ class EditMotelState extends Equatable {
     price,
     address,
     note,
+    car,
+    rentalStatus,
     phoneNumbers,
     extensions,
     customFees,
@@ -102,5 +118,6 @@ class EditMotelState extends Equatable {
     errorMessage,
     initialMotel,
     updatedMotel,
+    mode,
   ];
 }
