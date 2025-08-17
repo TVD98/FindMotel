@@ -56,7 +56,7 @@ dependencies:
   mask_text_input_formatter: ^2.7.0
   reorderable_grid_view: ^2.2.0
   cached_network_image: ^3.4.1
-
+  share_plus: ^7.2.2
 dev_dependencies:
   flutter_test:
     sdk: flutter
