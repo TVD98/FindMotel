@@ -221,6 +221,31 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
                     BlendMode.srcIn,
                   ),
                 ),
+                SizedBox(
+                  height: 40,
+                  child: Row(
+                    children: [
+                      Image.asset(
+                        'assets/images/ic_marker.png',
+                        width: 24,
+                        height: 24,
+                      ),
+                      const SizedBox(width: 5),
+                      Expanded(
+                        child: Text(
+                          motelCard.address,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400,
+                            color: AppColors.elementSecondary,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 6), // Giảm spacing
