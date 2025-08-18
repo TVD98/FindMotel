@@ -31,7 +31,7 @@ class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
         ),
       );
       final result = await _motelsService.getMotels(
-        filter: event.filter,
+        filter: event.filter?.copyWithOffDistance(),
         lastCreatedAt: event.isRefresh ? null : _lastCreatedAt,
         limit: _pageSize,
       );

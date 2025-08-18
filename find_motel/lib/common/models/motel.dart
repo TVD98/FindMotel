@@ -88,6 +88,7 @@ class Motel {
   /// Convert this [Motel] instance to a Map suitable for Firestore.
   Map<String, dynamic> toMap() {
     return {
+      'id': id,
       'address': address,
       'commission': commission,
       'extensions': extensions,

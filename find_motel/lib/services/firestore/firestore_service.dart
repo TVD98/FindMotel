@@ -6,6 +6,7 @@ import 'package:find_motel/extensions/list_string_extensions.dart';
 import 'package:find_motel/extensions/string_extensions.dart';
 import 'package:find_motel/services/catalog/catalog_service.dart';
 import 'package:find_motel/common/models/motel_index.dart';
+import 'package:find_motel/services/location/location_service.dart';
 import 'package:find_motel/services/storage/firebase_storage_service.dart';
 import 'package:find_motel/services/user_data/user_data_service.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -16,7 +17,6 @@ import 'package:find_motel/constants/firestore_paths.dart';
 import 'package:find_motel/common/models/user_profile.dart';
 import 'package:find_motel/common/models/deal.dart';
 import 'package:find_motel/services/customer/customer_service.dart';
-import 'package:find_motel/services/location_api_service.dart';
 
 /// Service that fetches motel data from Firebase Cloud Firestore.
 class FirestoreService
@@ -27,6 +27,7 @@ class FirestoreService
         ICustomerService {
   final FirebaseFirestore _firestore;
   final FirebaseStorageService _storageService = FirebaseStorageService();
+  final LocationService _locationService = LocationService();
 
   FirestoreService({FirebaseFirestore? firestore})
     : _firestore = firestore ?? FirebaseFirestore.instance;
@@ -35,7 +36,8 @@ class FirestoreService
   @override
   Future<({String? id, String? error})> addMotel(Motel motel) async {
     try {
-      final List<String> keywords = motel.address.generateKeywords();
+      final List<String> keywords =
+          motel.roomCode.generateKeywords() + motel.address.generateKeywords();
       final json = motel.toMap();
       json['keywords'] = keywords;
       json['created_at'] = DateTime.now().millisecondsSinceEpoch;
@@ -236,7 +238,8 @@ class FirestoreService
   ) async {
     try {
       final json = motel.toMap();
-      final List<String> keywords = motel.address.generateKeywords();
+      final List<String> keywords =
+          motel.roomCode.generateKeywords() + motel.address.generateKeywords();
       final List<String> imageUrls = await _storageService.uploadImages(
         motel.images,
       );
@@ -265,17 +268,18 @@ class FirestoreService
   Future<({List<Province>? provinces, String? error})> fetchProvinces() async {
     try {
       final List<Province> provinces = [];
-      final allProvinces = await LocationApiService().fetchProvinces();
-      final List<int> provinceCodes = allProvinces.map((p) => p.code).toList();
-      for (var provinceCode in provinceCodes) {
-         final province = await LocationApiService().fetchProvinceWithDetails(provinceCode);
-         provinces.add(province);
-      }
+      final allProvinces = await _locationService.getProvinces();
+      provinces.addAll(
+        allProvinces.map(
+          (p) => Province(id: p.id, name: p.fullName, units: []),
+        ),
+      );
       return (provinces: provinces, error: null);
     } catch (e) {
       return (provinces: null, error: e.toString());
     }
   }
+
   @override
   Future<({ImportImagesOptions? options, String? error})>
   fetchImportImagesOptions() async {
@@ -432,7 +436,10 @@ class FirestoreService
 
   // ICustomerService implementation
   @override
-  Future<(List<Deal>?, String?)> fetchDeals({String? saleId, String? motelId}) async {
+  Future<(List<Deal>?, String?)> fetchDeals({
+    String? saleId,
+    String? motelId,
+  }) async {
     try {
       Query<Map<String, dynamic>> query = _firestore
           .collection(FirestorePaths.dealsCollection)

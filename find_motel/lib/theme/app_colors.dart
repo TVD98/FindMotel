@@ -19,11 +19,13 @@ class AppColors {
   static const Color secondaryContainer = Color(0xFFFFEABD); // #FFEABD
   static const Color onSecondaryContainer = Color(0xFF043127);  //043127
 
+  static const Color secondarySecondary = Color(0xFFFFAD01); // #FFAD01
+
   // Neutral / grayscale
   static const Color strokeLight = Color(0xFFD1D1D1); // #D1D1D1
   static const Color strokeHighLight = Color(0xFF9BCFCA); // #B0B0B0
   static const Color elementPrimary = Color(0xFF1F1F1F); // #1F1F1F
-  static const Color elementSecondary = Color(0xFF474747); // #474747
+  static const Color elementSecondary = Color(0xFF000000); // #474747
   static const Color elementHighlight = Color(0xFF0047AB); // #0047AB
 
   // Text
