@@ -8,6 +8,7 @@ import 'package:find_motel/modules/deal_manager/screens/deal_manager_screen.dart
 import 'package:find_motel/modules/motel/detail_motel/bloc/motel_detail_event.dart';
 import 'package:find_motel/modules/motel/edit_motel/bloc/edit_motel_bloc.dart';
 import 'package:find_motel/modules/motel/edit_motel/screen/edit_motel_screen.dart';
+import 'package:find_motel/services/share_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -95,6 +96,13 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
               appBar: CommonAppBar(
                 title: "Chi Tiết Phòng Trọ",
                 actions: [
+                  IconButton(
+                    onPressed: () => ShareService.shareMotelInfo(currentMotelDetail, context),
+                    icon: const Icon(
+                      Icons.share,
+                      color: AppColors.headerLineOnPrimary,
+                    ),
+                  ),
                   IconButton(
                     onPressed: () {
                       Navigator.push(
