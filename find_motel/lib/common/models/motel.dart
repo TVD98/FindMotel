@@ -184,9 +184,9 @@ class Motel {
     );
   }
 
-  static Motel empty(String id) {
+  static Motel empty(String roomCode) {
     return Motel(
-      id: id,
+      id: '',
       address: '',
       commission: '',
       car: '',
@@ -196,7 +196,7 @@ class Motel {
       name: '',
       note: const [],
       price: 0,
-      roomCode: id,
+      roomCode: roomCode,
       type: '',
       status: RentalStatus.empty,
       images: const [],

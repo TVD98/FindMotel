@@ -107,6 +107,11 @@ class Address implements KeywordsFilter, LocalFilter {
     }
     return true;
   }
+
+  @override
+  String toString() {
+    return '$ward, $district, $province';
+  }
 }
 
 class MotelsFilter {

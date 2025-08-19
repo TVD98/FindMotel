@@ -23,29 +23,12 @@ class MotelsDataScreen extends StatefulWidget {
 
 class _MotelsDataScreenState extends State<MotelsDataScreen> {
   final ExcelHelper excelReader = ExcelHelper();
-  final IMotelsService motelsService = FirestoreService();
   bool isLoading = false;
 
-  void _checkMotelId(String id) {
-    setState(() {
-      isLoading = true;
-    });
-    motelsService.doesMotelExist(id).then((exists) {
-      setState(() {
-        isLoading = false;
-      });
-      if (exists) {
-        _addMotel(id, error: 'ID đã tồn tại');
-      } else {
-        _pushEditMotelScreen(Motel.empty(id));
-      }
-    });
-  }
-
-  void _addMotel(String id, {String? error}) async {
-    final motelId = await _showChooseMotelIdDialog(id, error: error);
-    if (motelId.isNotEmpty) {
-      _checkMotelId(motelId);
+  void _addMotel(String roomCode, {String? error}) async {
+    final code = await _showChooseRoomCodeDialog(roomCode, error: error);
+    if (code.isNotEmpty) {
+      _pushEditMotelScreen(Motel.empty(code));
     }
   }
 
@@ -177,13 +160,13 @@ class _MotelsDataScreenState extends State<MotelsDataScreen> {
                 ),
               ),
               onPressed: () {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => const ExportMotelsScreen(),
-    ),
-  );
-},
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ExportMotelsScreen(),
+                  ),
+                );
+              },
 
               child: Text(
                 'File excel .xlsx',
@@ -196,11 +179,11 @@ class _MotelsDataScreenState extends State<MotelsDataScreen> {
     );
   }
 
-  Future<String> _showChooseMotelIdDialog(
-    String motelId, {
+  Future<String> _showChooseRoomCodeDialog(
+    String roomCode, {
     String? error,
   }) async {
-    final motelIdControllerDialog = TextEditingController(text: motelId);
+    final roomCodeControllerDialog = TextEditingController(text: roomCode);
     final result = await showDialog(
       context: context,
       builder: (context) {
@@ -211,7 +194,7 @@ class _MotelsDataScreenState extends State<MotelsDataScreen> {
                 borderRadius: BorderRadius.circular(16),
               ),
               title: Text(
-                'Chọn ID nhà trọ',
+                'Chọn mã phòng',
                 style: AppTextStyle.heading5.copyWith(color: AppColors.primary),
               ),
               content: ConstrainedBox(
@@ -220,8 +203,8 @@ class _MotelsDataScreenState extends State<MotelsDataScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     CommonTextfield(
-                      controller: motelIdControllerDialog,
-                      label: 'ID',
+                      controller: roomCodeControllerDialog,
+                      label: 'Mã phòng',
                       backgroundColor: Theme.of(
                         context,
                       ).scaffoldBackgroundColor,
@@ -259,9 +242,9 @@ class _MotelsDataScreenState extends State<MotelsDataScreen> {
                     ),
                   ),
                   onPressed: () {
-                    final motelId = motelIdControllerDialog.text.trim();
-                    if (motelId.isNotEmpty) {
-                      Navigator.pop(context, motelId);
+                    final roomCode = roomCodeControllerDialog.text.trim();
+                    if (roomCode.isNotEmpty) {
+                      Navigator.pop(context, roomCode);
                     }
                   },
                   child: Text(

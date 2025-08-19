@@ -1,6 +1,8 @@
 import 'package:bloc/bloc.dart';
 import 'package:find_motel/common/models/motel.dart';
+import 'package:find_motel/extensions/string_extensions.dart';
 import 'package:find_motel/services/firestore/firestore_service.dart';
+import 'package:find_motel/services/motel/models/motels_filter.dart';
 import 'package:find_motel/services/motel/motels_service.dart';
 
 import 'edit_motel_event.dart';
@@ -40,6 +42,11 @@ class EditMotelBloc extends Bloc<EditMotelEvent, EditMotelState> {
     final mode = motel.createdAt == null
         ? EditMotelMode.create
         : EditMotelMode.edit;
+    final parsedAddress = motel.address.parseAddress();
+    final String ward = parsedAddress['ward'] as String;
+    final String district = parsedAddress['district'] as String;
+    
+    final address = Address(province: 'Thành phố Hồ Chí Minh', district: district.isEmpty ? 'Tất cả' : 'Quận $district', ward: ward.isEmpty ? 'Tất cả' : 'Phường $ward');
 
     emit(
       state.copyWith(
@@ -51,7 +58,7 @@ class EditMotelBloc extends Bloc<EditMotelEvent, EditMotelState> {
         texture: motel.texture,
         commission: motel.commission,
         price: motel.price.toStringAsFixed(0),
-        address: motel.address,
+        address: address,
         note: motel.note.join('\n'),
         phoneNumbers: List<String>.from(motel.phoneNumbers),
         extensions: List<String>.from(motel.extensions),
@@ -96,7 +103,7 @@ class EditMotelBloc extends Bloc<EditMotelEvent, EditMotelState> {
     EditMotelAddressChanged event,
     Emitter<EditMotelState> emit,
   ) {
-    emit(state.copyWith(address: event.address));
+    //emit(state.copyWith(address: event.address)); 
   }
 
   void _onNoteChanged(
@@ -172,11 +179,25 @@ class EditMotelBloc extends Bloc<EditMotelEvent, EditMotelState> {
   ) async {
     emit(state.copyWith(status: EditMotelStatus.loading));
 
-    if (state.address.isEmpty) {
+    if (state.address?.province == 'Tất cả' || state.address?.district == 'Tất cả' || state.address?.ward == 'Tất cả') {
       emit(
         state.copyWith(
           status: EditMotelStatus.failure,
-          errorMessage: 'Vui lòng nhập địa chỉ!',
+          errorMessage: 'Vui lòng nhập đầy đủ địa chỉ!',
+        ),
+      );
+      return;
+    }
+
+    final isExist = await _motelsService.doesMotelExist(
+      state.initialMotel!.roomCode,
+      state.address?.toString() ?? '',
+    );
+    if (isExist) {
+      emit(
+        state.copyWith(
+          status: EditMotelStatus.failure,
+          errorMessage: 'Mã phòng trọ và địa chỉ đã tồn tại!',
         ),
       );
       return;
@@ -190,7 +211,7 @@ class EditMotelBloc extends Bloc<EditMotelEvent, EditMotelState> {
         commission: state.commission,
         price: double.tryParse(state.price) ?? 0,
         status: state.rentalStatus,
-        address: state.address,
+        address: state.address?.toString() ?? '',
         note: state.note.split('\n'),
         extensions: state.extensions,
         fees: state.customFees,

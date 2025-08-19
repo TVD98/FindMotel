@@ -179,7 +179,7 @@ class FirestoreService
     final geoPoint = data['geo_point'] as GeoPoint? ?? const GeoPoint(0, 0);
 
     return Motel(
-      id: data['room_code'] as String? ?? '',
+      id: doc.id,
       address: data['address'] as String? ?? '',
       commission: data['commission']?.toString() ?? '',
       car: data['car'] as String? ?? '',
@@ -552,13 +552,15 @@ class FirestoreService
   }
 
   @override
-  Future<bool> doesMotelExist(String motelId) async {
+  Future<bool> doesMotelExist(String roomCode, String address) async {
     try {
-      final doc = await _firestore
+      final docSnapshot = await _firestore
           .collection(FirestorePaths.motelsCollection)
-          .doc(motelId)
+          .where('room_code', isEqualTo: roomCode)
+          .where('address', isEqualTo: address)
+          .limit(1)
           .get();
-      return doc.exists;
+      return docSnapshot.docs.isNotEmpty;
     } catch (e) {
       return false;
     }

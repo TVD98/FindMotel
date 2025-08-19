@@ -1,6 +1,7 @@
 import 'package:find_motel/common/models/filter_option.dart';
 import 'package:find_motel/common/widgets/common_selection_view.dart';
 import 'package:find_motel/common/widgets/common_textfield.dart';
+import 'package:find_motel/common/widgets/location_filter/views/location_filter.dart';
 import 'package:find_motel/common/widgets/motel_images_view.dart';
 import 'package:find_motel/common/widgets/selection_bottom_sheet.dart';
 import 'package:find_motel/extensions/double_extensions.dart';
@@ -492,7 +493,16 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
           ],
         ),
         const SizedBox(height: 24),
-        _buildTextField('Địa chỉ', addressController, maxLines: 2),
+        //_buildTextField('Địa chỉ', addressController, maxLines: 2),
+        if (state.address != null)
+          LocationFilter(
+            address: state.address,
+            onAddressChanged: (address) {
+              // context.read<EditMotelBloc>().add(
+              //   EditMotelAddressChanged(address),
+            // );
+          },
+        ),
       ],
     );
   }

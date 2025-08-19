@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:find_motel/common/models/motel.dart';
+import 'package:find_motel/services/motel/models/motels_filter.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 enum EditMotelStatus { initial, loading, success, failure, deleting }
@@ -14,7 +15,7 @@ class EditMotelState extends Equatable {
   final String texture;
   final String commission;
   final String price;
-  final String address;
+  final Address? address;
   final String note;
   final String car;
   final RentalStatus rentalStatus;
@@ -36,7 +37,7 @@ class EditMotelState extends Equatable {
     this.texture = '',
     this.commission = '',
     this.price = '',
-    this.address = '',
+    this.address,
     this.note = '',
     this.car = '',
     this.rentalStatus = RentalStatus.empty,
@@ -59,7 +60,7 @@ class EditMotelState extends Equatable {
     String? texture,
     String? commission,
     String? price,
-    String? address,
+    Address? address,
     String? note,
     String? car,
     RentalStatus? rentalStatus,
