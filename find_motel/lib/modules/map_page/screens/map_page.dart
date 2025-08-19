@@ -126,7 +126,7 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
                   left: 0,
                   right: 0,
                   child: SizedBox(
-                    height: 250, // Giảm từ 270 xuống 250
+                    height: 270, // Chiều cao cố định cho slider
                     child: ListView.builder(
                       controller: _scrollController,
                       scrollDirection: Axis.horizontal,
@@ -165,6 +165,7 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
   }
 
   Widget _buildMotelCard(Motel motelCard) {
+    // Cập nhật tham số
     return Container(
       width: MediaQuery.of(context).size.width - 2 * 20,
       margin: const EdgeInsets.symmetric(horizontal: 5),
@@ -180,46 +181,56 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12.0), // Giảm từ 16 xuống 12
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Header với title và actions
-            Row(
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Expanded(
-                  child: Text(
-                    motelCard.displayName,
-                    style: TextStyle(
-                      fontSize: 18, // Giảm từ 20 xuống 18
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        motelCard.displayName,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
+                        overflow:
+                            TextOverflow.ellipsis, // Tránh tràn chữ nếu tên dài
+                      ),
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                // Nút share nhỏ gọn hơn
-                GestureDetector(
-                  onTap: () {
-                    ShareService.shareMotelInfo(motelCard, context);
-                  },
-                  child: Container(
-                    padding: EdgeInsets.all(6),
-                    child: Icon(
-                      Icons.share,
-                      color: AppColors.primary,
-                      size: 18,
+                    // Thêm nút share
+                    GestureDetector(
+                      onTap: () async {
+                        await ShareService.shareMotelInfo(motelCard, context);
+                      },
+                      child: Container(
+                        padding: EdgeInsets.all(8),
+                        margin: EdgeInsets.only(right: 8),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          Icons.share,
+                          color: AppColors.primary,
+                          size: 20,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                SvgPicture.asset(
-                  'assets/images/ic_arrow_right.svg',
-                  width: 24, // Giảm từ 32 xuống 24
-                  height: 24,
-                  colorFilter: ColorFilter.mode(
-                    AppColors.primary,
-                    BlendMode.srcIn,
-                  ),
+                    SvgPicture.asset(
+                      'assets/images/ic_arrow_right.svg',
+                      width: 32,
+                      height: 32,
+                      colorFilter: ColorFilter.mode(
+                        AppColors.primary,
+                        BlendMode.srcIn,
+                      ),
+                    ),
+                  ],
                 ),
                 SizedBox(
                   height: 40,
@@ -248,76 +259,45 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
                 ),
               ],
             ),
-            const SizedBox(height: 6), // Giảm spacing
-            // Address
-            SizedBox(
-              height: 32, // Giảm từ 40 xuống 32
-              child: Row(
-                children: [
-                  Image.asset(
-                    'assets/images/ic_marker.png',
-                    width: 20, // Giảm từ 24 xuống 20
-                    height: 20,
-                  ),
-                  const SizedBox(width: 5),
-                  Expanded(
-                    child: Text(
-                      motelCard.address,
-                      style: TextStyle(
-                        fontSize: 13, // Giảm từ 14 xuống 13
-                        fontWeight: FontWeight.w400,
-                        color: AppColors.tertiary,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 6),
-
-            // Image
+            const SizedBox(height: 8),
             ClipRRect(
-              borderRadius: const BorderRadius.all(Radius.circular(8)),
+              borderRadius: const BorderRadius.all(Radius.circular(10)),
               child: CachedNetworkImage(
                 imageUrl: motelCard.images.first,
                 width: double.infinity,
-                height: 100, // Giảm từ 108 xuống 100
+                height: 108,
                 fit: BoxFit.cover,
                 errorWidget: (context, error, stackTrace) {
                   return Container(
                     width: double.infinity,
-                    height: 100,
+                    height: 108,
                     color: Colors.grey[200],
-                    child: const Icon(
-                      Icons.error,
-                      color: Colors.grey,
-                      size: 20,
-                    ),
+                    child: const Icon(Icons.error, color: Colors.grey),
                   );
                 },
               ),
             ),
-            const SizedBox(height: 10), // Giảm từ 16 xuống 10
-            // Price and commission tags
+            const SizedBox(height: 16),
             Row(
               mainAxisSize: MainAxisSize.max,
               children: [
+                const SizedBox(width: 12),
                 Container(
                   padding: EdgeInsets.symmetric(
                     horizontal: 6,
-                    vertical: 3, // Giảm từ 4 xuống 3
-                  ),
+                    vertical: 4,
+                  ), // Khoảng đệm bên trong Container
                   decoration: BoxDecoration(
-                    color: AppColors.primaryContainer,
-                    borderRadius: BorderRadius.circular(2),
+                    color: AppColors.primaryContainer, // Màu nền của Container
+                    borderRadius: BorderRadius.circular(
+                      2,
+                    ), // Bo tròn 10px cho tất cả các góc
                   ),
                   child: Text(
                     'HH ${motelCard.commission}',
                     style: TextStyle(
-                      color: AppColors.onPrimaryContainer,
-                      fontSize: 12, // Giảm từ 14 xuống 12
+                      color: AppColors.onPrimaryContainer, // Màu chữ
+                      fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -326,28 +306,31 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
                 Container(
                   padding: EdgeInsets.symmetric(
                     horizontal: 6,
-                    vertical: 3, // Giảm từ 4 xuống 3
-                  ),
+                    vertical: 4,
+                  ), // Khoảng đệm bên trong Container
                   decoration: BoxDecoration(
-                    color: AppColors.onSurface2,
-                    borderRadius: BorderRadius.circular(2),
+                    color: AppColors.onSurface2, // Màu nền của Container
+                    borderRadius: BorderRadius.circular(
+                      2,
+                    ), // Bo tròn 10px cho tất cả các góc
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'Giá: ', // Rút ngắn text
+                        'Giá thuê: ',
                         style: TextStyle(
-                          color: AppColors.primary,
-                          fontSize: 12, // Giảm từ 14 xuống 12
+                          color: AppColors.primary, // Màu chữ
+                          fontSize: 14,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
+                      const SizedBox(width: 2),
                       Text(
                         motelCard.price.toVND(),
                         style: TextStyle(
-                          color: AppColors.elementSecondary,
-                          fontSize: 12, // Giảm từ 14 xuống 12
+                          color: AppColors.elementSecondary, // Màu chữ
+                          fontSize: 14,
                           fontWeight: FontWeight.w400,
                         ),
                       ),
