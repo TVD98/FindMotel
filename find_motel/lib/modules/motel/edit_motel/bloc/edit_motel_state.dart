@@ -15,7 +15,9 @@ class EditMotelState extends Equatable {
   final String texture;
   final String commission;
   final String price;
+  final String prefixAddress;
   final Address? address;
+  final String fullAddress;
   final String note;
   final String car;
   final RentalStatus rentalStatus;
@@ -37,7 +39,9 @@ class EditMotelState extends Equatable {
     this.texture = '',
     this.commission = '',
     this.price = '',
+    this.prefixAddress = '',
     this.address,
+    this.fullAddress = '',
     this.note = '',
     this.car = '',
     this.rentalStatus = RentalStatus.empty,
@@ -60,7 +64,9 @@ class EditMotelState extends Equatable {
     String? texture,
     String? commission,
     String? price,
+    String? prefixAddress,
     Address? address,
+    String? fullAddress,
     String? note,
     String? car,
     RentalStatus? rentalStatus,
@@ -82,7 +88,9 @@ class EditMotelState extends Equatable {
       texture: texture ?? this.texture,
       commission: commission ?? this.commission,
       price: price ?? this.price,
+      prefixAddress: prefixAddress ?? this.prefixAddress,
       address: address ?? this.address,
+      fullAddress: fullAddress ?? this.fullAddress,
       note: note ?? this.note,
       car: car ?? this.car,
       rentalStatus: rentalStatus ?? this.rentalStatus,
@@ -107,7 +115,9 @@ class EditMotelState extends Equatable {
     texture,
     commission,
     price,
+    prefixAddress,
     address,
+    fullAddress,
     note,
     car,
     rentalStatus,

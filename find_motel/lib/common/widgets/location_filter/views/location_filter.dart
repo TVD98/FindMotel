@@ -29,128 +29,139 @@ class _LocationFilterState extends State<LocationFilter> {
       input == 'Tất cả' ? null : input;
 
   @override
+  void initState() {
+    super.initState();
+    context.read<LocationFilterBloc>().add(LoadProvinces(widget.address));
+  }
+
+  @override
+  void didUpdateWidget(covariant LocationFilter oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.address != widget.address) {
+      context.read<LocationFilterBloc>().add(LoadProvinces(widget.address));
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => LocationFilterBloc()..add(LoadProvinces(widget.address)),
-      child: BlocListener<LocationFilterBloc, LocationFilterState>(
-        listenWhen: (previous, current) => previous.address != current.address,
-        listener: (context, state) {
-          widget.onAddressChanged?.call(
-            Address(
-              province: _formatStringSelection(state.address?.province),
-              district: _formatStringSelection(state.address?.district),
-              ward: _formatStringSelection(state.address?.ward),
-            ),
+    return BlocListener<LocationFilterBloc, LocationFilterState>(
+      listenWhen: (previous, current) => previous.address != current.address,
+      listener: (context, state) {
+        widget.onAddressChanged?.call(
+          Address(
+            province: _formatStringSelection(state.address?.province),
+            district: _formatStringSelection(state.address?.district),
+            ward: _formatStringSelection(state.address?.ward),
+          ),
+        );
+      },
+      child: BlocBuilder<LocationFilterBloc, LocationFilterState>(
+        builder: (context, state) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Khu vực:',
+                style: AppTextStyle.smallLabel.copyWith(
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(height: 8.0),
+              Padding(
+                padding: const EdgeInsets.only(left: 12.0),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.only(right: 12.0),
+                            child: Text(
+                              'Tỉnh/Tp:',
+                              style: AppTextStyle.smallLabel.copyWith(
+                                color: AppColors.elementPrimary,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: FixedDropdownButton(
+                              value: state.address?.province ?? 'Tất cả',
+                              items: state.provinces
+                                  .map((e) => e.name)
+                                  .toList(),
+                              style: DropdownStyle.large,
+                              onChanged: (value) {
+                                context.read<LocationFilterBloc>().add(
+                                  ProvinceSelected(value!),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10.0),
+                      Row(
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.only(right: 12.0),
+                            child: Text(
+                              'Quận/huyện:',
+                              style: AppTextStyle.smallLabel.copyWith(
+                                color: AppColors.elementPrimary,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: FixedDropdownButton(
+                              value: state.address?.district ?? 'Tất cả',
+                              items: state.districts
+                                  .map((e) => e.name)
+                                  .toList(),
+                              style: DropdownStyle.large,
+                              onChanged: (value) {
+                                context.read<LocationFilterBloc>().add(
+                                  DistrictSelected(value!),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10.0),
+                      Row(
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.only(right: 12.0),
+                            child: Text(
+                              'Phường/xã:',
+                              style: AppTextStyle.smallLabel.copyWith(
+                                color: AppColors.elementPrimary,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: FixedDropdownButton(
+                              value: state.address?.ward ?? 'Tất cả',
+                              items: state.wards.map((e) => e.name).toList(),
+                              style: DropdownStyle.large,
+                              onChanged: (value) {
+                                context.read<LocationFilterBloc>().add(
+                                  WardSelected(value!),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           );
         },
-        child: BlocBuilder<LocationFilterBloc, LocationFilterState>(
-          builder: (context, state) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Khu vực:',
-                  style: AppTextStyle.smallLabel.copyWith(
-                    color: AppColors.primary,
-                  ),
-                ),
-                const SizedBox(height: 8.0),
-                Padding(
-                  padding: const EdgeInsets.only(left: 12.0),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Padding(
-                              padding: EdgeInsets.only(right: 12.0),
-                              child: Text(
-                                'Tỉnh/Tp:',
-                                style: AppTextStyle.smallLabel.copyWith(
-                                  color: AppColors.elementPrimary,
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: FixedDropdownButton(
-                                value: state.address?.province ?? 'Tất cả',
-                                items: state.provinces
-                                    .map((e) => e.name)
-                                    .toList(),
-                                style: DropdownStyle.large,
-                                onChanged: (value) {
-                                  context.read<LocationFilterBloc>().add(
-                                    ProvinceSelected(value!),
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10.0),
-                        Row(
-                          children: [
-                            Padding(
-                              padding: EdgeInsets.only(right: 12.0),
-                              child: Text(
-                                'Quận/huyện:',
-                                style: AppTextStyle.smallLabel.copyWith(
-                                  color: AppColors.elementPrimary,
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: FixedDropdownButton(
-                                value: state.address?.district ?? 'Tất cả',
-                                items: state.districts
-                                    .map((e) => e.name)
-                                    .toList(),
-                                style: DropdownStyle.large,
-                                onChanged: (value) {
-                                  context.read<LocationFilterBloc>().add(
-                                    DistrictSelected(value!),
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10.0),
-                        Row(
-                          children: [
-                            Padding(
-                              padding: EdgeInsets.only(right: 12.0),
-                              child: Text(
-                                'Phường/xã:',
-                                style: AppTextStyle.smallLabel.copyWith(
-                                  color: AppColors.elementPrimary,
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: FixedDropdownButton(
-                                value: state.address?.ward ?? 'Tất cả',
-                                items: state.wards.map((e) => e.name).toList(),
-                                style: DropdownStyle.large,
-                                onChanged: (value) {
-                                  context.read<LocationFilterBloc>().add(
-                                    WardSelected(value!),
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
       ),
     );
   }

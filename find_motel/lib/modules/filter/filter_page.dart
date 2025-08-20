@@ -1,5 +1,6 @@
 import 'package:find_motel/common/constants/constant.dart';
 import 'package:find_motel/common/widgets/common_textfield.dart';
+import 'package:find_motel/common/widgets/location_filter/bloc/location_filter_bloc.dart';
 import 'package:find_motel/common/widgets/price_range_input.dart';
 import 'package:find_motel/common/widgets/rectange_checkbox_list.dart';
 import 'package:find_motel/common/widgets/custom_button.dart';
@@ -121,14 +122,17 @@ class _FilterPageState extends State<FilterPage> {
               children: [
                 _buildRoomCodeRow(),
                 _divider(),
-                LocationFilter(
-                  address: _selectedAddress,
-                  // Cung cấp các hàm callback để cập nhật trạng thái
-                  onAddressChanged: (newAddress) {
-                    setState(() {
-                      _selectedAddress = newAddress;
-                    });
-                  },
+                BlocProvider(
+                  create: (context) => LocationFilterBloc(),
+                  child: LocationFilter(
+                    address: _selectedAddress,
+                    // Cung cấp các hàm callback để cập nhật trạng thái
+                    onAddressChanged: (newAddress) {
+                      setState(() {
+                        _selectedAddress = newAddress;
+                      });
+                    },
+                  ),
                 ),
                 // _buildAreaSection(),
                 _divider(),

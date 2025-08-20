@@ -110,7 +110,7 @@ class Address implements KeywordsFilter, LocalFilter {
 
   @override
   String toString() {
-    return '$ward, $district, $province';
+    return '$ward, $district';
   }
 }
 

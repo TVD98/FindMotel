@@ -1,6 +1,7 @@
 import 'package:find_motel/common/models/filter_option.dart';
 import 'package:find_motel/common/widgets/common_selection_view.dart';
 import 'package:find_motel/common/widgets/common_textfield.dart';
+import 'package:find_motel/common/widgets/location_filter/bloc/location_filter_bloc.dart';
 import 'package:find_motel/common/widgets/location_filter/views/location_filter.dart';
 import 'package:find_motel/common/widgets/motel_images_view.dart';
 import 'package:find_motel/common/widgets/selection_bottom_sheet.dart';
@@ -35,7 +36,7 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
   // Thay thế TextEditingController bằng Bloc
   late TextEditingController commissionController;
   late TextEditingController priceController;
-  late TextEditingController addressController;
+  late TextEditingController streetController;
   late TextEditingController noteController;
   late TextEditingController carController; // Thêm controller cho thông tin xe
 
@@ -44,7 +45,7 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
     super.initState();
     commissionController = TextEditingController(text: widget.motel.commission);
     priceController = TextEditingController(text: widget.motel.price.toVND());
-    addressController = TextEditingController(text: widget.motel.address);
+    streetController = TextEditingController();
     noteController = TextEditingController(text: widget.motel.note.join('\n'));
     carController = TextEditingController(text: widget.motel.car);
 
@@ -65,9 +66,9 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
         EditMotelPriceChanged(priceController.text),
       );
     });
-    addressController.addListener(() {
+    streetController.addListener(() {
       context.read<EditMotelBloc>().add(
-        EditMotelAddressChanged(addressController.text),
+        EditMotelPrefixAddressChanged(streetController.text),
       );
     });
     noteController.addListener(() {
@@ -85,7 +86,7 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
     // Đảm bảo dispose các controller
     commissionController.dispose();
     priceController.dispose();
-    addressController.dispose();
+    streetController.dispose();
     noteController.dispose();
     carController.dispose(); // Dispose controller thông tin xe
     super.dispose();
@@ -308,99 +309,106 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
           // Có thể hiển thị một loading indicator toàn màn hình tại đây nếu cần
         }
       },
-      child: GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        onTap: () => FocusScope.of(context).unfocus(),
-        child: BlocBuilder<EditMotelBloc, EditMotelState>(
-          builder: (context, state) {
-            return Scaffold(
-              appBar: CommonAppBar(
-                title: state.mode == EditMotelMode.edit
-                    ? 'Chỉnh Sửa Phòng Trọ'
-                    : 'Thêm Phòng Trọ',
-              ),
-              backgroundColor: AppColors.surface,
-              body: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildImageSection(state.images),
-                    const SizedBox(height: 16),
-                    _divider(),
-                    const SizedBox(height: 8),
-                    _buildStatusCardSection(state.rentalStatus),
-                    const SizedBox(height: 16),
-                    _divider(),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Thông tin cơ bản:',
-                      style: AppTextStyle.subtitle.copyWith(
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildBasicInfoSection(state),
-                    const SizedBox(height: 16),
-                    _divider(),
-                    _buildPhoneNumberSection(state.phoneNumbers),
-                    const SizedBox(height: 16),
-                    _divider(),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Tiện ích:',
-                      style: AppTextStyle.subtitle.copyWith(
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildExtensionsSection(context, state.extensions),
-                    const SizedBox(height: 16),
-                    _divider(),
-                    _buildCarSection(),
-                    const SizedBox(height: 16),
-                    _divider(),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Phí dịch vụ:',
-                      style: AppTextStyle.subtitle.copyWith(
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildFeesSection(state.customFees),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Toạ độ:',
-                      style: AppTextStyle.subtitle.copyWith(
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildLocationSection(state.location),
-                    const SizedBox(height: 8),
-                    _divider(),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Ghi chú:',
-                      style: AppTextStyle.subtitle.copyWith(
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildNotesSection(),
-                    const SizedBox(height: 24),
-                    _buildBottomActionButtons(
-                      context: context,
-                      isLoading: state.status == EditMotelStatus.loading,
-                      isDeleting: state.status == EditMotelStatus.deleting,
-                      state: state,
-                    ),
-                  ],
+      child: BlocListener<EditMotelBloc, EditMotelState>(
+        listenWhen: (previous, current) =>
+            previous.prefixAddress != current.prefixAddress,
+        listener: (context, state) {
+          streetController.text = state.prefixAddress;
+        },
+        child: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: BlocBuilder<EditMotelBloc, EditMotelState>(
+            builder: (context, state) {
+              return Scaffold(
+                appBar: CommonAppBar(
+                  title: state.mode == EditMotelMode.edit
+                      ? 'Chỉnh Sửa Phòng Trọ'
+                      : 'Thêm Phòng Trọ',
                 ),
-              ),
-            );
-          },
+                backgroundColor: AppColors.surface,
+                body: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildImageSection(state.images),
+                      const SizedBox(height: 16),
+                      _divider(),
+                      const SizedBox(height: 8),
+                      _buildStatusCardSection(state.rentalStatus),
+                      const SizedBox(height: 16),
+                      _divider(),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Thông tin cơ bản:',
+                        style: AppTextStyle.subtitle.copyWith(
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildBasicInfoSection(state),
+                      const SizedBox(height: 16),
+                      _divider(),
+                      _buildPhoneNumberSection(state.phoneNumbers),
+                      const SizedBox(height: 16),
+                      _divider(),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Tiện ích:',
+                        style: AppTextStyle.subtitle.copyWith(
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      _buildExtensionsSection(context, state.extensions),
+                      const SizedBox(height: 16),
+                      _divider(),
+                      _buildCarSection(),
+                      const SizedBox(height: 16),
+                      _divider(),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Phí dịch vụ:',
+                        style: AppTextStyle.subtitle.copyWith(
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildFeesSection(state.customFees),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Toạ độ:',
+                        style: AppTextStyle.subtitle.copyWith(
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildLocationSection(state.location),
+                      const SizedBox(height: 8),
+                      _divider(),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Ghi chú:',
+                        style: AppTextStyle.subtitle.copyWith(
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      _buildNotesSection(),
+                      const SizedBox(height: 24),
+                      _buildBottomActionButtons(
+                        context: context,
+                        isLoading: state.status == EditMotelStatus.loading,
+                        isDeleting: state.status == EditMotelStatus.deleting,
+                        state: state,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
@@ -493,16 +501,21 @@ class _EditMotelScreenState extends State<EditMotelScreen> {
           ],
         ),
         const SizedBox(height: 24),
-        //_buildTextField('Địa chỉ', addressController, maxLines: 2),
-        if (state.address != null)
-          LocationFilter(
+        BlocProvider(
+          create: (context) => LocationFilterBloc(),
+          child: LocationFilter(
             address: state.address,
-            onAddressChanged: (address) {
-              // context.read<EditMotelBloc>().add(
-              //   EditMotelAddressChanged(address),
-            // );
-          },
+            onAddressChanged: (newAddress) {
+              if (newAddress != null) {
+                context.read<EditMotelBloc>().add(
+                  EditMotelAddressChanged(newAddress),
+                );
+              }
+            },
+          ),
         ),
+        const SizedBox(height: 24),
+        _buildTextField('Tên đường', streetController),
       ],
     );
   }

@@ -41,7 +41,12 @@ class LocationFilterBloc
           selectedProvinceId,
           selectedDistrictId,
         );
-        final selectedWardName = event.address!.ward ?? 'Tất cả';
+        final selectedWardName = wards
+            .firstWhere(
+              (e) => e.name == event.address!.ward,
+              orElse: () => Unit(id: '0', name: 'Tất cả', units: []),
+            )
+            .name;
 
         emit(
           state.copyWith(

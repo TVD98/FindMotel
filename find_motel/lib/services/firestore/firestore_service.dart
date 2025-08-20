@@ -37,14 +37,12 @@ class FirestoreService
   Future<({String? id, String? error})> addMotel(Motel motel) async {
     try {
       final List<String> keywords =
-          motel.roomCode.generateKeywords() + motel.address.generateKeywords();
+          motel.roomCode.generateIncrementalKeywords() +
+          motel.address.generateKeywords();
       final json = motel.toMap();
       json['keywords'] = keywords;
       json['created_at'] = DateTime.now().millisecondsSinceEpoch;
-      await _firestore
-          .collection(FirestorePaths.motelsCollection)
-          .doc(motel.roomCode)
-          .set(json, SetOptions(merge: true));
+      await _firestore.collection(FirestorePaths.motelsCollection).add(json);
       return (id: motel.roomCode, error: null);
     } catch (e) {
       return (id: null, error: e.toString());
@@ -239,7 +237,8 @@ class FirestoreService
     try {
       final json = motel.toMap();
       final List<String> keywords =
-          motel.roomCode.generateKeywords() + motel.address.generateKeywords();
+          motel.roomCode.generateIncrementalKeywords() +
+          motel.address.generateKeywords();
       final List<String> imageUrls = await _storageService.uploadImages(
         motel.images,
       );

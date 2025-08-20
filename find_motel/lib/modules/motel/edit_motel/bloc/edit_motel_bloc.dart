@@ -19,6 +19,7 @@ class EditMotelBloc extends Bloc<EditMotelEvent, EditMotelState> {
     on<EditMotelTextureChanged>(_onTextureChanged);
     on<EditMotelCommissionChanged>(_onCommissionChanged);
     on<EditMotelPriceChanged>(_onPriceChanged);
+    on<EditMotelPrefixAddressChanged>(_onPrefixAddressChanged);
     on<EditMotelAddressChanged>(_onAddressChanged);
     on<EditMotelNoteChanged>(_onNoteChanged);
     on<EditMotelCarChanged>(_onCarChanged);
@@ -43,10 +44,16 @@ class EditMotelBloc extends Bloc<EditMotelEvent, EditMotelState> {
         ? EditMotelMode.create
         : EditMotelMode.edit;
     final parsedAddress = motel.address.parseAddress();
+    final String number = parsedAddress['number'] as String;
+    final String street = parsedAddress['street'] as String;
     final String ward = parsedAddress['ward'] as String;
     final String district = parsedAddress['district'] as String;
-    
-    final address = Address(province: 'Thành phố Hồ Chí Minh', district: district.isEmpty ? 'Tất cả' : 'Quận $district', ward: ward.isEmpty ? 'Tất cả' : 'Phường $ward');
+
+    final address = Address(
+      province: 'Thành phố Hồ Chí Minh',
+      district: district.isEmpty ? 'Tất cả' : district.getFullDistrictName(),
+      ward: ward.isEmpty ? 'Tất cả' : 'Phường ${ward.padLeft(2, '0')}',
+    );
 
     emit(
       state.copyWith(
@@ -58,7 +65,12 @@ class EditMotelBloc extends Bloc<EditMotelEvent, EditMotelState> {
         texture: motel.texture,
         commission: motel.commission,
         price: motel.price.toStringAsFixed(0),
+        prefixAddress: [
+          number,
+          street,
+        ].where((element) => element.isNotEmpty).join(' '),
         address: address,
+        fullAddress: motel.address,
         note: motel.note.join('\n'),
         phoneNumbers: List<String>.from(motel.phoneNumbers),
         extensions: List<String>.from(motel.extensions),
@@ -103,7 +115,17 @@ class EditMotelBloc extends Bloc<EditMotelEvent, EditMotelState> {
     EditMotelAddressChanged event,
     Emitter<EditMotelState> emit,
   ) {
-    //emit(state.copyWith(address: event.address)); 
+    final fullAddress = '${state.prefixAddress}, ${event.address.toString()}';
+    emit(state.copyWith(fullAddress: fullAddress));
+  }
+
+  void _onPrefixAddressChanged(
+    EditMotelPrefixAddressChanged event,
+    Emitter<EditMotelState> emit,
+  ) {
+    final fullAddress =
+        '${event.prefixAddress}, ${state.fullAddress.split(', ').sublist(1).join(', ')}';
+    emit(state.copyWith(fullAddress: fullAddress));
   }
 
   void _onNoteChanged(
@@ -179,25 +201,11 @@ class EditMotelBloc extends Bloc<EditMotelEvent, EditMotelState> {
   ) async {
     emit(state.copyWith(status: EditMotelStatus.loading));
 
-    if (state.address?.province == 'Tất cả' || state.address?.district == 'Tất cả' || state.address?.ward == 'Tất cả') {
+    if (state.fullAddress.contains('Tất cả')) {
       emit(
         state.copyWith(
           status: EditMotelStatus.failure,
           errorMessage: 'Vui lòng nhập đầy đủ địa chỉ!',
-        ),
-      );
-      return;
-    }
-
-    final isExist = await _motelsService.doesMotelExist(
-      state.initialMotel!.roomCode,
-      state.address?.toString() ?? '',
-    );
-    if (isExist) {
-      emit(
-        state.copyWith(
-          status: EditMotelStatus.failure,
-          errorMessage: 'Mã phòng trọ và địa chỉ đã tồn tại!',
         ),
       );
       return;
@@ -211,7 +219,7 @@ class EditMotelBloc extends Bloc<EditMotelEvent, EditMotelState> {
         commission: state.commission,
         price: double.tryParse(state.price) ?? 0,
         status: state.rentalStatus,
-        address: state.address?.toString() ?? '',
+        address: state.fullAddress,
         note: state.note.split('\n'),
         extensions: state.extensions,
         fees: state.customFees,
@@ -227,6 +235,19 @@ class EditMotelBloc extends Bloc<EditMotelEvent, EditMotelState> {
 
       final ({String? error, Motel? motel}) result;
       if (updatedMotel.createdAt == null) {
+        final isExist = await _motelsService.doesMotelExist(
+          state.initialMotel!.roomCode,
+          state.fullAddress,
+        );
+        if (isExist) {
+          emit(
+            state.copyWith(
+              status: EditMotelStatus.failure,
+              errorMessage: 'Mã phòng trọ và địa chỉ đã tồn tại!',
+            ),
+          );
+          return;
+        }
         result = await _motelsService.addMotelWithImages(updatedMotel);
       } else {
         result = await _motelsService.updateMotelWithImages(updatedMotel);

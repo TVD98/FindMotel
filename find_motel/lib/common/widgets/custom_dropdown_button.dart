@@ -54,10 +54,11 @@ class CustomDropdownButton<T> extends StatelessWidget {
             return DropdownMenuItem<T>(
               value: item,
               child: Text(
-                item.toString(), // Convert item to string for display
+                item.toString(),
                 style: AppTextStyle.smallBody.copyWith(
                   fontSize: menuItemFontSize,
-                  color: menuItemTextColor),
+                  color: menuItemTextColor,
+                ),
               ),
             );
           }).toList(),

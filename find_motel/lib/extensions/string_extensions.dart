@@ -142,7 +142,13 @@ extension StringExtensions on String {
     String result = this;
 
     // Danh sách các cụm từ cần loại bỏ
-    final List<String> phrasesToRemove = [ 'đặc khu', 'quận', 'huyện', 'tỉnh', 'thành phố'];
+    final List<String> phrasesToRemove = [
+      'đặc khu',
+      'quận',
+      'huyện',
+      'tỉnh',
+      'thành phố',
+    ];
 
     for (String phrase in phrasesToRemove) {
       String resultTemp = result.replaceAll(
@@ -151,8 +157,7 @@ extension StringExtensions on String {
       );
       try {
         int.parse(resultTemp);
-      }
-      catch (e) {
+      } catch (e) {
         result = resultTemp;
       }
     }
@@ -230,5 +235,26 @@ extension StringExtensions on String {
     parsedAddress['district'] = district;
 
     return parsedAddress;
+  }
+
+  String getFullDistrictName() {
+    // Chuyển đổi chuỗi về dạng chữ thường để kiểm tra không phân biệt chữ hoa/thường
+    String lowerCaseName = toLowerCase();
+
+    if (lowerCaseName.contains('quận') || lowerCaseName.contains('thành phố')) {
+      return this;
+    }
+
+    return 'Quận $this';
+  }
+
+  List<String> generateIncrementalKeywords() {
+    final normalizedCode = normalizeString();
+    final List<String> keywords = [];
+    for (int i = 0; i < normalizedCode.length; i++) {
+      String subString = normalizedCode.substring(0, i + 1);
+      keywords.add(subString);
+    }
+    return keywords;
   }
 }
