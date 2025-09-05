@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:find_motel/common/models/user_profile.dart';
 import 'package:find_motel/managers/app_data_manager.dart';
@@ -173,16 +175,24 @@ class _ProfilePageState extends State<ProfilePage>
         fit: BoxFit.contain,
       );
     }
+    bool isLocalImage = !avatar.startsWith('http');
     return CircleAvatar(
       radius: 50,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(50),
-        child: CachedNetworkImage(
-          imageUrl: avatar,
-          width: 100,
-          height: 100,
-          fit: BoxFit.cover,
-        ),
+        child: isLocalImage
+            ? Image.file(
+                File(avatar),
+                width: 100,
+                height: 100,
+                fit: BoxFit.cover,
+              )
+            : CachedNetworkImage(
+                imageUrl: avatar,
+                width: 100,
+                height: 100,
+                fit: BoxFit.cover,
+              ),
       ),
     );
   }

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:find_motel/common/widgets/common_app_bar.dart';
 import 'package:find_motel/common/widgets/custom_button.dart';
@@ -97,28 +99,47 @@ class _ImageDisplayScreenState extends State<ImageDisplayScreen> {
                 } else {
                   // Nếu không phải placeholder, hiển thị ảnh thông thường
                   final imageUrl = item;
+                  final bool isLocalFile = !imageUrl.startsWith('http');
                   return Card(
                     key: ValueKey(imageUrl),
                     clipBehavior: Clip.antiAlias,
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
-                        CachedNetworkImage(
-                          imageUrl: imageUrl,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) =>
-                              const Center(child: CircularProgressIndicator()),
-                          errorWidget: (context, url, error) {
-                            print('Lỗi tải ảnh: $error cho URL: $url');
-                            return const Center(
-                              child: Icon(
-                                Icons.broken_image,
-                                size: 50,
-                                color: Colors.grey,
+                        isLocalFile
+                            ? Image.file(
+                                File(imageUrl),
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  print(
+                                    'Lỗi tải ảnh cục bộ: $error cho đường dẫn: $imageUrl',
+                                  );
+                                  return const Center(
+                                    child: Icon(
+                                      Icons.broken_image,
+                                      size: 50,
+                                      color: Colors.grey,
+                                    ),
+                                  );
+                                },
+                              )
+                            : CachedNetworkImage(
+                                imageUrl: imageUrl,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => const Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                                errorWidget: (context, url, error) {
+                                  print('Lỗi tải ảnh: $error cho URL: $url');
+                                  return const Center(
+                                    child: Icon(
+                                      Icons.broken_image,
+                                      size: 50,
+                                      color: Colors.grey,
+                                    ),
+                                  );
+                                },
                               ),
-                            );
-                          },
-                        ),
                         Positioned(
                           top: 4,
                           right: 4,

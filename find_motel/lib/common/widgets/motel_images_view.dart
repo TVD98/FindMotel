@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:find_motel/common/widgets/edit_images_screen.dart';
 import 'package:find_motel/theme/app_colors.dart';
@@ -176,20 +178,34 @@ class _MotelImagesViewState extends State<MotelImagesView> {
     if (url.isEmpty) {
       return _buildImageDefault(width, height);
     } else {
-      return CachedNetworkImage(
-        imageUrl: url,
-        height: height,
-        width: width,
-        fit: BoxFit.cover,
-        errorWidget: (context, error, stackTrace) {
-          return Container(
-            width: width,
-            height: height,
-            color: Colors.grey[200],
-            child: const Icon(Icons.error, color: Colors.grey),
-          );
-        },
-      );
+      final bool isLocalFile = !url.startsWith('http');
+      return isLocalFile
+          ? Image.file(
+              File(url),
+              height: height,
+              width: width,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                print('Lỗi tải ảnh cục bộ: $error cho đường dẫn: $url');
+                return const Center(
+                  child: Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                );
+              },
+            )
+          : CachedNetworkImage(
+              imageUrl: url,
+              height: height,
+              width: width,
+              fit: BoxFit.cover,
+              errorWidget: (context, error, stackTrace) {
+                return Container(
+                  width: width,
+                  height: height,
+                  color: Colors.grey[200],
+                  child: const Icon(Icons.error, color: Colors.grey),
+                );
+              },
+            );
     }
   }
 

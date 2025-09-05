@@ -56,8 +56,15 @@ class FirestoreService
     try {
       final List<String> imageUrls = await _storageService.uploadImages(
         motel.images,
+        'images'
       );
-      final updatedMotel = motel.copyWith(images: imageUrls);
+      String thumbnail = imageUrls.isEmpty ? '' : imageUrls.first;
+      String marker = imageUrls.isEmpty ? '' : imageUrls.first;
+      final updatedMotel = motel.copyWith(
+        images: imageUrls,
+        thumbnail: thumbnail,
+        marker: marker,
+      );
       final result = await addMotel(updatedMotel);
       if (result.id != null) {
         return (error: null, motel: updatedMotel);
@@ -241,8 +248,11 @@ class FirestoreService
           motel.address.generateKeywords();
       final List<String> imageUrls = await _storageService.uploadImages(
         motel.images,
+        '${motel.roomCode}/${motel.id}',
       );
       json['images'] = imageUrls;
+      json['thumbnail'] = imageUrls.isEmpty ? '' : imageUrls.first;
+      json['marker'] = imageUrls.isEmpty ? '' : imageUrls.first;
       json['keywords'] = keywords;
       await _firestore
           .collection(FirestorePaths.motelsCollection)
@@ -406,7 +416,7 @@ class FirestoreService
   }) async {
     try {
       Map<String, dynamic> json = {'name': name};
-      String? imageUrl = await _storageService.uploadImage(avatar);
+      String? imageUrl = await _storageService.uploadImage(avatar, '$userId/avatar');
       if (imageUrl != null) {
         json['avatar'] = imageUrl;
       }

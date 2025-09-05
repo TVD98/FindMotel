@@ -2,7 +2,6 @@ import 'package:find_motel/common/models/motel.dart';
 import 'package:find_motel/extensions/double_extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
-import 'dart:io';
 
 class ShareService {
   static Future<void> shareMotelInfo(Motel motel, BuildContext context) async {

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:find_motel/managers/app_data_manager.dart';
 import 'package:find_motel/managers/cubit/cubit.dart';
@@ -65,6 +67,7 @@ class _SettingPageState extends State<SettingPage> {
         }
       },
       builder: (context, state) {
+        bool isLocalImage = !(state.avatar?.startsWith('http') ?? true);
         return Scaffold(
           appBar: CommonAppBar(
             title: 'Cài đặt',
@@ -85,13 +88,21 @@ class _SettingPageState extends State<SettingPage> {
                       backgroundColor: AppColors.strokeHighLight,
                       child: state.avatar != null && state.avatar!.isNotEmpty
                           ? ClipOval(
-                              child: CachedNetworkImage(
-                                imageUrl: state.avatar!,
-                                width: 100,
-                                height: 100,
-                                alignment: Alignment.center,
-                                fit: BoxFit.cover,
-                              ),
+                              child: isLocalImage
+                                  ? Image.file(
+                                      File(state.avatar!),
+                                      width: 100,
+                                      height: 100,
+                                      alignment: Alignment.center,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : CachedNetworkImage(
+                                      imageUrl: state.avatar!,
+                                      width: 100,
+                                      height: 100,
+                                      alignment: Alignment.center,
+                                      fit: BoxFit.cover,
+                                    ),
                             )
                           : ClipOval(
                               child: Image.asset(
@@ -166,8 +177,8 @@ class _SettingPageState extends State<SettingPage> {
                     ),
                   ),
                   style: AppTextStyle.body.copyWith(
-                      color: AppColors.elementSecondary,
-                    ),
+                    color: AppColors.elementSecondary,
+                  ),
                 ),
                 _divider(),
                 const SizedBox(height: 30),

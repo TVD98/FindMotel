@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path/path.dart' as p;
 
 class FirebaseStorageService {
@@ -23,18 +24,33 @@ class FirebaseStorageService {
     }
   }
 
-  Future<String?> uploadImage(String filePath) async {
+  Future<String?> uploadImage(String filePath, String folder) async {
     try {
       if (filePath.startsWith('http')) {
         return filePath;
       } else {
-        final file = File(filePath);
+        final String targetPath =
+            '${Directory.systemTemp.path}/${DateTime.now().microsecondsSinceEpoch}.jpg';
+
+        final XFile? compressedFile =
+            await FlutterImageCompress.compressAndGetFile(
+              filePath,
+              targetPath,
+              quality: 80,
+              format: CompressFormat.jpeg,
+            );
+
+        if (compressedFile == null) {
+          return null;
+        }
+
+        final File file = File(compressedFile.path);
         if (!await file.exists()) {
           print('File không tồn tại: $filePath');
           return null;
         }
 
-        return _uploadFile(file, 'images');
+        return _uploadFile(file, folder);
       }
     } catch (e) {
       print('Lỗi upload ảnh: $e');
@@ -42,11 +58,11 @@ class FirebaseStorageService {
     }
   }
 
-  Future<List<String>> uploadImages(List<String> filePaths) async {
+  Future<List<String>> uploadImages(List<String> filePaths, String folder) async {
     final List<String> uploadedUrls = [];
 
     for (final filePath in filePaths) {
-      final url = await uploadImage(filePath);
+      final url = await uploadImage(filePath, folder);
       if (url != null) {
         uploadedUrls.add(url);
       }

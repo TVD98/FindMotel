@@ -88,10 +88,10 @@ class ImagePickerService {
 
   /// Chọn ảnh từ thư viện và upload.
   Future<void> _pickImageFromGallery() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      final imageUrl = image.path;
-      addImagesToList([imageUrl]);
+    final List<XFile> images = await _picker.pickMultiImage();
+    if (images.isNotEmpty) {
+      final imageUrls = images.map((e) => e.path).toList();
+      addImagesToList(imageUrls);
     }
   }
 
