@@ -184,7 +184,8 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
 
     final Map<String, int> idCounts = {};
     for (final motel in existingMotels) {
-      idCounts[motel.roomCode] = (idCounts[motel.roomCode] ?? 0) + 1;
+      final id = '${motel.roomCode} - ${motel.address}';
+      idCounts[id] = (idCounts[id] ?? 0) + 1;
     }
 
     final Set<String> duplicateIds = idCounts.entries
@@ -196,7 +197,8 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
     final List<ImportedMotel> nonDuplicates = [];
 
     for (final motel in motels) {
-      if (duplicateIds.contains(motel.roomCode)) {
+      final id = '${motel.roomCode} - ${motel.address}';
+      if (duplicateIds.contains(id)) {
         duplicates.add(ImportedMotel(motel: motel, isValid: false));
       } else {
         nonDuplicates.add(ImportedMotel(motel: motel, isValid: true));

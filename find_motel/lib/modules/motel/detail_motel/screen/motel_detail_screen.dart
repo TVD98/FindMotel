@@ -415,22 +415,6 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
     );
   }
 
-  Widget _buildCar(String car) {
-    return Row(
-      children: [
-        Text(
-          "Xe:",
-          style: AppTextStyle.subtitle.copyWith(color: AppColors.primary),
-        ),
-        const SizedBox(width: AppConstants.spacing),
-        Text(
-          car,
-          style: AppTextStyle.body.copyWith(color: AppColors.elementSecondary),
-        ),
-      ],
-    );
-  }
-
   Widget _buildFees(List<Fee> fees, String car) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:find_motel/common/models/motel.dart';
+import 'package:find_motel/services/motel/models/motels_filter.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class EditMotelCarChanged extends EditMotelEvent {
@@ -52,10 +53,17 @@ class EditMotelPriceChanged extends EditMotelEvent {
 }
 
 class EditMotelAddressChanged extends EditMotelEvent {
-  final String address;
+  final Address address;
   const EditMotelAddressChanged(this.address);
   @override
   List<Object> get props => [address];
+}
+
+class EditMotelPrefixAddressChanged extends EditMotelEvent {
+  final String prefixAddress;
+  const EditMotelPrefixAddressChanged(this.prefixAddress);
+  @override
+  List<Object> get props => [prefixAddress];
 }
 
 class EditMotelNoteChanged extends EditMotelEvent {
