@@ -37,15 +37,15 @@
   },
   "functions": [
     {
-      "source": "default",
-      "codebase": "default",
-      "runtime": "nodejs18",
-      "gen": 2,
+      "source": "functions",
+      "codebase": "functions",
+      "runtime": "nodejs20",
       "ignore": [
         "node_modules",
         ".git",
         "firebase-debug.log",
-        "firebase-debug.*.log"
+        "firebase-debug.*.log",
+        "*.local"
       ],
       "predeploy": [
         "npm --prefix \"$RESOURCE_DIR\" run lint"

@@ -1,3 +1,4 @@
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:find_motel/common/models/motel.dart';
 import 'package:find_motel/extensions/string_extensions.dart';
 import 'package:find_motel/managers/app_data_manager.dart';
@@ -10,6 +11,9 @@ import 'package:find_motel/services/motel/motels_service.dart';
 
 class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
   final IMotelsService _motelsService;
+  Map<String, List<String>> imagesList = {};
+  List<Future<void>> imageFutures = [];
+
   ImportMotelsBloc({IMotelsService? motelsService})
     : _motelsService = motelsService ?? FirestoreService(),
       super(const ImportMotelsState()) {
@@ -51,9 +55,19 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
 
     on<SaveMotelsEvent>((event, emit) async {
       emit(state.copyWith(isLoading: true));
+      await Future.wait(imageFutures);
       try {
         for (final motel in event.motels) {
-          final result = await _motelsService.addMotel(motel);
+          List<String> images = imagesList[motel.roomCode] ?? [];
+          String thumbnail = images.isEmpty ? '' : images.first;
+          String marker = images.isEmpty ? '' : images.first;
+          final result = await _motelsService.addMotel(
+            motel.copyWith(
+              images: images,
+              thumbnail: thumbnail,
+              marker: marker,
+            ),
+          );
           if (result.error != null) {
             emit(state.copyWith(isLoading: false, error: result.error));
             return;
@@ -124,7 +138,10 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
         'phone_numbers': rowData[phoneNumbersIndex],
       };
       final motel = _motelFromJson(motelJson);
-      if (motel != null) motelList.add(motel);
+      if (motel != null) {
+        motelList.add(motel);
+        imageFutures.add(_fetchDriveImagesAsync(motel, rowData[imagesIndex]));
+      }
     }
     return motelList;
   }
@@ -141,9 +158,10 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
     final carDeposit = json['car'];
     final images = (json['images'] as String)
         .split(',')
-        .map((e) => e.trim().toImageUrl())
+        .map((e) => e.trim())
         .toList();
-    final phoneNumbers = (json['phone_numbers'] as String).extractPhoneNumbers();
+    final phoneNumbers = (json['phone_numbers'] as String)
+        .extractPhoneNumbers();
     final electricityPrice = (json['electricity'] as String).toPrice();
     final waterPrice = (json['water'] as String).toPrice();
     final otherPrice = (json['other'] as String).toPrice();
@@ -177,7 +195,10 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
     );
   }
 
-  List<ImportedMotel> _reorganizeMotelsById(List<Motel> motels, List<Motel> existingMotels) {
+  List<ImportedMotel> _reorganizeMotelsById(
+    List<Motel> motels,
+    List<Motel> existingMotels,
+  ) {
     if (motels.isEmpty) {
       return [];
     }
@@ -208,5 +229,73 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
     duplicates.sort((a, b) => a.motel.roomCode.compareTo(b.motel.roomCode));
 
     return [...duplicates, ...nonDuplicates];
+  }
+
+  Future<List<String>> _processImagesCell(String imagesCell) async {
+    final links = imagesCell.split(',').map((e) => e.trim()).toList();
+    List<String> finalUrls = [];
+
+    for (var link in links) {
+      if (_isDriveFolderLink(link)) {
+        final folderId = _extractFolderId(link);
+        final driveImages = await getDriveImages(folderId);
+        finalUrls.addAll(
+          driveImages.map((e) => e['thumbnailLink'] ?? e['webViewLink']),
+        );
+      } else {
+        finalUrls.add(link);
+      }
+    }
+
+    return finalUrls;
+  }
+
+  Future<void> _fetchDriveImagesAsync(Motel motel, String imagesCell) async {
+    final links = imagesCell.split(',').map((e) => e.trim()).toList();
+    for (var link in links) {
+      if (_isDriveFolderLink(link)) {
+        try {
+          final folderId = _extractFolderId(link);
+          final driveImages = await getDriveImages(
+            folderId,
+          ); // gọi Firebase function
+          final List<String> urls = driveImages
+              .whereType<Map<String, dynamic>>()
+              .map((e) {
+                if (e['thumbnailLink'] != null) {
+                  return e['thumbnailLink'] as String;
+                }
+                if (e['webViewLink'] != null) return e['webViewLink'] as String;
+                return null;
+              })
+              .whereType<String>()
+              .toList();
+          imagesList[motel.roomCode] = urls;
+        } catch (_) {}
+      }
+    }
+  }
+
+  bool _isDriveFolderLink(String url) {
+    return url.contains('drive.google.com/drive/folders/');
+  }
+
+  String _extractFolderId(String url) {
+    final regex = RegExp(r'folders/([a-zA-Z0-9_-]+)');
+    final match = regex.firstMatch(url);
+    if (match != null && match.groupCount >= 1) {
+      return match.group(1)!;
+    }
+    throw Exception('Invalid Drive folder link: $url');
+  }
+
+  Future<List<Map<String, dynamic>>> getDriveImages(String folderId) async {
+    final functions = FirebaseFunctions.instance;
+    final result = await functions.httpsCallable('getDriveImages').call({
+      'folderId': folderId,
+    });
+
+    final List<dynamic> files = result.data;
+    return files.map((e) => Map<String, dynamic>.from(e)).toList();
   }
 }
