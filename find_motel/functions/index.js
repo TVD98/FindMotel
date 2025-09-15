@@ -41,10 +41,16 @@ exports.getDriveImages = onCall(async (request) => {
       return [];
     }
 
+    await Promise.all(files.map(async (file) => {
+      await drive.permissions.create({
+        fileId: file.id,
+        requestBody: { role: 'reader', type: 'anyone' },
+      });
+    }));
+
     return files.map((file) => ({
       name: file.name,
-      webViewLink: file.webViewLink,
-      thumbnailLink: file.thumbnailLink,
+      imageLink: `https://drive.google.com/uc?export=view&id=${file.id}`,
     }));
   } catch (error) {
     console.error("Error fetching images:", error);
