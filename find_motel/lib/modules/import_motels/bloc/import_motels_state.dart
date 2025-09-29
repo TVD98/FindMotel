@@ -26,12 +26,16 @@ class ImportMotelsState {
   final bool isCanImport;
   final bool isLoading;
   final bool? isSaved;
+  final int? addedMotelCount;
+  final int? updatedMotelCount;
   final String? error;
 
   const ImportMotelsState({
     this.sheetList,
     this.isLoading = false,
     this.isSaved,
+    this.addedMotelCount,
+    this.updatedMotelCount,
     this.error,
     this.isCanImport = false,
   });
@@ -40,6 +44,8 @@ class ImportMotelsState {
     List<ImportedMotelList>? sheetList,
     bool? isLoading,
     bool? isSaved,
+    int? addedMotelCount,
+    int? updatedMotelCount,
     String? error,
     bool? isCanImport,
   }) {
@@ -48,6 +54,8 @@ class ImportMotelsState {
       isCanImport: isCanImport ?? this.isCanImport,
       isLoading: isLoading ?? this.isLoading,
       isSaved: isSaved ?? this.isSaved,
+      addedMotelCount: addedMotelCount ?? this.addedMotelCount,
+      updatedMotelCount: updatedMotelCount ?? this.updatedMotelCount,
       error: error ?? this.error,
     );
   }

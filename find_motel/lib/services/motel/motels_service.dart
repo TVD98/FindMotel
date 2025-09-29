@@ -26,5 +26,5 @@ abstract class IMotelsService {
   /// Delete a motel document. Returns `null` on success, or an error string if the deletion fails.
   Future<String?> deleteMotel(String motelId);
 
-  Future<bool> doesMotelExist(String roomCode, String address);
+  Future<String?> doesMotelExist(String roomCode, String address);
 }

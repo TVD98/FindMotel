@@ -46,8 +46,8 @@ class _PriceRangeInputViewState extends State<PriceRangeInputView> {
 
   void _notifyParentOnPriceChange() {
     // Lấy giá trị sau khi loại bỏ định dạng để truyền đi
-    final double minPrice = _minPriceController.text.toPrice();
-    final double maxPrice = _maxPriceController.text.toPrice();
+    final double minPrice = _minPriceController.text.replaceAll(RegExp(r'[^0-9]'), '').toPrice();
+    final double maxPrice = _maxPriceController.text.replaceAll(RegExp(r'[^0-9]'), '').toPrice();
 
     widget.onPriceRangeChanged?.call(minPrice, maxPrice);
   }

@@ -142,6 +142,7 @@ class Motel {
   }
 
   Motel copyWith({
+    String? id,
     int? createdAt,
     String? address,
     String? commission,
@@ -162,7 +163,7 @@ class Motel {
     List<String>? phoneNumbers,
   }) {
     return Motel(
-      id: id,
+      id: id ?? this.id,
       address: address ?? this.address,
       commission: commission ?? this.commission,
       car: car ?? this.car,

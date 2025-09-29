@@ -57,23 +57,37 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
       emit(state.copyWith(isLoading: true));
       await Future.wait(imageFutures);
       try {
+        int addedMotelCount = 0;
+        int updatedMotelCount = 0;
         for (final motel in event.motels) {
           List<String> images = imagesList[motel.roomCode] ?? [];
           String thumbnail = images.isEmpty ? '' : images.first;
           String marker = images.isEmpty ? '' : images.first;
-          final result = await _motelsService.addMotel(
-            motel.copyWith(
-              images: images,
-              thumbnail: thumbnail,
-              marker: marker,
-            ),
+          final motelId = await _motelsService.doesMotelExist(
+            motel.roomCode,
+            motel.address,
           );
-          if (result.error != null) {
-            emit(state.copyWith(isLoading: false, error: result.error));
-            return;
+          final uploadingMotel = motel.copyWith(
+            id: motelId,
+            images: images,
+            thumbnail: thumbnail,
+            marker: marker,
+          );
+          if (motelId == null) {
+            final result = await _motelsService.addMotel(uploadingMotel);
+            if (result.error == null) {
+              addedMotelCount += 1;
+            }
+          } else {
+            final result = await _motelsService.updateMotelWithImages(
+              uploadingMotel,
+            );
+            if (result.error == null) {
+              updatedMotelCount += 1;
+            }
           }
         }
-        emit(state.copyWith(isLoading: false, isSaved: true));
+        emit(state.copyWith(isLoading: false, isSaved: true, addedMotelCount: addedMotelCount, updatedMotelCount: updatedMotelCount));
       } catch (e) {
         emit(state.copyWith(isLoading: false, error: e.toString()));
       }
@@ -229,25 +243,6 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
     duplicates.sort((a, b) => a.motel.roomCode.compareTo(b.motel.roomCode));
 
     return [...duplicates, ...nonDuplicates];
-  }
-
-  Future<List<String>> _processImagesCell(String imagesCell) async {
-    final links = imagesCell.split(',').map((e) => e.trim()).toList();
-    List<String> finalUrls = [];
-
-    for (var link in links) {
-      if (_isDriveFolderLink(link)) {
-        final folderId = _extractFolderId(link);
-        final driveImages = await getDriveImages(folderId);
-        finalUrls.addAll(
-          driveImages.map((e) => e['thumbnailLink'] ?? e['webViewLink']),
-        );
-      } else {
-        finalUrls.add(link);
-      }
-    }
-
-    return finalUrls;
   }
 
   Future<void> _fetchDriveImagesAsync(Motel motel, String imagesCell) async {

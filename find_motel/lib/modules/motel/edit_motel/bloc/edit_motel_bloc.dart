@@ -235,11 +235,11 @@ class EditMotelBloc extends Bloc<EditMotelEvent, EditMotelState> {
 
       final ({String? error, Motel? motel}) result;
       if (updatedMotel.createdAt == null) {
-        final isExist = await _motelsService.doesMotelExist(
+        final motelId = await _motelsService.doesMotelExist(
           state.initialMotel!.roomCode,
           state.fullAddress,
         );
-        if (isExist) {
+        if (motelId != null) {
           emit(
             state.copyWith(
               status: EditMotelStatus.failure,

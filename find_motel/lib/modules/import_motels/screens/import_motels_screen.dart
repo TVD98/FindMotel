@@ -33,7 +33,8 @@ class _ImportMotelsScreenState extends State<ImportMotelsScreen> {
         if (state.isSaved ?? false) {
           _showSaveMotelsSuccessDialog(
             context,
-            state.sheetList?.expand((e) => e.motels).length ?? 0,
+            state.addedMotelCount ?? 0,
+            state.updatedMotelCount ?? 0,
           );
         }
       },
@@ -288,13 +289,27 @@ class _ImportMotelsScreenState extends State<ImportMotelsScreen> {
     );
   }
 
-  void _showSaveMotelsSuccessDialog(BuildContext context, int motelsCount) {
+  void _showSaveMotelsSuccessDialog(
+    BuildContext context,
+    int addedMotelsCount,
+    int updatedMotelsCount,
+  ) {
+    final String addedMotelsContent = addedMotelsCount == 0
+        ? ''
+        : 'Lưu $addedMotelsCount trọ';
+    final String updatedMotelsContent = updatedMotelsCount == 0
+        ? ''
+        : 'Cập nhật $updatedMotelsCount trọ';
+    final String content = [
+      addedMotelsContent,
+      updatedMotelsContent,
+    ].where((s) => s.isNotEmpty).join(' và ');
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return CommonAlertDialog(
           title: 'Thành công',
-          content: 'Lưu $motelsCount trọ thành công',
+          content: '$content thành công',
           leadingActionTitle: 'Đóng',
           onLeadingPressed: () {
             Navigator.of(context).pop();

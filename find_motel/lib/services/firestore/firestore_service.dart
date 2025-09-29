@@ -56,7 +56,7 @@ class FirestoreService
     try {
       final List<String> imageUrls = await _storageService.uploadImages(
         motel.images,
-        'images'
+        'images',
       );
       String thumbnail = imageUrls.isEmpty ? '' : imageUrls.first;
       String marker = imageUrls.isEmpty ? '' : imageUrls.first;
@@ -416,7 +416,10 @@ class FirestoreService
   }) async {
     try {
       Map<String, dynamic> json = {'name': name};
-      String? imageUrl = await _storageService.uploadImage(avatar, '$userId/avatar');
+      String? imageUrl = await _storageService.uploadImage(
+        avatar,
+        '$userId/avatar',
+      );
       if (imageUrl != null) {
         json['avatar'] = imageUrl;
       }
@@ -561,7 +564,7 @@ class FirestoreService
   }
 
   @override
-  Future<bool> doesMotelExist(String roomCode, String address) async {
+  Future<String?> doesMotelExist(String roomCode, String address) async {
     try {
       final docSnapshot = await _firestore
           .collection(FirestorePaths.motelsCollection)
@@ -569,9 +572,13 @@ class FirestoreService
           .where('address', isEqualTo: address)
           .limit(1)
           .get();
-      return docSnapshot.docs.isNotEmpty;
+      if (docSnapshot.docs.isEmpty) {
+        return null;
+      } else {
+        return docSnapshot.docs.first.id;
+      }
     } catch (e) {
-      return false;
+      return null;
     }
   }
 }
