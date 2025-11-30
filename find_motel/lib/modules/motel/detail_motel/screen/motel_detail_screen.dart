@@ -300,13 +300,16 @@ class _MotelDetailScreenState extends State<MotelDetailScreen> {
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Icon(Icons.location_on, size: 18, color: AppColors.primary),
             const SizedBox(width: AppConstants.spacing),
-            Text(
-              address,
-              style: AppTextStyle.smallBody.copyWith(
-                color: AppColors.elementSecondary,
+            Expanded(
+              child: Text(
+                address,
+                style: AppTextStyle.smallBody.copyWith(
+                  color: AppColors.elementSecondary,
+                ),
               ),
             ),
           ],
