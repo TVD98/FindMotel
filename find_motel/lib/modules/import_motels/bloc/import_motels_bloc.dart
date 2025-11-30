@@ -164,10 +164,11 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
     final roomCode = '${json['roomCode']}';
     if (roomCode.isEmpty) return null;
 
-    final district = '${json['district']}';
+    final district = '${json['district']}'.getFullDistrictName();
     final number = '${json['number']}';
     final street = '${json['street']}';
-    final ward = 'phường ${json['ward']}';
+    final wardNumber = '${json['ward']}'.padLeft(2, '0');
+    final ward = 'Phường $wardNumber';
     final address = '$number $street, $ward, $district';
     final carDeposit = json['car'];
     final images = (json['images'] as String)
