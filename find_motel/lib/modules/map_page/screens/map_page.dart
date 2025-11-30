@@ -113,15 +113,20 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
         builder: (context, state) {
           return Stack(
             children: [
-              GoogleMap(
-                onMapCreated: _onMapCreated,
-                initialCameraPosition: CameraPosition(
-                  target: state.centerPosition ?? _defaultCenter,
-                  zoom: 13.0,
+              Padding(
+                padding: EdgeInsets.only(
+                  bottom: state.cards.isNotEmpty ? 300 : 0,
                 ),
-                markers: state.markers,
-                myLocationEnabled: true,
-                buildingsEnabled: false,
+                child: GoogleMap(
+                  onMapCreated: _onMapCreated,
+                  initialCameraPosition: CameraPosition(
+                    target: state.centerPosition ?? _defaultCenter,
+                    zoom: 13.0,
+                  ),
+                  markers: state.markers,
+                  myLocationEnabled: true,
+                  buildingsEnabled: false,
+                ),
               ),
               if (state.cards.isNotEmpty)
                 Positioned(
