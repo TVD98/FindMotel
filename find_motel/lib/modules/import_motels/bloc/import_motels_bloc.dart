@@ -248,13 +248,14 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
 
   Future<void> _fetchDriveImagesAsync(Motel motel, String imagesCell) async {
     final links = imagesCell.split(',').map((e) => e.trim()).toList();
+    final List<String> directUrls = [];
+
     for (var link in links) {
       if (_isDriveFolderLink(link)) {
+        // Thử gọi API để lấy ảnh từ folder
         try {
           final folderId = _extractFolderId(link);
-          final driveImages = await getDriveImages(
-            folderId,
-          ); // gọi Firebase function
+          final driveImages = await getDriveImages(folderId);
           final List<String> urls = driveImages
               .whereType<Map<String, dynamic>>()
               .map((e) {
@@ -266,14 +267,48 @@ class ImportMotelsBloc extends Bloc<ImportMotelsEvent, ImportMotelsState> {
               })
               .whereType<String>()
               .toList();
-          imagesList[motel.roomCode] = urls;
-        } catch (_) {}
+          directUrls.addAll(urls);
+        } catch (_) {
+          // Nếu API lỗi, bỏ qua folder này
+        }
+      } else if (_isDriveFileLink(link)) {
+        // Link ảnh trực tiếp từ Drive file
+        final fileId = _extractFileId(link);
+        if (fileId != null) {
+          directUrls.add('https://lh3.googleusercontent.com/d/$fileId');
+        }
+      } else if (link.startsWith('http')) {
+        // Link ảnh thông thường (Firebase Storage, Imgur, etc.)
+        directUrls.add(link);
       }
+    }
+
+    if (directUrls.isNotEmpty) {
+      imagesList[motel.roomCode] = directUrls;
     }
   }
 
   bool _isDriveFolderLink(String url) {
     return url.contains('drive.google.com/drive/folders/');
+  }
+
+  bool _isDriveFileLink(String url) {
+    return url.contains('drive.google.com/file/d/') ||
+           url.contains('drive.google.com/open?id=');
+  }
+
+  String? _extractFileId(String url) {
+    // Format: https://drive.google.com/file/d/FILE_ID/view
+    final regex1 = RegExp(r'file/d/([a-zA-Z0-9_-]+)');
+    final match1 = regex1.firstMatch(url);
+    if (match1 != null) return match1.group(1);
+
+    // Format: https://drive.google.com/open?id=FILE_ID
+    final regex2 = RegExp(r'[?&]id=([a-zA-Z0-9_-]+)');
+    final match2 = regex2.firstMatch(url);
+    if (match2 != null) return match2.group(1);
+
+    return null;
   }
 
   String _extractFolderId(String url) {
