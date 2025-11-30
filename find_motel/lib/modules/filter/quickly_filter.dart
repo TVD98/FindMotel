@@ -26,6 +26,20 @@ class _QuicklyFilterState extends State<QuicklyFilter> {
   Catalog? catalog;
 
   @override
+  void initState() {
+    super.initState();
+    // Đọc giá trị catalog hiện tại từ CatalogCubit khi widget được khởi tạo
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final currentCatalog = context.read<CatalogCubit>().state;
+      if (currentCatalog.texturies.isNotEmpty || currentCatalog.amenities.isNotEmpty) {
+        setState(() {
+          catalog = currentCatalog;
+        });
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return BlocListener<CatalogCubit, Catalog>(
       listenWhen: (previous, current) => previous != current,
