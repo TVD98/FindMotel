@@ -27,7 +27,7 @@ class MapPage extends StatefulWidget {
 }
 
 class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
-  late GoogleMapController mapController;
+  GoogleMapController? _mapController;
   late final StreamSubscription<bool> _reloadSubscription;
   final ScrollController _scrollController = ScrollController();
   final LatLng _defaultCenter = const LatLng(
@@ -36,7 +36,7 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
   ); // Vĩ độ TP.HCM
 
   void _onMapCreated(GoogleMapController controller) {
-    mapController = controller;
+    _mapController = controller;
   }
 
   @override
@@ -88,16 +88,19 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
       child: BlocConsumer<MapBloc, MapState>(
         listener: (context, state) {
           // Cập nhật vị trí camera khi trạng thái thay đổi
-          if (state.bounds != null) {
-            mapController.animateCamera(
-              CameraUpdate.newLatLngBounds(state.bounds!, 50),
-            );
-          } else if (state.centerPosition != null) {
-            mapController.animateCamera(
-              CameraUpdate.newCameraPosition(
-                CameraPosition(target: state.centerPosition!, zoom: 12.0),
-              ),
-            );
+          final mapController = _mapController;
+          if (mapController != null) {
+            if (state.bounds != null) {
+              mapController.animateCamera(
+                CameraUpdate.newLatLngBounds(state.bounds!, 50),
+              );
+            } else if (state.centerPosition != null) {
+              mapController.animateCamera(
+                CameraUpdate.newCameraPosition(
+                  CameraPosition(target: state.centerPosition!, zoom: 12.0),
+                ),
+              );
+            }
           }
 
           if (state.selectedMotel != null && state.cards.isNotEmpty) {
@@ -262,20 +265,27 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
             const SizedBox(height: 8),
             ClipRRect(
               borderRadius: const BorderRadius.all(Radius.circular(10)),
-              child: CachedNetworkImage(
-                imageUrl: motelCard.images.first,
-                width: double.infinity,
-                height: 108,
-                fit: BoxFit.cover,
-                errorWidget: (context, error, stackTrace) {
-                  return Container(
-                    width: double.infinity,
-                    height: 108,
-                    color: Colors.grey[200],
-                    child: const Icon(Icons.error, color: Colors.grey),
-                  );
-                },
-              ),
+              child: motelCard.images.isNotEmpty
+                  ? CachedNetworkImage(
+                      imageUrl: motelCard.images.first,
+                      width: double.infinity,
+                      height: 108,
+                      fit: BoxFit.cover,
+                      errorWidget: (context, error, stackTrace) {
+                        return Container(
+                          width: double.infinity,
+                          height: 108,
+                          color: Colors.grey[200],
+                          child: const Icon(Icons.error, color: Colors.grey),
+                        );
+                      },
+                    )
+                  : Container(
+                      width: double.infinity,
+                      height: 108,
+                      color: Colors.grey[200],
+                      child: const Icon(Icons.image_not_supported, color: Colors.grey),
+                    ),
             ),
             const SizedBox(height: 16),
             Row(

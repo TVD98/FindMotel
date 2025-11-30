@@ -154,10 +154,11 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     final Marker? oldMarker = _markerCache[motelId];
     if (oldMarker == null) return; // Marker không có trong cache
 
-    final Motel motel = state.cards.firstWhere(
-      (m) => m.id == motelId,
-      orElse: () => throw Exception('Motel not found'),
-    );
+    // Tìm motel, nếu không có thì bỏ qua
+    final int motelIndex = state.cards.indexWhere((m) => m.id == motelId);
+    if (motelIndex == -1) return;
+
+    final Motel motel = state.cards[motelIndex];
 
     final BitmapDescriptor updatedIcon = await _createCustomMarker(
       motel.marker,
@@ -197,7 +198,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
         position: position,
         icon: BitmapDescriptor.defaultMarker,
         onTap: () {
-          add(MarkerTapped(motel));
+          if (!isClosed) add(MarkerTapped(motel));
         },
       );
       markers.add(marker);
@@ -216,12 +217,15 @@ class MapBloc extends Bloc<MapEvent, MapState> {
                 backgroundColor: AppColors.secondaryContainer,
               )
               .then((markerIcon) {
+                // Kiểm tra bloc còn hoạt động không trước khi emit
+                if (isClosed) return;
+
                 final updatedMarker = Marker(
                   markerId: MarkerId(motel.id),
                   position: position,
                   icon: markerIcon,
                   onTap: () {
-                    add(MarkerTapped(motel));
+                    if (!isClosed) add(MarkerTapped(motel));
                   },
                 );
                 markers.removeWhere((m) => m.markerId == MarkerId(motel.id));
@@ -230,7 +234,10 @@ class MapBloc extends Bloc<MapEvent, MapState> {
                 emit(state.copyWith(markers: {...markers}, isLoading: false));
               })
               .catchError((e) {
-                print('Lỗi tải ảnh cho marker ${motel.id}: $e');
+                // Ignore errors if bloc is closed
+                if (!isClosed) {
+                  print('Lỗi tải ảnh cho marker ${motel.id}: $e');
+                }
               }),
         );
       }
