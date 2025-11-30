@@ -33,8 +33,8 @@ class ExportMotelsBloc extends Bloc<ExportMotelsEvent, ExportMotelsState> {
     emit(ExportMotelsExporting());
     try {
       final excelHelper = ExcelHelper();
-      await excelHelper.exportMotelsToExcel(event.motels);
-      emit(ExportMotelsExported());
+      final filePath = await excelHelper.exportMotelsToExcel(event.motels);
+      emit(ExportMotelsExported(filePath));
     } catch (e) {
       emit(ExportMotelsError(e.toString()));
     }

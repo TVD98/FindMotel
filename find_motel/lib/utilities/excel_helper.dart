@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:file_picker/file_picker.dart';
 import 'package:excel/excel.dart';
 import 'package:flutter/services.dart';
+import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 
 class ExcelData {
@@ -88,10 +89,31 @@ class ExcelHelper {
     }
   }
 
+  /// Lấy thư mục lưu file của app (tạo nếu chưa có)
+  Future<Directory> _getAppExportDirectory() async {
+    final Directory baseDir;
+    if (Platform.isIOS) {
+      // iOS: Dùng Documents directory (có thể truy cập qua Files app)
+      baseDir = await getApplicationDocumentsDirectory();
+    } else {
+      // Android: Dùng external storage để user có thể truy cập dễ dàng
+      final externalDir = await getExternalStorageDirectory();
+      baseDir = externalDir ?? await getApplicationDocumentsDirectory();
+    }
+
+    // Tạo thư mục FindMotel
+    final appDir = Directory('${baseDir.path}/FindMotel');
+    if (!await appDir.exists()) {
+      await appDir.create(recursive: true);
+    }
+    return appDir;
+  }
+
   Future<String> overwriteExcelFile(
     List<List<String>> newData, {
     String excelFilePath = 'assets/files/template.xlsx',
     int startRow = 2,
+    bool openAfterSave = true,
   }) async {
     try {
       // 1. Đọc file Excel từ thư mục assets
@@ -106,7 +128,7 @@ class ExcelHelper {
       String sheetName = excel.getDefaultSheet()!;
       var sheet = excel.tables[sheetName]!;
 
-      // 4. Ghi dữ liệu mới
+      // 3. Ghi dữ liệu mới
       for (int rowIndex = startRow; rowIndex < newData.length; rowIndex++) {
         List<String> rowData = newData[rowIndex];
         for (int colIndex = 0; colIndex < rowData.length; colIndex++) {
@@ -120,18 +142,23 @@ class ExcelHelper {
         }
       }
 
-      // 5. Lưu file Excel đã cập nhật vào bộ nhớ thiết bị
-      var directory = await getApplicationDocumentsDirectory();
-      String newPath =
-          '${directory.path}/${DateTime.now().millisecondsSinceEpoch}.xlsx';
+      // 4. Lưu file Excel vào thư mục app
+      final appDir = await _getAppExportDirectory();
+      final fileName =
+          'motels_${DateTime.now().millisecondsSinceEpoch}.xlsx';
+      final filePath = '${appDir.path}/$fileName';
 
-      // Ghi dữ liệu đã cập nhật vào file mới
-      var newFile = File(newPath);
+      var newFile = File(filePath);
       await newFile.writeAsBytes(excel.save()!);
 
-      return 'Ghi đè dữ liệu thành công! File được lưu tại: $newPath';
+      // 5. Mở file sau khi lưu
+      if (openAfterSave && !kIsWeb) {
+        await OpenFilex.open(filePath);
+      }
+
+      return filePath;
     } catch (e) {
-      return 'Đã xảy ra lỗi khi ghi đè dữ liệu: $e';
+      return 'Đã xảy ra lỗi khi xuất file: $e';
     }
   }
 

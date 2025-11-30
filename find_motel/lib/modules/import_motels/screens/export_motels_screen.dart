@@ -10,6 +10,70 @@ import '../bloc/export_motels_state.dart';
 class ExportMotelsScreen extends StatelessWidget {
   const ExportMotelsScreen({super.key});
 
+  void _showExportSuccessDialog(BuildContext context, String filePath) {
+    // Lấy tên file từ đường dẫn
+    final fileName = filePath.split('/').last;
+    // Lấy thư mục (bỏ tên file)
+    final folderPath = filePath.replaceAll('/$fileName', '');
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.green[600], size: 28),
+            const SizedBox(width: 8),
+            const Expanded(child: Text('Xuất file thành công!')),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'File đã được lưu tại:',
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '📁 $folderPath',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '📄 $fileName',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Đóng'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
@@ -93,11 +157,7 @@ class ExportMotelsScreen extends StatelessWidget {
             if (state is ExportMotelsExported) {
               Future.delayed(Duration.zero, () {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Xuất file Excel thành công!'),
-                    ),
-                  );
+                  _showExportSuccessDialog(context, state.filePath);
                 }
               });
             }

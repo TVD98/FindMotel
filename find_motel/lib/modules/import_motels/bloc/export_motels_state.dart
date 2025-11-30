@@ -28,4 +28,10 @@ class ExportMotelsError extends ExportMotelsState {
 
 class ExportMotelsExporting extends ExportMotelsState {}
 
-class ExportMotelsExported extends ExportMotelsState {}
+class ExportMotelsExported extends ExportMotelsState {
+  final String filePath;
+  ExportMotelsExported(this.filePath);
+
+  @override
+  List<Object?> get props => [filePath];
+}
